@@ -119,8 +119,6 @@ if [ "$HOOKS" = 1 ]; then
   git config core.hooksPath tools/yass/githooks
   echo "hook   core.hooksPath = tools/yass/githooks (undo: git config --unset core.hooksPath)"
 fi
-command -v yass >/dev/null || echo "note: yass isn't on your PATH yet; add $(dirname "$BIN") to it so you, the hook and your agents can run yass"
-
 cat <<'EOF'
 
 YASS is set up. Next:
@@ -130,3 +128,30 @@ YASS is set up. Next:
        large:  "use yass-shape to plan <feature>"
   3. `yass status` shows what's in flight.
 EOF
+
+# Last, so it isn't scrolled away: you, the hook and your agents run `yass` from PATH, so say if
+# that finds nothing, or a different yass than the one just installed, and how to fix it.
+BIN_DIR_ABS="$(cd "$(dirname "$BIN")" && pwd)"
+ON_PATH="$(command -v yass || true)"
+home() { case "$1" in "$HOME"/*) echo "\$HOME${1#"$HOME"}" ;; *) echo "$1" ;; esac; }
+if [ -n "$ON_PATH" ] && [ -z "$BIN_DIR" ] && [ "$(cd "$(dirname "$ON_PATH")" && pwd)" != "$BIN_DIR_ABS" ]; then
+  # Nothing was copied anywhere; BIN is next to this script (an unpacked release or a clone), so
+  # don't suggest putting that folder on PATH. Replacing the yass that's already there is the fix.
+  echo
+  echo "WARNING: \`yass\` on your PATH is $ON_PATH, not the one this script used ($BIN)."
+  echo "  To replace it, run this script again with:  --bin-dir $(home "$(dirname "$ON_PATH")")"
+elif [ -z "$ON_PATH" ] || [ "$(cd "$(dirname "$ON_PATH")" && pwd)" != "$BIN_DIR_ABS" ]; then
+  d="$(home "$BIN_DIR_ABS")"
+  case "$(basename "${SHELL:-}")" in
+    zsh)  fix="echo 'export PATH=\"$d:\$PATH\"' >> ~/.zshrc" ;;
+    bash) if [ "$(uname -s)" = Darwin ]; then rc="~/.bash_profile"; else rc="~/.bashrc"; fi
+          fix="echo 'export PATH=\"$d:\$PATH\"' >> $rc" ;;
+    fish) fix="fish_add_path $d" ;;
+    *)    fix="echo 'export PATH=\"$d:\$PATH\"' >> ~/.profile" ;;
+  esac
+  echo
+  if [ -z "$ON_PATH" ]; then echo "WARNING: yass isn't on your PATH, so you, the hook and your agents can't run it."
+  else echo "WARNING: \`yass\` on your PATH is $ON_PATH, not the one just installed in $BIN_DIR_ABS."; fi
+  echo "  Fix it with:  $fix"
+  echo "  then open a new terminal."
+fi

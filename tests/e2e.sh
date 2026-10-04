@@ -268,6 +268,18 @@ bash "$ROOT/install.sh" . --upgrade >/dev/null
 has "--upgrade replaces them" "^name: yass-work" cat .agents/skills/yass-work/SKILL.md
 has "--bin-dir copies the binary" "write  .*/bindir/yass" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
 [ -x "$W/e2e/bindir/yass" ] && ok "…and it runs" || bad "no binary in --bin-dir"
+has   "…and warns that another yass on PATH comes first" "is .*, not the one just installed" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
+has   "…or that --bin-dir isn't on PATH" "yass isn't on your PATH" \
+      env PATH=/usr/bin:/bin SHELL=/bin/zsh bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir2"
+has   "…with the fix for the shell" "Fix it with:  echo 'export PATH=\".*/bindir2:\\\$PATH\"' >> ~/.zshrc" \
+      env PATH=/usr/bin:/bin SHELL=/bin/zsh bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir2"
+hasnt "no warning when the installed yass is the one on PATH" "WARNING" \
+      env PATH="$W/e2e/bindir:/usr/bin:/bin" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
+U="$W/e2e/unpacked"; rm -rf "$U"; mkdir -p "$U"; cp -R "$ROOT/install.sh" "$ROOT/kit" "$U/"; cp "$YASS_BIN" "$U/yass"
+has   "an unpacked release with an older yass on PATH suggests --bin-dir, not a PATH edit" \
+      "run this script again with:  --bin-dir .*/bindir$" \
+      env -u YASS_BIN PATH="$W/e2e/bindir:/usr/bin:/bin" bash "$U/install.sh" .
+hasnt "…and no PATH edit" "Fix it with" env -u YASS_BIN PATH="$W/e2e/bindir:/usr/bin:/bin" bash "$U/install.sh" .
 K="$W/e2e/kit-only"; rm -rf "$K"; mkdir -p "$K"; cp -R "$ROOT/install.sh" "$ROOT/kit" "$K/"
 has      "a web install with no --bin-dir and no yass stops before downloading" "pass --bin-dir" \
          bash -c 'env -u YASS_BIN PATH=/usr/bin:/bin bash -s -- . < "$1"' _ "$ROOT/install.sh"
