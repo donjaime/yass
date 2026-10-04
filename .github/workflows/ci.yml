@@ -1,9 +1,33 @@
 name: ci
-on: [push, pull_request]
+on: [push, pull_request, merge_group]
 permissions:
   contents: read
 jobs:
+  # Commits that only change plans (yass/, yass.yaml) skip the build and tests: the recipe in
+  # docs/monorepo.md, with yass built from this checkout. Branch protection should require ci-ok.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.only.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - id: only
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before }}
+        run: |
+          if [ -n "$BASE" ] && [ "$BASE" != 0000000000000000000000000000000000000000 ] &&
+             go run ./cmd/yass paths --only "$BASE...$GITHUB_SHA"; then
+            echo code=false >> "$GITHUB_OUTPUT"
+          else
+            echo code=true >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -39,3 +63,12 @@ jobs:
             dist/*.tar.gz
             dist/*.zip
             dist/checksums.txt
+
+  ci-ok:
+    if: always()
+    needs: [changes, test, build]
+    runs-on: ubuntu-latest
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - run: echo ok

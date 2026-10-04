@@ -87,6 +87,8 @@ yass status [<change>]          what's in flight, progress, next steps, what's b
             [--archived] [--strict]
 yass archive <change>           move a finished change to archive/ (refuses while boxes are open)
 yass root                       print the yass folder(s) this repo uses
+yass paths [--only A...B]       the repo paths that are YASS's, as globs; --only exits 0 for a
+                                plans-only commit range, so CI can skip builds and tests
 yass template <name>            print a template (design, prd, plan, …), e.g. to add design.md later
 yass hook [--range A..B]        the optional hook's check, for CI
 ```
@@ -216,6 +218,8 @@ path: ../my-project-plans        # relative to this file
 ## Monorepos
 
 Any folder named `yass/` with `changes/` or `archive/` inside counts, and so does any `yass.yaml`, so teams opt in by running `yass init services/payments`. `yass status` shows every `yass/` folder in the repo, and `yass new` puts a change in the nearest one to where you're standing. Cross-team work is links, not copies: a root change's plan names the team changes that deliver each criterion, each team change names the criterion it delivers, and a team change that needs another team's work first names it in `blocked:`. Ownership and review rules belong in your CODEOWNERS. See [examples/monorepo](examples/monorepo).
+
+Rolling it out across a large monorepo, with expensive CI and many teams? [docs/monorepo.md](docs/monorepo.md) shows how to keep plan-only commits from running builds and tests, including GitHub required checks, merge queues and Bazel.
 
 ### Folders that aren't yours
 

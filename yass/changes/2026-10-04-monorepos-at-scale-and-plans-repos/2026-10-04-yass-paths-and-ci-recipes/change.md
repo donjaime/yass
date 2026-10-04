@@ -13,18 +13,35 @@ CI can skip plan-only changes with one gate job built on yass paths, with tested
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC1–AC5 in [plan.md](../plan.md)
-- [ ] `docs/monorepo.md` exists and the README's Monorepos section links to it
+- [/] Delivers AC1–AC5 in [plan.md](../plan.md)
+- [x] `docs/monorepo.md` exists and the README's Monorepos section links to it
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
-- [ ] 
+- [x] `yass paths`: globs for each yass folder inside the repo and each `yass.yaml`; `**` for a plans repo (AC1)
+- [x] `--only <range>`: 0 plans only, 1 anything else or nothing, 2 unreadable range (AC2)
+- [x] e2e §13
+- [x] `docs/monorepo.md`: why a job and not a path filter, GitHub gate job and `ci-ok`, a no-install diff check, merge queues, Bazel, other CI (AC4, AC5)
+- [x] This repo's `ci.yml`: the gate job (`go run ./cmd/yass`), `test`/`build` behind it, `ci-ok` aggregating, `merge_group` added (AC3)
+- [x] README: `yass paths` in the CLI list, link to docs/monorepo.md
+- [/] AC3 on GitHub: a plan-only push skips `test` and `build` and `ci-ok` passes; a code push runs them
+- [/] AC4: the Bazel recipe run against a real Bazel repo
+- [/] AC5: a plan-only pull request through a real merge queue
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
+- `yass paths` lists each whole yass folder (`yass/**`), not just the parts the hook classifies (changes/, archive/, queue.md, README.md) - a yass folder is YASS's by definition, and one glob per folder is what CI filters and `.bazelignore` want (claude)
+- `--only` exits 1 for a range with no changed files - when in doubt, a gate should run the checks, not skip them (claude)
+- Recipes compare `BASE...HEAD` (three dots) - a branch is compared with where it left its base, so commits that landed on the base meanwhile don't count as its changes (claude)
+- This repo's CI builds the gate's yass with `go run ./cmd/yass` - no release has `yass paths` yet, and it dogfoods the branch's own version (claude)
+- The GitHub facts in the docs come from GitHub's documentation, checked on 2026-10-04: a workflow skipped by a path filter leaves required checks Pending; a job skipped by `if:` reports Success; `merge_group` takes `branches` filters, no `paths` (claude)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
 ### YYYY-MM-DD (<who>)
 - Did: …
 - Next: … -->
+### 2026-10-04 (claude)
+- Did: `yass paths` and `--only`; e2e §13 (10 checks); `docs/monorepo.md` with the GitHub gate-job recipe (plus `ci-ok`, a no-install variant, merge queues), Bazel and generic recipes; this repo's `ci.yml` gated the same way; README updated. Checks: go test, go vet, gofmt, e2e 263/263, examples. The gate step simulated locally: plan-only commit c7a9f90 → skip, code commit e6bdcbc → run, new branch → run. Workflow YAML parses.
+- Not yet verified (needs GitHub or tools not here): AC3 on a real push, AC4's Bazel recipe (no Bazel on this machine), AC5 through a real merge queue. The `merge_group.base_sha` field name comes from the webhook payload and isn't confirmed on GitHub's events page.
+- Next: when this branch is pushed, check one plan-only push and one code push in Actions (record the run links here), and consider requiring `ci-ok` on main. Try the Bazel recipe on a repo that uses Bazel, and a merge queue on a scratch repo, or record why not. Then mark AC3–AC5 and the Delivers box.

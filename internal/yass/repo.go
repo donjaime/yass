@@ -259,6 +259,7 @@ type Repo struct {
 	Top, Cwd         string
 	Roots            []*Root
 	Ignored          []string // folders a yass.yaml ignores
+	Configs          []string // the yass.yaml files that count, wherever they point
 	Warnings         []string
 	Notes            []string // worth knowing, but not a problem: they don't fail --strict
 	Linked           bool     // a yass.yaml's folder wasn't found from this linked worktree
@@ -397,7 +398,8 @@ func (r *Repo) findRoots() {
 	}
 
 	seen, claimed := map[string]bool{}, map[string]bool{}
-	for _, f := range sortedKeys(configs) {
+	r.Configs = sortedKeys(configs)
+	for _, f := range r.Configs {
 		owner := filepath.Dir(f)
 		claimed[owner] = true
 		dir, cfg, unknown, err := configDir(f)

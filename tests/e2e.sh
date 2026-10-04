@@ -473,6 +473,30 @@ mkdir -p svc; y init svc --no-agents >/dev/null; mkb svc/yass/changes/2026-07-01
 mkb yass/changes/2026-07-02-ui "" "svc/yass/changes/2026-07-01-api"
 has   "dependencies work across yass folders" "2026-07-02-ui .*waiting on: 2026-07-01-api" y status
 
+echo "13. yass paths: what's YASS's, for CI"
+newrepo "$W/e2e/paths"; rm -rf "$W/e2e/paths-priv"
+y init --no-agents >/dev/null; printf 'ignore:\n  - examples/*\n' > yass.yaml
+mkdir -p services/payments services/search services/priv examples/demo/yass/changes
+y init services/payments --no-agents >/dev/null
+printf 'path: planning\n' > services/search/yass.yaml; mkdir -p services/search/planning/changes
+printf 'path: ../../../paths-priv\n' > services/priv/yass.yaml; mkdir -p "$W/e2e/paths-priv/changes"
+EXP=$'services/payments/yass/**\nservices/priv/yass.yaml\nservices/search/planning/**\nservices/search/yass.yaml\nyass.yaml\nyass/**'
+[ "$(y paths)" = "$EXP" ] && ok "paths lists the yass folders in the repo and every yass.yaml, and nothing ignored or outside" || bad "paths: $(y paths | tr '\n' ' ')"
+git add -A; git commit -q -m "chore: adopt YASS"
+B=$(git rev-parse HEAD); y new "Plan only" >/dev/null; printf 'x\n' > services/payments/yass/changes/note.md; git add -A; git commit -q -m "yass: plan"
+has   "--only: a range with only plans exits 0" "plans only: 2 file" y paths --only "$B..HEAD"
+run_ok "…with status 0" y paths --only "$B..HEAD"
+B=$(git rev-parse HEAD); echo more >> app.txt; echo y >> services/payments/yass/changes/note.md; git commit -qam "feat: code and plans"
+run_fail "a range with any other file exits 1" y paths --only "$B..HEAD"
+has   "…and names one" "1 of 2 changed file.* e.g. app.txt" y paths --only "$B..HEAD"
+run_fail "an empty range runs the checks (exits 1)" y paths --only HEAD..HEAD
+has   "a range it can't read exits 2 and says to fetch" "fetch history first" y paths --only nope..HEAD
+bash -c 'yass paths --only nope..HEAD' >/dev/null 2>&1; [ $? -eq 2 ] && ok "…with status 2" || bad "not exit 2"
+B=$(git rev-parse HEAD); sub yass/changes/*-plan-only/change.md '^- \[ \] $' '- [x] Done'; git commit -qam "yass: done"; y archive plan-only >/dev/null; git commit -q -m "yass: archive"
+run_ok "archiving (a move inside yass/) is plans only" y paths --only "$B..HEAD"
+cd "$W/e2e/paths-priv"; git init -q -b main; printf 'path: .\n' > yass.yaml
+has   "a plans repo (path: .) is YASS's throughout" "^\*\*$" y paths
+
 echo "16. worktrees and the yass/ link"
 newrepo "$W/e2e/wt"; rm -rf "$W/e2e/wt-plans" "$W/e2e/wt-other" "$W/e2e/wts" "$W/e2e/wt-priv"*
 y init --path ../wt-plans --no-agents >/dev/null; git add yass.yaml; git commit -q -m "chore: adopt YASS"

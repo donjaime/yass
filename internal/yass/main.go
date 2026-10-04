@@ -24,6 +24,8 @@ usage: yass <command> [options]
                                         what's in flight, or one change in detail
   archive <change> [--force]            move a finished change to the archive
   root                                  print the yass folder(s) this repo uses
+  paths [--only RANGE]                  the repo paths that are YASS's, as globs (for CI filters);
+                                        --only exits 0 if a commit range touches nothing else
   template <name>                       print a template: change, change-large, prd, plan, design
   hook [--range A..B] [--strict]        the optional pre-commit check (also for CI)
   version
@@ -43,6 +45,7 @@ var specs = map[string]spec{
 	"status":   {[]string{"archived", "strict"}, nil, 0, 1, "yass status [<change>] [--archived] [--strict]"},
 	"archive":  {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
 	"root":     {nil, nil, 0, 0, "yass root"},
+	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
 	"template": {nil, nil, 1, 1, "yass template <change|change-large|prd|plan|design|readme|agents>"},
 	"hook":     {[]string{"strict"}, []string{"range"}, 0, 0, "yass hook [--range A..B] [--strict]"},
 	"version":  {nil, nil, 0, 0, "yass version"},
@@ -141,6 +144,8 @@ func Main(argv []string, version string) int {
 		err = cmdArchive(a)
 	case "root":
 		err = cmdRoot(a)
+	case "paths":
+		return cmdPaths(a)
 	case "template":
 		err = cmdTemplate(a)
 	case "hook":
