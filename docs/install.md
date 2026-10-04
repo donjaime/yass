@@ -85,7 +85,17 @@ Without `--bin-dir`, `install.sh` uses a `yass` it finds next to it, in `bin/`, 
 
 ## Upgrading
 
-Get the newer release (or pull and rebuild), then run its `install.sh --upgrade --bin-dir ~/.local/bin` in your repo. It replaces the binary, the playbooks and the hook; your changes, `yass.yaml` and anything outside the `yass:begin`/`yass:end` markers in `AGENTS.md` are left alone. Review the diff and commit it.
+Get the newer release (or pull and rebuild), then run its `install.sh --upgrade --bin-dir ~/.local/bin` in your repo. It replaces the binary, the playbooks and the hook; your changes, `yass.yaml` and anything outside the `yass:begin`/`yass:end` markers in `AGENTS.md` are left alone. Review the diff and commit it (`chore: upgrade YASS`).
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --upgrade --bin-dir ~/.local/bin .
+```
+
+does the same in one line, with the same caveat as [the one-line install](#in-one-line): it runs a script you haven't read.
+
+- **You don't need to remember how you installed it.** An upgrade refreshes the copies that are there: Claude's playbooks in `.claude/skills/` if the repo has them, and, when the repo has no playbooks of its own but your user folder does, the ones there (as if you'd passed `--global`, which updates them for every repo that uses them).
+- **Read the [release notes](https://github.com/donjaime/yass/releases)** for what changed. Before 1.0, a minor version can change the file format or the CLI; the notes say how to migrate.
+- **The binary is per machine; the playbooks are per repo.** Upgrading the binary affects every repo on your machine, so upgrade each repo you use YASS in, and teammates should upgrade their binary when the repo's playbooks move ahead.
 
 ## Removing it
 

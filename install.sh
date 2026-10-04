@@ -91,8 +91,16 @@ place() {  # place <src> <dst>
 }
 
 # Playbooks: in this repo (project scope, the default), or in your user folder (--global).
+has_playbooks() { compgen -G "$1/yass-*/SKILL.md" >/dev/null; }
+# An upgrade refreshes what's already installed, whatever flags it was installed with: the user
+# folder's playbooks when the repo has none, and Claude's copies wherever they are.
+if [ "$UPGRADE" = 1 ] && [ "$GLOBAL" = 0 ] && ! has_playbooks "$DEST/.agents/skills" &&
+   has_playbooks "${YASS_SKILLS_DIR:-$HOME/.agents/skills}"; then
+  GLOBAL=1; echo "note   no playbooks in this repo, so upgrading the ones in your user folder (as --global)"
+fi
 SKILLS="$DEST/.agents/skills"; CLAUDE_SKILLS="$DEST/.claude/skills"
 if [ "$GLOBAL" = 1 ]; then SKILLS="${YASS_SKILLS_DIR:-$HOME/.agents/skills}"; CLAUDE_SKILLS="$HOME/.claude/skills"; fi
+if [ "$UPGRADE" = 1 ] && [ "$CLAUDE" = 0 ] && has_playbooks "$CLAUDE_SKILLS"; then CLAUDE=1; fi
 
 (cd "$SRC/kit" && find tools -type f | sort) | while read -r rel; do
   place "$SRC/kit/$rel" "$DEST/$rel"
@@ -126,6 +134,7 @@ YASS is upgraded; your changes weren't touched. Next:
   1. Review and commit it:  git add -A && git commit -m "chore: upgrade YASS"
   2. `yass status` checks your changes with the new version.
 EOF
+echo "  3. What changed, and how to migrate if anything needs it: https://github.com/$REPO_SLUG/releases"
 else
 cat <<'EOF'
 

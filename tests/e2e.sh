@@ -268,7 +268,14 @@ has "re-running keeps your edits" "^changed$" cat .agents/skills/yass-work/SKILL
 UPGRADE_OUT="$(bash "$ROOT/install.sh" . --upgrade)"
 has   "--upgrade says it upgraded" "YASS is upgraded.*chore: upgrade YASS" bash -c 'tr "\n" " " <<<"$1"' _ "$UPGRADE_OUT"
 hasnt "…not the adoption steps" "chore: adopt YASS" echo "$UPGRADE_OUT"
+has   "…and points to the release notes" "github.com/.*/releases" echo "$UPGRADE_OUT"
 has "--upgrade replaces them" "^name: yass-work" cat .agents/skills/yass-work/SKILL.md
+echo "changed" > .claude/skills/yass-work/SKILL.md
+bash "$ROOT/install.sh" . --upgrade >/dev/null
+has   "--upgrade refreshes Claude's copies without --claude" "^name: yass-work" cat .claude/skills/yass-work/SKILL.md
+newrepo "$W/e2e/noclaude"; bash "$ROOT/install.sh" . >/dev/null; bash "$ROOT/install.sh" . --upgrade >/dev/null
+[ ! -e .claude ] && ok "…and doesn't create them when there are none" || bad ".claude written by --upgrade"
+cd "$W/e2e/claude"
 has "--bin-dir copies the binary" "write  .*/bindir/yass" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
 [ -x "$W/e2e/bindir/yass" ] && ok "…and it runs" || bad "no binary in --bin-dir"
 has   "…and warns that another yass on PATH comes first" "is .*, not the one just installed" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
@@ -294,6 +301,12 @@ HOME="$W/e2e/home" bash "$ROOT/install.sh" . --global --claude >/dev/null
 [ -f "$W/e2e/home/.claude/skills/yass-work/SKILL.md" ] && ok "…and Claude's, with --claude" || bad "no user-level Claude playbooks"
 [ ! -e .agents ] && [ ! -e .claude ] && ok "…not in the repo" || bad "playbooks written into the repo"
 [ -f tools/yass/githooks/pre-commit ] && [ -d yass/changes ] && ok "…while the hook and yass/ still are" || bad "repo files missing"
+echo "changed" > "$W/e2e/home/.agents/skills/yass-work/SKILL.md"; echo "changed" > "$W/e2e/home/.claude/skills/yass-work/SKILL.md"
+GOUT="$(HOME="$W/e2e/home" bash "$ROOT/install.sh" . --upgrade)"
+has   "--upgrade without --global finds the user folder's playbooks" "upgrading the ones in your user folder" echo "$GOUT"
+has   "…and replaces them" "^name: yass-work" cat "$W/e2e/home/.agents/skills/yass-work/SKILL.md"
+has   "…and Claude's" "^name: yass-work" cat "$W/e2e/home/.claude/skills/yass-work/SKILL.md"
+[ ! -e .agents ] && [ ! -e .claude ] && ok "…without writing any into the repo" || bad "--upgrade wrote playbooks into the repo"
 newrepo "$W/e2e/bare"
 run_fail "new before init explains itself" y new "x"
 has      "…with the fix" "run .*yass init" y new "x"

@@ -58,7 +58,7 @@ go build -o bin/yass ./cmd/yass
 
 **In one line,** if you've read the script and trust it: `curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .` downloads the latest release for your machine and checks its checksum, but runs a script you haven't looked at.
 
-Then commit what it added: `git add -A && git commit -m "chore: adopt YASS"`. Add `--claude` for Claude Code, `--hooks` to turn on the hook, `--path <folder>` to keep the yass folder out of the repo, and `--global` to put the playbooks in your user folder instead of the repo. Re-run a newer release with `--upgrade` to update the playbooks and the hook; your changes are never touched.
+Then commit what it added: `git add -A && git commit -m "chore: adopt YASS"`. Add `--claude` for Claude Code, `--hooks` to turn on the hook, `--path <folder>` to keep the yass folder out of the repo, and `--global` to put the playbooks in your user folder instead of the repo. Re-run a newer release with `--upgrade` to update the binary, the playbooks and the hook, wherever they were installed; your changes are never touched ([upgrading](docs/install.md#upgrading)).
 
 Then talk to your agent:
 
