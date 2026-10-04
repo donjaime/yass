@@ -421,5 +421,40 @@ echo code >> app.txt; printf -- '- 2026-02-01-bravo\n' > yass/queue.md; git add 
 hasnt "…but not creating one" "heads-up" git commit -q -m "feat: code and a new queue"
 git config --unset core.hooksPath
 
+echo "12. blocked: naming changes is a dependency"
+newrepo "$W/e2e/deps"
+bash "$ROOT/install.sh" . >/dev/null
+mkb() { mkdir -p "$1"; printf -- '---\nblocked: %s\n---\n# %s\n\n## Goal\nIt.\n\n## Steps\n- [%s] Do it\n' "${3:-}" "$(basename "$1")" "${2:- }" > "$1/change.md"; }
+mkb yass/changes/2026-01-01-alpha /; mkb yass/changes/2026-02-01-bravo x "2026-01-01-alpha"
+mkb yass/changes/2026-03-01-big; mkb yass/changes/2026-03-01-big/2026-03-02-part
+mkb yass/changes/2026-04-01-multi x "yass/changes/2026-01-01-alpha, 2026-03-01-big/2026-03-02-part"
+git add -A; git commit -q -m "chore: adopt YASS"
+has   "waiting on a change that isn't done" "2026-02-01-bravo .*waiting on: 2026-01-01-alpha" y status
+run_fail "archive refuses while it waits" y archive bravo
+has   "…and says why" "waiting on 2026-01-01-alpha" y archive bravo
+has   "several, as a path and as change/piece" "2026-04-01-multi .*waiting on: 2026-01-01-alpha, 2026-03-01-big/2026-03-02-part" y status
+sub yass/changes/2026-01-01-alpha/change.md '^- \[/\]' '- [x]'
+hasnt "once it's done, nothing waits on it" "bravo .*(waiting|BLOCKED)" y status
+has   "…the detail view suggests clearing it" "clear .blocked:" y status bravo
+has   "…and still waiting on the rest" "2026-04-01-multi .*waiting on: 2026-03-01-big/2026-03-02-part$" y status
+run_ok "archive works once it's met" y archive bravo
+git commit -q -m "yass: archive bravo"
+y archive alpha >/dev/null; git commit -q -m "yass: archive alpha"
+hasnt "an archived dependency is met" "multi .*alpha" y status
+mkb yass/changes/2026-05-01-free x "waiting on 2026-03-01-big and legal sign-off"
+has   "free text, even mentioning a change, is a reason" "2026-05-01-free .*BLOCKED: waiting on 2026-03-01-big and legal" y status
+run_fail "…and archive refuses" y archive free
+mkb yass/changes/2026-05-01-free x "2026-09-09-nope"
+has   "a dated name that isn't a change warns" "blocked: '2026-09-09-nope' looks like a change" y status
+has   "…and stays a reason" "free .*BLOCKED: 2026-09-09-nope" y status
+rm -rf yass/changes/2026-05-01-free
+mkb yass/changes/2026-06-01-x "" "2026-06-02-y"; mkb yass/changes/2026-06-02-y "" "2026-06-01-x"
+has   "a cycle warns" "waits on itself: 2026-06-01-x → 2026-06-02-y → 2026-06-01-x" y status
+has   "…once" "^1$" bash -c 'yass status | grep -c "waits on itself"'
+rm -rf yass/changes/2026-06-0*
+mkdir -p svc; y init svc --no-agents >/dev/null; mkb svc/yass/changes/2026-07-01-api /
+mkb yass/changes/2026-07-02-ui "" "svc/yass/changes/2026-07-01-api"
+has   "dependencies work across yass folders" "2026-07-02-ui .*waiting on: 2026-07-01-api" y status
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

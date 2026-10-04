@@ -160,8 +160,10 @@ func statusLine(c *Change) string {
 	if s := c.state(); s != "in progress" {
 		bits = append(bits, s)
 	}
-	if b := c.blocked(); b != "" {
-		bits = append(bits, "BLOCKED: "+b)
+	if reason, waiting := c.blockedBy(); reason != "" {
+		bits = append(bits, "BLOCKED: "+reason)
+	} else if len(waiting) > 0 {
+		bits = append(bits, "waiting on: "+labels(waiting))
 	} else if n := c.nextStep(); n != "" {
 		bits = append(bits, "next: "+trunc(n, 70))
 	}
@@ -265,13 +267,22 @@ func showChange(r *Repo, c *Change) {
 			fmt.Printf("%s: %s\n", k, v)
 		}
 	}
+	if c.Deps != nil {
+		if _, waiting := c.blockedBy(); len(waiting) > 0 {
+			fmt.Printf("waiting on: %s\n", labels(waiting))
+		} else {
+			fmt.Printf("note: everything blocked: names is done or archived; clear `blocked:`\n")
+		}
+	}
 	done, total := c.progress()
 	fmt.Printf("files: %s   progress: %d/%d  (%s)\n", strings.Join(mdFiles(c.Path), ", "), done, total, c.state())
 	for _, p := range c.Pieces {
 		d, t := p.progress()
 		line := fmt.Sprintf("piece: %s  %d/%d  (%s)", p.Name, d, t, p.state())
-		if b := p.blocked(); b != "" {
-			line += "  BLOCKED: " + b
+		if reason, waiting := p.blockedBy(); reason != "" {
+			line += "  BLOCKED: " + reason
+		} else if len(waiting) > 0 {
+			line += "  waiting on: " + labels(waiting)
 		}
 		fmt.Println(line)
 	}
@@ -304,8 +315,10 @@ func cmdArchive(a *args) error {
 		return fmt.Errorf("%s is a piece of %s; pieces are archived with their change", c.Name, c.Parent.Name)
 	}
 	var problems []string
-	if b := c.blocked(); b != "" {
-		problems = append(problems, fmt.Sprintf("it's blocked: %s (clear `blocked:` when it isn't)", b))
+	if reason, waiting := c.blockedBy(); reason != "" {
+		problems = append(problems, fmt.Sprintf("it's blocked: %s (clear `blocked:` when it isn't)", reason))
+	} else if len(waiting) > 0 {
+		problems = append(problems, fmt.Sprintf("it's waiting on %s, which isn't done yet", labels(waiting)))
 	}
 	if opened := c.allOpen(); len(opened) > 0 {
 		msg := fmt.Sprintf("%d box(es) still open; finish them, or drop them with [-] and say why in Decisions:", len(opened))

@@ -23,13 +23,13 @@
 - [x] AC8 (R10) Given the README, the yass README template, `yass-status` and the solo-app example, when someone reads them, then they describe `queue.md` and `yass-status` uses it to answer "what's next?" — verify: manual: read them; tests/examples.sh passes
 
 ### M2
-- [ ] AC9 (R6, R7) Given change B with `blocked: <A's folder>` and A in progress, when `yass status` runs, then B shows `waiting on: <A>` — verify: tests/e2e.sh
-- [ ] AC10 (R6, R7) Given A then becomes done, or is archived, when `yass status` runs, then B shows no block, and `yass status B` suggests clearing `blocked:` — verify: tests/e2e.sh
-- [ ] AC11 (R6) Given `blocked:` naming two changes, as a path ending in a folder and as `<change>/<piece>`, when only one is done, then B is still waiting on the other — verify: tests/e2e.sh
-- [ ] AC12 (R6) Given `blocked:` with free text, including text that mentions a change, when `yass status` runs, then it shows `BLOCKED: <text>` as today — verify: tests/e2e.sh
-- [ ] AC13 (R8) Given B's boxes all done, when `yass archive B` runs, then it refuses while A isn't done and succeeds once A is — verify: tests/e2e.sh
-- [ ] AC14 (R9) Given `blocked:` naming a dated folder that doesn't exist, or A and B blocked on each other, when `yass status` runs, then it warns — verify: tests/e2e.sh
-- [ ] AC15 (R10) Given the README, `yass-work`, `yass-plan`, `yass-status` and the monorepo example, when someone reads them, then they describe `blocked: <change>`, and the monorepo example uses it — verify: manual: read them; tests/examples.sh passes
+- [x] AC9 (R6, R7) Given change B with `blocked: <A's folder>` and A in progress, when `yass status` runs, then B shows `waiting on: <A>` — verify: tests/e2e.sh
+- [x] AC10 (R6, R7) Given A then becomes done, or is archived, when `yass status` runs, then B shows no block, and `yass status B` suggests clearing `blocked:` — verify: tests/e2e.sh
+- [x] AC11 (R6) Given `blocked:` naming two changes, as a path ending in a folder and as `<change>/<piece>`, when only one is done, then B is still waiting on the other — verify: tests/e2e.sh
+- [x] AC12 (R6) Given `blocked:` with free text, including text that mentions a change, when `yass status` runs, then it shows `BLOCKED: <text>` as today — verify: tests/e2e.sh
+- [x] AC13 (R8) Given B's boxes all done, when `yass archive B` runs, then it refuses while A isn't done and succeeds once A is — verify: tests/e2e.sh
+- [x] AC14 (R9) Given `blocked:` naming a dated folder that doesn't exist, or A and B blocked on each other, when `yass status` runs, then it warns — verify: tests/e2e.sh
+- [x] AC15 (R10) Given the README, `yass-work`, `yass-plan`, `yass-status` and the monorepo example, when someone reads them, then they describe `blocked: <change>`, and the monorepo example uses it — verify: manual: read them; tests/examples.sh passes
 
 ## Pieces
 Order first, then dependencies. They're independent, but both change how `yass status` builds its lines, and order is the simpler of the two, so it settles the shape of that code first. Each piece ships its own docs and playbook edits.

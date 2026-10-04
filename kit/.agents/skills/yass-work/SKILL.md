@@ -23,6 +23,7 @@ description: Work on a YASS change you've been pointed at. Create it if it's new
    - if `yass root` is outside this repo, cite the code commits; see **Plans in another folder** below
 4. **Don't move the goalposts.** `prd.md`, `design.md`, plan text, a Goal and acceptance criteria (including dropping one) never change alongside code. If they're wrong, see **Intent changes mid-build** below.
 5. **Out of scope?** Note it in the Log, or file it wherever this repo tracks issues. Don't build it.
+   - **Waiting on another change?** Set `blocked: <its folder>` (several, comma-separated), say so in the Log, and stop. It clears itself once that change is done. A `yass status` line showing `waiting on:` means the same for the change you were pointed at: say so rather than building around it.
 6. **Verify** each criterion the way it says (`verify:`). Re-run checks rather than trusting earlier output. If the repo has a separate reviewer or evaluator step, use it. Only mark `[x]` what has evidence; anything without it stays `[/]`.
 7. **Before you stop,** append to `## Log`, so anyone can resume from the files alone:
    ```

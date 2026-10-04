@@ -13,7 +13,7 @@ description: Report where YASS work stands. Summarize progress across active cha
    - Decisions recorded in that time (the `yass-log` playbook does this well).
 2. **One screen:**
    1. Progress per change (boxes ticked, pieces done), one line each, in the order `yass status` lists them: a yass folder's `queue.md` ranks its changes, top first. Keep changes in progress apart from ones that are planned but `not started`, and name the items marked `[/]`: that's what's actively being worked on.
-   2. Blocked changes and the reason.
+   2. Blocked changes and the reason, and changes `waiting on:` others (say whether those are moving).
    3. Decisions made recently, with who made them, so the human can object.
    4. Changes `yass status` marks `done`: ready to archive.
    5. Stale changes: no activity in a while.

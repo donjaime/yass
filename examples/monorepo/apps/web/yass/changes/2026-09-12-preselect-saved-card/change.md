@@ -2,7 +2,7 @@
 platforms: [web]
 source: yass/changes/2026-09-01-three-tap-checkout (AC1, AC2)
 follows:
-blocked: waiting on services/payments/yass/changes/2026-09-10-saved-cards-api
+blocked: services/payments/yass/changes/2026-09-10-saved-cards-api
 ---
 # Preselect a saved card
 

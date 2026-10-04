@@ -92,6 +92,8 @@ type Change struct {
 	Meta                    map[string]string
 	Pieces                  []*Change
 	Large                   bool
+	Archived                bool
+	Deps                    []*Change // the changes blocked: names, when it names changes rather than a reason
 }
 
 func newChange(p string, root *Root, parent *Change) *Change {
@@ -173,6 +175,31 @@ func (c *Change) progress() (int, int) {
 }
 
 func (c *Change) blocked() string { return c.Meta["blocked"] }
+
+// met: a change others wait on is done (every box checked) or archived.
+func (c *Change) met() bool { return c.Archived || c.state() == "done" }
+
+// blockedBy is why a change can't proceed: a reason for a human, or the changes it's still waiting on.
+// A blocked: that names only changes that are all met blocks nothing.
+func (c *Change) blockedBy() (reason string, waiting []*Change) {
+	if c.Deps == nil {
+		return c.blocked(), nil
+	}
+	for _, d := range c.Deps {
+		if !d.met() {
+			waiting = append(waiting, d)
+		}
+	}
+	return "", waiting
+}
+
+func labels(cs []*Change) string {
+	var out []string
+	for _, c := range cs {
+		out = append(out, c.label())
+	}
+	return strings.Join(out, ", ")
+}
 
 func (c *Change) log() string { return commentRE.ReplaceAllString(section(c.Head, "Log"), "") }
 
@@ -434,6 +461,7 @@ func (r *Repo) load(root *Root, kind string, warn bool) []*Change {
 	for _, name := range subdirs(base) {
 		p := filepath.Join(base, name)
 		c := newChange(p, root, nil)
+		c.Archived = kind == "archive"
 		out = append(out, c)
 		if warn && c.Head == "" {
 			r.warn("%s: no change.md", r.disp(p))
@@ -446,7 +474,9 @@ func (r *Repo) load(root *Root, kind string, warn bool) []*Change {
 			if !isFile(filepath.Join(sp, "change.md")) {
 				continue
 			}
-			c.Pieces = append(c.Pieces, newChange(sp, root, c))
+			piece := newChange(sp, root, c)
+			piece.Archived = c.Archived
+			c.Pieces = append(c.Pieces, piece)
 			if !warn {
 				continue
 			}
@@ -474,8 +504,99 @@ func (r *Repo) check() {
 			r.warn("%s: follows '%s', which isn't in changes/ or archive/", r.disp(c.Path), f)
 		}
 	}
+	r.checkDeps()
 	r.checkQueues()
 	r.checkCode()
+}
+
+// checkDeps reads each blocked: that names changes (comma-separated single words: a folder name, a
+// path ending in one, or <change>/<piece>) into Deps, and warns about names that look like a change
+// but aren't one, and about changes that end up waiting on themselves.
+func (r *Repo) checkDeps() {
+	all := append(flatten(r.Active), flatten(r.Archived)...)
+	find := func(item string) *Change {
+		// By folder name, so a path keeps working after its change is archived; the path only
+		// picks between changes that share a name.
+		var hits, exact []*Change
+		for _, c := range all {
+			if c.Name == path.Base(item) {
+				hits = append(hits, c)
+				if strings.HasSuffix(filepath.ToSlash(c.Path), "/"+item) {
+					exact = append(exact, c)
+				}
+			}
+		}
+		if len(hits) == 1 {
+			return hits[0]
+		}
+		if len(exact) == 1 {
+			return exact[0]
+		}
+		return nil
+	}
+	for _, c := range r.everything() {
+		b := c.blocked()
+		if b == "" {
+			continue
+		}
+		var deps []*Change
+		names := true
+		for _, item := range strings.Split(b, ",") {
+			item = strings.TrimRight(strings.TrimSpace(item), "/")
+			if item == "" || strings.ContainsAny(item, " \t") {
+				names = false
+				continue
+			}
+			if d := find(item); d != nil {
+				deps = append(deps, d)
+				continue
+			}
+			names = false
+			if nameRE.MatchString(path.Base(item)) {
+				r.warn("%s: blocked: '%s' looks like a change, but there's no such change (or more than one; give its path)", r.disp(c.Path), item)
+			}
+		}
+		if names && len(deps) > 0 {
+			c.Deps = deps
+		}
+	}
+	reported := map[string]bool{}
+	for _, c := range r.everything() {
+		if loop := depLoop(c, c, nil, map[*Change]bool{}); loop != nil {
+			var names []string
+			for _, x := range loop {
+				names = append(names, x.label())
+			}
+			key := strings.Join(sortedCopy(names), " ")
+			if !reported[key] {
+				reported[key] = true
+				r.warn("%s: blocked: waits on itself: %s", r.disp(c.Path), strings.Join(append([]string{c.label()}, names...), " → "))
+			}
+		}
+	}
+}
+
+// depLoop returns the path of dependencies from cur back to start, if there is one.
+func depLoop(start, cur *Change, trail []*Change, seen map[*Change]bool) []*Change {
+	for _, d := range cur.Deps {
+		next := append(append([]*Change{}, trail...), d)
+		if d == start {
+			return next
+		}
+		if !seen[d] {
+			seen[d] = true
+			if loop := depLoop(start, d, next, seen); loop != nil {
+				return loop
+			}
+		}
+	}
+	return nil
+}
+
+func sortedCopy(s []string) []string {
+	out := append([]string{}, s...)
+	sort.Strings(out)
+	return out
 }
 
 // checkQueues warns about queue.md entries that aren't active changes in that yass folder, and repeats.

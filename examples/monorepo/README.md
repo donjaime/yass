@@ -12,6 +12,7 @@ Acme runs a marketplace from one repository. Three folders have a `yass/` folder
 
 Things to notice:
 - **Cross-team work is just links.** The root change's plan lists which team change delivers each criterion; each team change names the root criterion it delivers. Nobody copies anyone's plan.
+- **Web waits on payments.** The web change's `blocked:` names the payments change, so `yass status` shows `waiting on: 2026-09-10-saved-cards-api` until payments ticks its last box. Nobody has to remember to unblock it.
 - **Payments adopted YASS late.** Its `README.md` and `docs/api.md` describe what exists today. Its `yass/` folder only describes what it's changing.
 - **Ownership is your repo's business.** Use CODEOWNERS on `*/yass/` folders if you want reviews from the owning team.
 

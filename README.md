@@ -136,7 +136,7 @@ Tapping Save twice quickly saves one entry and never crashes.
 - Next: disable Save while saving, then the unit test.
 ```
 
-- **Frontmatter:** `platforms` is what "done" has to cover. `source` is the issue, alert or request it came from. `follows` names the archived change it follows up. `blocked` holds a reason when work can't continue. All optional.
+- **Frontmatter:** `platforms` is what "done" has to cover. `source` is the issue, alert or request it came from. `follows` names the archived change it follows up. `blocked` says why work can't continue: a reason for a human, or the [changes it waits on](#waiting-on-another-change). All optional.
 - **Intent:** the title, `## Goal` and `## Acceptance`. They change only in commits without code.
 - **Progress:** `## Steps` (your working checklist), `## Decisions` (`- <decision> - <why> (<who>)`) and `## Log` (ending in `- Next:`, which `yass status` shows). These change with the code.
 
@@ -162,6 +162,20 @@ A yass folder can hold a `queue.md`: the order you want to tackle its changes in
 - **Reordering is a decision,** so it's intent: commit it without code, and the hook checks that. Creating a queue alongside code is fine, like any new intent file.
 - **`yass archive` takes the change off the list** and stages that with the move.
 - **The queue informs whoever directs the work.** `yass-work` still works only on the change it's pointed at.
+
+### Waiting on another change
+
+When a change can't start until another is done, put that change's folder in `blocked:` (several, separated by commas):
+
+```yaml
+blocked: 2026-09-16-offline-queue
+# blocked: services/payments/yass/changes/2026-09-10-saved-cards-api, 2026-09-14-offline-sync/2026-09-16-offline-queue
+```
+
+- **A name is a change's folder,** a path ending in one, or `<change>/<piece>`. It can be in another yass folder; a path only matters when two changes share a name.
+- **It clears itself.** `yass status` shows `waiting on: <change>` until every change it names is done (every box checked) or archived, then nothing; `yass status <change>` suggests clearing it. `yass archive` refuses only while it's still waiting.
+- **Anything else is a reason** for a human, shown as `BLOCKED:` until someone clears it, as before. That includes text that mentions a change (`waiting on 2026-09-16-offline-queue and legal`).
+- `yass status` warns about a name that looks like a change folder but isn't one, and about changes that wait on each other.
 
 Checkboxes: `[ ]` not started, `[/]` in progress, `[x]` done, `[-]` dropped (say why in Decisions). Progress counts are just these boxes: `[/]` isn't done yet, and `[-]` doesn't count. The same boxes give each change its state in `yass status`: `not started` (no Log entry, nothing in progress or done), in progress, or `done` (every box done or dropped, ready to archive). Archived means finished.
 
@@ -197,7 +211,7 @@ path: ../my-project-plans        # relative to this file
 
 ## Monorepos
 
-Any folder named `yass/` with `changes/` or `archive/` inside counts, and so does any `yass.yaml`, so teams opt in by running `yass init services/payments`. `yass status` shows every `yass/` folder in the repo, and `yass new` puts a change in the nearest one to where you're standing. Cross-team work is links, not copies: a root change's plan names the team changes that deliver each criterion, and each team change names the criterion it delivers. Ownership and review rules belong in your CODEOWNERS. See [examples/monorepo](examples/monorepo).
+Any folder named `yass/` with `changes/` or `archive/` inside counts, and so does any `yass.yaml`, so teams opt in by running `yass init services/payments`. `yass status` shows every `yass/` folder in the repo, and `yass new` puts a change in the nearest one to where you're standing. Cross-team work is links, not copies: a root change's plan names the team changes that deliver each criterion, each team change names the criterion it delivers, and a team change that needs another team's work first names it in `blocked:`. Ownership and review rules belong in your CODEOWNERS. See [examples/monorepo](examples/monorepo).
 
 ### Folders that aren't yours
 

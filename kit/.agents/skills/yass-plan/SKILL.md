@@ -28,7 +28,7 @@ For anything bigger than one pull request:
 - `yass new "<piece title>" --in <change> [--goal "…"]` for each piece. Pieces nest one level deep.
 - One reviewable story per piece; the main branch stays green after each. Thin vertical slices beat layers; shared foundations go first.
 - In each piece's `## Acceptance`, name the plan criteria it delivers (`Delivers AC1, AC3`), plus anything specific to the piece.
-- Under `## Pieces` in `plan.md`, say what order they go in and why.
+- Under `## Pieces` in `plan.md`, say what order they go in and why. When a piece truly can't start before another is done, also set its `blocked:` to that piece's folder; `yass status` then shows what it's waiting on.
 - Small changes don't need pieces, or a plan: their `change.md` Steps and Acceptance are enough.
 
 ## Plan mode
