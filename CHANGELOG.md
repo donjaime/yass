@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 (2026-10-03)
 - **`queue.md`:** an optional file in a yass folder that ranks its changes, top first. `yass status` follows it (unlisted changes come after, oldest first) and warns about entries that aren't active changes there; `yass archive` takes the change off the list; the hook treats reordering alongside code as intent.
 - **Dependencies through `blocked:`:** naming one or more changes (a folder name, a path ending in one, or `<change>/<piece>`, comma-separated) means waiting on them. `yass status` shows `waiting on:` until they're done or archived, then nothing; `yass archive` refuses only while it's still waiting. Warnings for names that look like a change but aren't, and for changes that wait on each other.
 - **`ignore:` in `yass.yaml`:** folders or glob patterns (`examples/*`) whose `yass/` folders belong to something else. They're left out of `status`, `root`, `new` and the hook; from inside one, it's a project of its own. A `yass.yaml` without `path:` beside a `yass/` folder just holds settings.
