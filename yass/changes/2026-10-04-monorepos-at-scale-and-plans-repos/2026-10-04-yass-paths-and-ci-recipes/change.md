@@ -13,7 +13,7 @@ CI can skip plan-only changes with one gate job built on yass paths, with tested
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC1–AC3, AC57, AC58 in [plan.md](../plan.md)
+- [x] Delivers AC1–AC3, AC57, AC58 in [plan.md](../plan.md)
 - [x] `docs/monorepo.md` exists and the README's Monorepos section links to it
 
 ## Steps
@@ -24,7 +24,7 @@ CI can skip plan-only changes with one gate job built on yass paths, with tested
 - [x] `docs/monorepo.md`: why a job and not a path filter, GitHub gate job and `ci-ok`, a no-install diff check, merge queues, Bazel, other CI (AC4, AC5)
 - [x] This repo's `ci.yml`: the gate job (`go run ./cmd/yass`), `test`/`build` behind it, `ci-ok` aggregating, `merge_group` added (AC3)
 - [x] README: `yass paths` in the CLI list, link to docs/monorepo.md
-- [/] AC3 on GitHub: a plan-only push skips `test` and `build` and `ci-ok` passes; a code push runs them
+- [x] AC3 on GitHub: a plan-only push skips `test` and `build` and `ci-ok` passes; a code push runs them
 - [-] AC4: the Bazel recipe run against a real Bazel repo (moved to `2026-10-04-validate-the-ci-recipes-in-the-field`)
 - [-] AC5: a plan-only pull request through a real merge queue (moved to `2026-10-04-validate-the-ci-recipes-in-the-field`)
 - [x] Mark the Bazel and merge-queue sections of `docs/monorepo.md` as untested, with where to report results (AC57, AC58)
@@ -46,3 +46,8 @@ CI can skip plan-only changes with one gate job built on yass paths, with tested
 - Did: `yass paths` and `--only`; e2e §13 (10 checks); `docs/monorepo.md` with the GitHub gate-job recipe (plus `ci-ok`, a no-install variant, merge queues), Bazel and generic recipes; this repo's `ci.yml` gated the same way; README updated. Checks: go test, go vet, gofmt, e2e 263/263, examples. The gate step simulated locally: plan-only commit c7a9f90 → skip, code commit e6bdcbc → run, new branch → run. Workflow YAML parses.
 - Not yet verified (needs GitHub or tools not here): AC3 on a real push, AC4's Bazel recipe (no Bazel on this machine), AC5 through a real merge queue. The `merge_group.base_sha` field name comes from the webhook payload and isn't confirmed on GitHub's events page.
 - Next: when this branch is pushed, check one plan-only push and one code push in Actions (record the run links here), and consider requiring `ci-ok` on main. Try the Bazel recipe on a repo that uses Bazel, and a merge queue on a scratch repo, or record why not. Then mark AC3–AC5 and the Delivers box.
+### 2026-10-04 (claude)
+- Did: AC3 verified on GitHub after Jaime had me push main. Plan-only push d5ee308: run https://github.com/donjaime/yass/actions/runs/37235914174, `changes` passed, `test` and `build` skipped, `ci-ok` passed (26s). Code pushes ran everything: https://github.com/donjaime/yass/actions/runs/37235844602 (which caught a macOS-only bug, fixed in `2026-10-04-paths-that-don-t-exist-yet-compare-through-symlinks`) and https://github.com/donjaime/yass/actions/runs/37236153589 (all passed).
+- Did: AC4 and AC5 moved to `2026-10-04-validate-the-ci-recipes-in-the-field` (Jaime). In their place, AC57 and AC58: the docs now say the Bazel and merge-queue recipes are untested and where to report (8ad7aac); the GitHub recipe is the one these runs used, and the generic one is what e2e §13 checks.
+- Next: done. Its parent criteria (AC1–AC3, AC57, AC58) are ready to mark in a closing commit. `ci-ok` could be made the required check on main (Jaime's call, in GitHub settings).
+
