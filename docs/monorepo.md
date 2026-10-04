@@ -87,9 +87,13 @@ If you'd rather not install `yass` in CI, paste the output of `yass paths` into 
 
 ### Merge queues
 
+> **Not tested on a real merge queue yet.** This section follows GitHub's documentation; if you run it, please [tell us how it went](https://github.com/donjaime/yass/issues).
+
 A merge queue runs your checks again on the `merge_group` event. That event takes `branches` filters but no `paths` filters ([events that trigger workflows](https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#merge_group)), so a workflow can't skip itself there by path. The gate job above handles it: on `merge_group` it compares the queue's base with the merge group's commit, so a plan-only pull request still passes through the queue, but without running the build. It still takes its turn in the queue; it just doesn't hold the queue up for long.
 
 ### Bazel
+
+> **Not tested end to end yet.** If you try this on a Bazel repo, please [tell us how it went](https://github.com/donjaime/yass/issues).
 
 YASS folders hold Markdown and images, never build files, so:
 
@@ -98,6 +102,8 @@ YASS folders hold Markdown and images, never build files, so:
 - **Affected-target tools** ([bazel-diff](https://github.com/Tinder/bazel-diff), [target-determinator](https://github.com/bazel-contrib/target-determinator)) then find no affected targets for a plan-only change, so nothing builds. You can also skip running them at all with `yass paths --only` first, the same way as the gate job above.
 
 ### Any other CI
+
+Tried YASS with Buck, Pants, Nx, Buildkite, GitLab CI or something else? [Tell us](https://github.com/donjaime/yass/issues) what worked, and we'll list it here.
 
 The same three lines work in Buildkite, Jenkins, GitLab CI or a shell script. Decide on a base (the target branch's merge base for a change under review, the previous commit for a push) and:
 

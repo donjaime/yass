@@ -27,7 +27,7 @@ CI can skip plan-only changes with one gate job built on yass paths, with tested
 - [/] AC3 on GitHub: a plan-only push skips `test` and `build` and `ci-ok` passes; a code push runs them
 - [-] AC4: the Bazel recipe run against a real Bazel repo (moved to `2026-10-04-validate-the-ci-recipes-in-the-field`)
 - [-] AC5: a plan-only pull request through a real merge queue (moved to `2026-10-04-validate-the-ci-recipes-in-the-field`)
-- [ ] Mark the Bazel and merge-queue sections of `docs/monorepo.md` as untested, with where to report results (AC57, AC58)
+- [x] Mark the Bazel and merge-queue sections of `docs/monorepo.md` as untested, with where to report results (AC57, AC58)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
