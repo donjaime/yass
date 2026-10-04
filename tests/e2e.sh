@@ -545,5 +545,35 @@ git -C bare.git worktree add -q "$W/e2e/bare-wts/deep/feat2" -b feat2 main
 mkdir -p "$W/e2e/bare-wts/wt-plans/changes"
 has   "a bare clone's worktrees find plans next to another worktree" "bare-wts/wt-plans$" bash -c "cd '$W/e2e/bare-wts/deep/feat2' && yass root"
 
+echo "22. private team folders: kept out of git, found through git config"
+newrepo "$W/e2e/pv"; rm -rf "$W/e2e/pv-plans" "$W/e2e/pv-wts"
+y init --no-agents >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+run_ok "init --private sets up a team folder" y init private --path ../../pv-plans --private --no-agents
+y init private --path ../../pv-plans --private --no-agents >/dev/null
+[ -f private/yass.yaml ] && [ -d "$W/e2e/pv-plans/changes" ] && [ -L private/yass ] && ok "…writes yass.yaml, creates the plans and links private/yass/" || bad "private setup incomplete"
+has   "…adds /private to info/exclude once" "^1$" grep -c '^/private$' .git/info/exclude
+has   "…and private to git config yass.include once" "^private$" git config --get-all yass.include
+[ -z "$(git status --porcelain)" ] && ok "…and git status stays clean" || bad "git status: $(git status --porcelain)"
+has   "status from the top lists it" "pv-plans/$" y status
+has   "…and root" "pv-plans$" y root
+hasnt "paths leaves it out" "private" y paths
+P=$(cd private && yass new "Secret")
+case "$P" in "$W/e2e/pv-plans/changes/"*-secret) ok "new inside private/ lands in the private plans";; *) bad "new went to $P";; esac
+echo code >> app.txt; git add app.txt
+hasnt "the hook ignores it" "." env YASS_STRICT=1 yass hook
+git commit -q -m "feat: code"
+git worktree add -q "$W/e2e/pv-wts/deep/a" -b a
+cd "$W/e2e/pv-wts/deep/a"
+has   "a worktree elsewhere lists the private plans" "pv-plans$" y root
+[ -L private/yass ] && [ -z "$(git status --porcelain)" ] && ok "…gets its own private/yass link, and stays clean" || bad "worktree: $(ls -la private 2>&1) $(git status --porcelain)"
+P=$(cd private && yass new "From a worktree")
+case "$P" in "$W/e2e/pv-plans/changes/"*-from-a-worktree) ok "…and new inside its private/ lands there too";; *) bad "new went to $P";; esac
+cd "$W/e2e/pv"; git worktree add -q .claude/worktrees/n -b n
+has   "a nested worktree lists them too" "pv-plans$" bash -c 'cd .claude/worktrees/n && yass root'
+git config --add yass.include gone
+has   "an include with no yass.yaml anywhere warns, and says how to stop" "yass.include: 'gone' has no yass.yaml in any checkout .*git config --unset yass.include '.gone.'\)$" y status
+git config --unset yass.include '^gone$'
+run_fail "--private outside a folder refuses" y init --private --path ../x --no-agents
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

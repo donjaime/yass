@@ -10,11 +10,12 @@ import (
 
 // yassPaths are the repo-relative globs that are YASS's: each yass folder inside the repo, and each
 // yass.yaml. A plans folder outside the repo has none, and folders a yass.yaml ignores aren't YASS's.
-// The hook scripts in tools/yass/ aren't either: changing them is changing code.
+// The hook scripts in tools/yass/ aren't either: changing them is changing code. Nor are team
+// folders included through git config: git never sees them, so no commit contains them.
 func yassPaths(r *Repo) []string {
 	var out []string
 	for _, root := range r.Roots {
-		if !within(root.Dir, r.Top) {
+		if !within(root.Dir, r.Top) || root.Included { // git never sees an included folder
 			continue
 		}
 		if root.Dir == r.Top { // a plans repo (path: .): everything in it is YASS's

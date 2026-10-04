@@ -17,7 +17,8 @@ const usage = `yass: Yet Another Spec System. Planned work as change folders.
 usage: yass <command> [options]
 
   init [dir] [--path P] [--no-agents]   create the yass folder (in dir, for a team folder) and the
-                                        AGENTS.md section; --path writes a yass.yaml pointing to P
+       [--private]                      AGENTS.md section; --path writes a yass.yaml pointing to P;
+                                        --private keeps dir out of git, for this clone only
   new "<title>" [--large] [--design]    a change: a dated folder from a template
       [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]
   status [<change>] [--archived] [--strict]
@@ -40,7 +41,7 @@ type spec struct {
 }
 
 var specs = map[string]spec{
-	"init":     {[]string{"no-agents"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--no-agents]"},
+	"init":     {[]string{"no-agents", "private"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--no-agents] [--private]"},
 	"new":      {[]string{"large", "design"}, []string{"in", "goal", "platforms", "source", "follows"}, 1, 1, `yass new "<title>" [--large] [--design] [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]`},
 	"status":   {[]string{"archived", "strict"}, nil, 0, 1, "yass status [<change>] [--archived] [--strict]"},
 	"archive":  {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},

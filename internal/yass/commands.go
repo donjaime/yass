@@ -18,6 +18,11 @@ func cmdInit(a *args) error {
 	}
 	cfg := filepath.Join(base, ConfigName)
 	var made []string
+	if a.b["private"] {
+		if err := makePrivate(top, base, a.v["path"]); err != nil {
+			return err
+		}
+	}
 	if p := a.v["path"]; p != "" {
 		if isFile(cfg) {
 			c, _, err := loadConfig(cfg)
@@ -107,6 +112,35 @@ func cmdInit(a *args) error {
 	if len(made) == 0 {
 		fmt.Println("already set up")
 	}
+	return nil
+}
+
+// makePrivate keeps a team folder out of git for this clone only: its own line in the clone's
+// .git/info/exclude, and a yass.include entry in the clone's git config so YASS still finds it,
+// from every worktree. Nothing is written to the repo.
+func makePrivate(top, base, path string) error {
+	rel, err := filepath.Rel(top, base)
+	if err != nil || rel == "." || !within(base, top) {
+		return fmt.Errorf("--private needs a folder inside the repo: yass init <folder> --path <plans> --private")
+	}
+	if path == "" && !isFile(filepath.Join(base, ConfigName)) {
+		return fmt.Errorf("--private needs --path: the plans live outside the repo, and %s points to them", ConfigName)
+	}
+	if _, ok := git(top, "rev-parse", "--git-dir"); !ok {
+		return fmt.Errorf("--private needs a git repo")
+	}
+	rel = filepath.ToSlash(rel)
+	r := &Repo{Top: top}
+	r.exclude(base)
+	if out, _ := git(top, "config", "--get-all", "yass.include"); !contains(lines(strings.TrimSpace(out)), rel) {
+		if _, ok := git(top, "config", "--add", "yass.include", rel); !ok {
+			return fmt.Errorf("couldn't add %s to git config yass.include", rel)
+		}
+	}
+	for _, n := range r.Notes {
+		fmt.Printf("note: %s\n", n)
+	}
+	fmt.Printf("private: %s/ is kept out of git (.git/info/exclude) and found through git config yass.include, for this clone only\n", rel)
 	return nil
 }
 

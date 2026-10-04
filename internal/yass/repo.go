@@ -65,11 +65,13 @@ func repoTop(cwd string) string {
 
 // Root is one yass folder and the part of the repo it serves.
 type Root struct {
-	Dir    string   // the yass folder: changes/, archive/, README.md
-	Owner  string   // the folder it serves: where yass/ or the yass.yaml sits
-	Config string   // the yass.yaml that points to Dir, if any
-	Branch string   // the code branch that counts as merged, from yass.yaml
-	Queue  []string // the changes queue.md ranks, top first, as written
+	Dir    string // the yass folder: changes/, archive/, README.md
+	Owner  string // the folder it serves: where yass/ or the yass.yaml sits
+	Config string // the yass.yaml that points to Dir, if any
+	Branch string // the code branch that counts as merged, from yass.yaml
+	// Included: a team folder git never sees, named in the clone's git config (yass.include)
+	Included bool
+	Queue    []string // the changes queue.md ranks, top first, as written
 }
 
 // rank is a change's place in its yass folder's queue.md; changes it doesn't list come after all that it does.
@@ -397,9 +399,14 @@ func (r *Repo) findRoots() {
 		}
 	}
 
+	included, borrowed := r.includes(configs)
 	seen, claimed := map[string]bool{}, map[string]bool{}
-	r.Configs = sortedKeys(configs)
-	for _, f := range r.Configs {
+	for _, f := range sortedKeys(configs) {
+		if !included[f] {
+			r.Configs = append(r.Configs, f)
+		}
+	}
+	for _, f := range sortedKeys(configs) {
 		owner := filepath.Dir(f)
 		claimed[owner] = true
 		dir, cfg, unknown, err := configDir(f)
@@ -439,7 +446,13 @@ func (r *Repo) findRoots() {
 		}
 		if !seen[dir] {
 			seen[dir] = true
-			r.Roots = append(r.Roots, &Root{Dir: dir, Owner: owner, Config: f, Branch: strings.TrimSpace(cfg.Branch)})
+			r.Roots = append(r.Roots, &Root{Dir: dir, Owner: owner, Config: f, Branch: strings.TrimSpace(cfg.Branch), Included: included[f]})
+		}
+	}
+	for _, b := range borrowed {
+		if !seen[b.Dir] {
+			seen[b.Dir] = true
+			r.Roots = append(r.Roots, b)
 		}
 	}
 	for _, d := range sortedKeys(dirs) {

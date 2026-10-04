@@ -3,6 +3,7 @@ package yass
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -86,6 +87,52 @@ func (r *Repo) borrowConfig() {
 	}
 }
 
+// includes adds the yass.yaml of each team folder named in the clone's git config (yass.include):
+// folders git never sees, like a private/ kept out of the repo, so git's file list can't find them.
+// Git config is shared by every worktree of the clone; a worktree without the folder reads the
+// yass.yaml from another checkout, and gets its own copy of the folder (for the link) later.
+func (r *Repo) includes(configs map[string]bool) (included map[string]bool, borrowed []*Root) {
+	included = map[string]bool{}
+	out, ok := git(r.Top, "config", "--get-all", "yass.include")
+	if !ok {
+		return included, nil
+	}
+	var others []string
+	for _, rel := range lines(strings.TrimSpace(out)) {
+		rel = strings.Trim(filepath.Clean(filepath.FromSlash(strings.TrimSpace(rel))), string(filepath.Separator))
+		if rel == "" || rel == "." {
+			continue
+		}
+		owner := filepath.Join(r.Top, rel)
+		if f := filepath.Join(owner, ConfigName); isFile(f) {
+			configs[f], included[f] = true, true
+			continue
+		}
+		if others == nil {
+			others, _ = worktrees(r.Top)
+		}
+		found := false
+		for _, t := range others {
+			f := filepath.Join(t, rel, ConfigName)
+			if t == r.Top || !isFile(f) {
+				continue
+			}
+			dir, cfg, _, err := configDir(f)
+			if err != nil || !isDir(dir) {
+				continue
+			}
+			borrowed = append(borrowed, &Root{Dir: canon(dir), Owner: owner, Config: f, Branch: strings.TrimSpace(cfg.Branch), Included: true})
+			found = true
+			break
+		}
+		if !found {
+			r.warn("git config yass.include: '%s' has no %s in any checkout of this clone (to stop including it: git config --unset yass.include '^%s$')",
+				filepath.ToSlash(rel), ConfigName, regexp.QuoteMeta(filepath.ToSlash(rel)))
+		}
+	}
+	return included, borrowed
+}
+
 // link keeps a yass/ symlink next to each yass.yaml whose folder is outside the repo, so people,
 // editors and agents find the plans at yass/ as they would anywhere else. It's ignored through the
 // clone's info/exclude, which every worktree shares and nobody commits. Nothing depends on it:
@@ -116,6 +163,9 @@ func (r *Repo) link() {
 				r.note("couldn't repoint %s/ to %s: %v", r.disp(ln), root.Dir, err)
 				continue
 			}
+		}
+		if root.Included { // a worktree's own copy of the team folder, which git never creates
+			os.MkdirAll(root.Owner, 0o755)
 		}
 		if err := os.Symlink(root.Dir, ln); err != nil {
 			r.note("couldn't link %s/ to %s (%v); `yass root` prints where the plans are", r.disp(ln), root.Dir, err)
