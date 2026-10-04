@@ -35,8 +35,8 @@ checksum:
   name_template: checksums.txt
   algorithm: sha256
 
-changelog:
-  disable: true # release notes come from CHANGELOG.md (see release.yml)
+# Release notes come from CHANGELOG.md, passed in with --release-notes (see release.yml). Don't set
+# changelog.disable: it also makes GoReleaser ignore --release-notes.
 
 release:
   github: { owner: donjaime, name: yass }
