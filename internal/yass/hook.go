@@ -13,9 +13,9 @@ import (
 // The optional pre-commit check: progress travels with code; intent changes get their own commit.
 //
 // It warns when one commit changes code and also edits existing intent in a yass folder: prd.md,
-// design.md, plan.md beyond marking boxes, or a change's title, Goal or Acceptance. Writing new
-// intent files is fine. Marking boxes and appending to Log and Decisions alongside code is expected
-// and never flagged. Editing the archive is always flagged: it's append-only.
+// design.md, plan.md beyond marking boxes, a yass folder's queue.md, or a change's title, Goal or
+// Acceptance. Writing new intent files is fine. Marking boxes and appending to Log and Decisions
+// alongside code is expected and never flagged. Editing the archive is always flagged: it's append-only.
 
 var (
 	hookBoxRE = regexp.MustCompile(`^(\s*[-*+]\s+)\[[ xX/]\]`) // starting, ticking or unticking is progress; dropping ([-]) is not
@@ -25,7 +25,7 @@ var (
 type entry struct{ status, path, oldPath string }
 
 type place struct {
-	kind   string // "changes", "archive", "meta", or "" for code
+	kind   string // "changes", "archive", "queue", "meta", or "" for code
 	fname  string
 	folder string // for the archive: the archived change's folder
 }
@@ -70,6 +70,9 @@ func (h *hook) where(p string) place {
 			continue
 		}
 		rest := strings.Split(strings.TrimPrefix(p, pre+"/"), "/")
+		if len(rest) == 1 && rest[0] == QueueName {
+			return place{kind: "queue", fname: QueueName}
+		}
 		if len(rest) >= 2 && (rest[0] == "changes" || rest[0] == "archive") {
 			return place{rest[0], parts[len(parts)-1], pre + "/" + rest[0] + "/" + rest[1]}
 		}
@@ -83,6 +86,9 @@ func (h *hook) where(p string) place {
 			}
 			return place{parts[i+1], parts[len(parts)-1], folder}
 		}
+	}
+	if len(parts) >= 2 && parts[len(parts)-2] == "yass" && parts[len(parts)-1] == QueueName {
+		return place{kind: "queue", fname: QueueName}
 	}
 	if len(parts) >= 2 && parts[len(parts)-2] == "yass" && parts[len(parts)-1] == "README.md" {
 		return place{kind: "meta"}
@@ -134,6 +140,12 @@ func (h *hook) check(entries []entry, oldRef, newRef string) []string {
 			continue
 		}
 		fromChanges := strings.HasPrefix(e.status, "R") && h.where(e.oldPath).kind == "changes"
+		if pl.kind == "queue" {
+			if hasCode && e.status[0] != 'A' {
+				out = append(out, e.path+": queue.md is intent; reorder in a commit without code")
+			}
+			continue
+		}
 		if pl.kind == "archive" {
 			addedToOld := false
 			if e.status[0] == 'A' && oldRef != "" {

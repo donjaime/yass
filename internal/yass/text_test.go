@@ -5,6 +5,15 @@ import (
 	"testing"
 )
 
+func TestParseQueue(t *testing.T) {
+	got := parseQueue("# Queue\nTop first.\n\n1. 2026-10-02-a — a note\n- `2026-09-14-b`\n* [2026-09-01-c](changes/2026-09-01-c/) - linked\n" +
+		"10) 2026-08-01-d/\n<!-- - 2026-01-01-hidden -->\nprose with 2026-07-01-e in it\n  + 2026-10-02-a\n")
+	want := []string{"2026-10-02-a", "2026-09-14-b", "2026-09-01-c", "2026-08-01-d", "2026-10-02-a"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("parseQueue = %q, want %q", got, want)
+	}
+}
+
 func TestBoxes(t *testing.T) {
 	got := boxes("- [ ] a\n* [x] b\n+ [X] c\n- [/] d\n- [-] e\n- [ ] \n<!-- - [ ] hidden -->\n- [?] f\n")
 	want := []box{{" ", "a"}, {"x", "b"}, {"x", "c"}, {"/", "d"}, {"-", "e"}}

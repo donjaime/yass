@@ -94,11 +94,13 @@ yass hook [--range A..B]        the optional hook's check, for CI
 `yass status` looks like this:
 
 ```
+2026-10-02-fix-double-tap-save      1/4  next: disable Save while saving, then the unit test.
 2026-09-14-offline-sync  (large)   5/16  next: offline-queue first; sync-badge needs it.
   ├ 2026-09-16-offline-queue        4/8  next: drain on `online` for the web, then batch the drain.
   └ 2026-09-24-sync-badge           0/5  BLOCKED: does the web get the badge too?
-2026-10-02-fix-double-tap-save      1/4  next: disable Save while saving, then the unit test.
 ```
+
+Changes are listed oldest first, unless the yass folder has a [`queue.md`](#the-queue) saying what order to tackle them in.
 
 The CLI is one Go binary with no runtime dependencies. It reads the files and moves folders; it never commits, branches or merges.
 
@@ -143,6 +145,23 @@ A large change has a slimmer `change.md` (goal, decisions, log) and adds:
 - **`plan.md`:** approach, acceptance criteria per milestone (`AC1 (R1) Given … — verify: …`), the order of the pieces, validation.
 - **`design.md`** (optional): context, at least two options, the decision and who made it, rollback.
 - **Pieces:** PR-sized changes in their own dated folders inside it. Each names the plan criteria it delivers.
+
+### The queue
+
+A yass folder can hold a `queue.md`: the order you want to tackle its changes in, top first. It's optional, and it doesn't have to list everything.
+
+```markdown
+# Queue
+
+1. 2026-10-02-fix-double-tap-save — a crash; before more sync work
+2. 2026-09-14-offline-sync
+```
+
+- **Each list item names a change folder** (`1.` or `-`, plain, in backticks, or as a link). Anything after the name is a note. Headings and prose are ignored.
+- **`yass status` follows it:** listed changes first, in order, then the rest, oldest first. It warns about a name that isn't an active change there, an archived change, a piece (a large change's `plan.md` orders its pieces), or a repeat.
+- **Reordering is a decision,** so it's intent: commit it without code, and the hook checks that. Creating a queue alongside code is fine, like any new intent file.
+- **`yass archive` takes the change off the list** and stages that with the move.
+- **The queue informs whoever directs the work.** `yass-work` still works only on the change it's pointed at.
 
 Checkboxes: `[ ]` not started, `[/]` in progress, `[x]` done, `[-]` dropped (say why in Decisions). Progress counts are just these boxes: `[/]` isn't done yet, and `[-]` doesn't count. The same boxes give each change its state in `yass status`: `not started` (no Log entry, nothing in progress or done), in progress, or `done` (every box done or dropped, ready to archive). Archived means finished.
 

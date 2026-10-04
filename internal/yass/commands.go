@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -194,6 +195,9 @@ func cmdStatus(a *args) (int, error) {
 				items = append(items, c)
 			}
 		}
+		if !archived {
+			sort.SliceStable(items, func(i, j int) bool { return root.rank(items[i].Name) < root.rank(items[j].Name) })
+		}
 		if multi {
 			fmt.Printf("%s/\n", r.disp(root.Dir))
 		}
@@ -333,6 +337,22 @@ func cmdArchive(a *args) error {
 		git(c.Root.Dir, "add", "-A", "--", c.Path, dest)
 	}
 	fmt.Printf("archived %s\n", r.disp(dest))
+	if q := filepath.Join(c.Root.Dir, QueueName); isFile(q) {
+		cur := read(q)
+		var keep []string
+		for _, l := range strings.SplitAfter(cur, "\n") {
+			if name, ok := queueEntry(strings.TrimRight(l, "\r\n")); !ok || name != c.Name {
+				keep = append(keep, l)
+			}
+		}
+		if next := strings.Join(keep, ""); next != cur {
+			if err := write(q, next); err != nil {
+				return err
+			}
+			git(c.Root.Dir, "add", "--", q)
+			fmt.Printf("took it off %s\n", r.disp(q))
+		}
+	}
 	commit := fmt.Sprintf("git commit -m \"yass: archive %s\"", c.Name)
 	if out, ok := git(c.Root.Dir, "rev-parse", "--show-toplevel"); ok {
 		if gitTop := canon(filepath.FromSlash(strings.TrimSpace(out))); gitTop != r.Top {

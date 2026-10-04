@@ -65,10 +65,21 @@ func repoTop(cwd string) string {
 
 // Root is one yass folder and the part of the repo it serves.
 type Root struct {
-	Dir    string // the yass folder: changes/, archive/, README.md
-	Owner  string // the folder it serves: where yass/ or the yass.yaml sits
-	Config string // the yass.yaml that points to Dir, if any
-	Branch string // the code branch that counts as merged, from yass.yaml
+	Dir    string   // the yass folder: changes/, archive/, README.md
+	Owner  string   // the folder it serves: where yass/ or the yass.yaml sits
+	Config string   // the yass.yaml that points to Dir, if any
+	Branch string   // the code branch that counts as merged, from yass.yaml
+	Queue  []string // the changes queue.md ranks, top first, as written
+}
+
+// rank is a change's place in its yass folder's queue.md; changes it doesn't list come after all that it does.
+func (root *Root) rank(name string) int {
+	for i, n := range root.Queue {
+		if n == name {
+			return i
+		}
+	}
+	return len(root.Queue)
 }
 
 type fileBox struct{ file, mark, text string }
@@ -236,6 +247,7 @@ func findRepo() *Repo {
 func loadRepo() *Repo {
 	r := findRepo()
 	for _, root := range r.Roots {
+		root.Queue = parseQueue(readText(filepath.Join(root.Dir, QueueName)))
 		r.Active = append(r.Active, r.load(root, "changes", true)...)
 		r.Archived = append(r.Archived, r.load(root, "archive", false)...)
 	}
@@ -462,7 +474,44 @@ func (r *Repo) check() {
 			r.warn("%s: follows '%s', which isn't in changes/ or archive/", r.disp(c.Path), f)
 		}
 	}
+	r.checkQueues()
 	r.checkCode()
+}
+
+// checkQueues warns about queue.md entries that aren't active changes in that yass folder, and repeats.
+func (r *Repo) checkQueues() {
+	for _, root := range r.Roots {
+		where := r.disp(filepath.Join(root.Dir, QueueName))
+		active, archived, pieces := map[string]bool{}, map[string]bool{}, map[string]string{}
+		for _, c := range r.Active {
+			if c.Root == root {
+				active[c.Name] = true
+				for _, p := range c.Pieces {
+					pieces[p.Name] = c.Name
+				}
+			}
+		}
+		for _, c := range r.Archived {
+			if c.Root == root {
+				archived[c.Name] = true
+			}
+		}
+		seen := map[string]bool{}
+		for _, name := range root.Queue {
+			switch {
+			case seen[name]:
+				r.warn("%s: '%s' is listed more than once", where, name)
+			case active[name]:
+			case archived[name]:
+				r.warn("%s: '%s' is archived; take it off the list", where, name)
+			case pieces[name] != "":
+				r.warn("%s: '%s' is a piece of %s; its plan.md orders its pieces", where, name, pieces[name])
+			default:
+				r.warn("%s: '%s' isn't a change in %s", where, name, r.disp(filepath.Join(root.Dir, "changes")))
+			}
+			seen[name] = true
+		}
+	}
 }
 
 // checkCode checks the code commits that boxes cite ("— code: a1b2c3d"): each must be a commit in

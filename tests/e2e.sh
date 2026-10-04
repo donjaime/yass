@@ -382,5 +382,44 @@ has   "an ignore outside the folder warns" "'../elsewhere' isn't inside" y statu
 has   "…so does the folder itself" "'\.' is the folder yass.yaml is in" y status
 has   "…and one that matches nothing" "'missing' doesn't match a folder" y status
 
+echo "11. queue.md: the order to tackle changes in"
+newrepo "$W/e2e/queue"
+bash "$ROOT/install.sh" . >/dev/null
+mk() { mkdir -p "$1"; printf '# %s\n\n## Goal\nIt.\n\n## Steps\n- [%s] Do it\n' "$(basename "$1")" "${2:- }" > "$1/change.md"; }
+mk yass/changes/2026-01-01-alpha; mk yass/changes/2026-02-01-bravo; mk yass/changes/2026-03-01-charlie; mk yass/changes/2026-04-01-delta x
+mk yass/changes/2026-03-01-charlie/2026-03-02-piece; mk yass/archive/2025-12-01-old x
+git add -A; git commit -q -m "chore: adopt YASS"
+order() { yass status | grep -oE '^ *[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z]+' | tr -d ' ' | paste -sd, -; }
+has   "without queue.md, changes are in date order" "^2026-01-01-alpha,2026-02-01-bravo,2026-03-01-charlie,2026-04-01-delta$" order
+printf '# Queue\nTop first.\n\n1. 2026-03-01-charlie — first\n2. `2026-01-01-alpha`\n' > yass/queue.md
+has   "queue.md order first, then the rest by date" "^2026-03-01-charlie,2026-01-01-alpha,2026-02-01-bravo,2026-04-01-delta$" order
+hasnt "…and nothing warns" "warning" y status
+git add -A; git commit -q -m "yass: queue"
+printf '\n- 2026-09-09-nope\n- 2025-12-01-old\n- 2026-03-02-piece\n- 2026-01-01-alpha\n' >> yass/queue.md
+has   "an unknown entry warns" "'2026-09-09-nope' isn't a change in yass/changes" y status
+has   "…an archived one" "'2025-12-01-old' is archived" y status
+has   "…a piece" "'2026-03-02-piece' is a piece of 2026-03-01-charlie" y status
+has   "…and a repeat" "'2026-01-01-alpha' is listed more than once" y status
+run_fail "…and --strict fails" y status --strict
+git checkout -q yass/queue.md
+mkdir -p svc && y init svc --no-agents >/dev/null; mk svc/yass/changes/2026-01-01-one; mk svc/yass/changes/2026-02-01-two
+printf -- '- 2026-02-01-two\n' > svc/yass/queue.md
+has   "each yass folder follows its own queue.md" "2026-02-01-two,2026-01-01-one" order
+hasnt "…without warnings across folders" "warning" y status
+rm -rf svc
+printf '1. 2026-04-01-delta — done, ready\n2. 2026-03-01-charlie — first\n3. `2026-01-01-alpha`\n' > yass/queue.md
+git add -A; git commit -q -m "yass: rank delta"
+has   "archive takes a change off queue.md" "took it off yass/queue.md" y archive delta
+has   "…keeping the other lines" "^2. 2026-03-01-charlie — first$" head -1 yass/queue.md
+has   "…and stages the edit with the move" "^M  yass/queue.md$" git status --short
+git commit -q -m "yass: archive delta"
+git config core.hooksPath tools/yass/githooks
+echo code >> app.txt; printf '1. `2026-01-01-alpha`\n2. 2026-03-01-charlie\n' > yass/queue.md; git add -A
+has   "the hook flags reordering queue.md with code" "queue.md is intent" git commit -q -m "feat: sneaky reorder"
+git rm -q yass/queue.md; git commit -q -m "yass: drop queue"
+echo code >> app.txt; printf -- '- 2026-02-01-bravo\n' > yass/queue.md; git add -A
+hasnt "…but not creating one" "heads-up" git commit -q -m "feat: code and a new queue"
+git config --unset core.hooksPath
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

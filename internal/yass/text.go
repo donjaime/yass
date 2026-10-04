@@ -26,7 +26,34 @@ var (
 	agentsRE    = regexp.MustCompile(`(?s)<!-- yass:begin.*?<!-- yass:end -->`)
 	codeRefRE   = regexp.MustCompile(`\s*(?:—|-{1,2})?\s*\bcode:\s*`)
 	shaRE       = regexp.MustCompile(`^[0-9a-fA-F]{7,40}$`)
+	queueRE     = regexp.MustCompile(`^\s*(?:[-*+]|\d+[.)])\s+(?:\[([^\]]+)\]\([^)]*\)|(\S+))`)
 )
+
+// QueueName is the optional file in a yass folder that ranks its changes, top first.
+const QueueName = "queue.md"
+
+// queueEntry is the change a queue.md line names: the first word of a list item ("- name",
+// "1. name"), in backticks or as a link's text if it is one. Anything after it is a note.
+func queueEntry(line string) (string, bool) {
+	m := queueRE.FindStringSubmatch(line)
+	if m == nil {
+		return "", false
+	}
+	name := m[1] + m[2]
+	name = strings.TrimRight(strings.Trim(name, "`"), "/")
+	return name, name != ""
+}
+
+// parseQueue lists the changes a queue.md names, in order, duplicates included.
+func parseQueue(text string) []string {
+	var out []string
+	for _, l := range lines(commentRE.ReplaceAllString(text, "")) {
+		if name, ok := queueEntry(l); ok {
+			out = append(out, name)
+		}
+	}
+	return out
+}
 
 // Box marks: ' ' not started, '/' in progress, 'x' done, '-' dropped.
 const (

@@ -13,14 +13,14 @@
 
 ## Acceptance
 ### M1
-- [ ] AC1 (R1, R2) Given a `queue.md` listing two changes in the reverse of their date order, when `yass status` runs, then they're listed in queue order, followed by the unlisted changes in date order — verify: tests/e2e.sh
-- [ ] AC2 (R1) Given a `queue.md` with a heading, prose, ordered and unordered items, and ` — note` suffixes, when `yass status` runs, then only the items' folder names affect the order and nothing warns — verify: unit test for the parser
-- [ ] AC3 (R2) Given no `queue.md`, when `yass status` runs, then the output is the same as before this change — verify: tests/e2e.sh and tests/examples.sh pass unchanged
-- [ ] AC4 (R3) Given a `queue.md` naming an unknown folder, an archived change, a piece, and one change twice, when `yass status` runs, then each gets a warning — verify: tests/e2e.sh
-- [ ] AC5 (R2) Given a repo with two yass folders, each with its own `queue.md`, when `yass status` runs, then each folder's changes follow its own file — verify: tests/e2e.sh
-- [ ] AC6 (R4) Given a ranked change that's done, when `yass archive` runs, then its line is gone from `queue.md`, the other lines are untouched, and the edit is staged with the move — verify: tests/e2e.sh
-- [ ] AC7 (R5) Given a commit with code that reorders an existing `queue.md`, when the hook runs, then it flags `queue.md` as intent; a commit that creates `queue.md` with code isn't flagged — verify: tests/e2e.sh
-- [ ] AC8 (R10) Given the README, the yass README template, `yass-status` and the solo-app example, when someone reads them, then they describe `queue.md` and `yass-status` uses it to answer "what's next?" — verify: manual: read them; tests/examples.sh passes
+- [x] AC1 (R1, R2) Given a `queue.md` listing two changes in the reverse of their date order, when `yass status` runs, then they're listed in queue order, followed by the unlisted changes in date order — verify: tests/e2e.sh
+- [x] AC2 (R1) Given a `queue.md` with a heading, prose, ordered and unordered items, and ` — note` suffixes, when `yass status` runs, then only the items' folder names affect the order and nothing warns — verify: unit test for the parser
+- [x] AC3 (R2) Given no `queue.md`, when `yass status` runs, then the output is the same as before this change — verify: tests/e2e.sh and tests/examples.sh pass unchanged
+- [x] AC4 (R3) Given a `queue.md` naming an unknown folder, an archived change, a piece, and one change twice, when `yass status` runs, then each gets a warning — verify: tests/e2e.sh
+- [x] AC5 (R2) Given a repo with two yass folders, each with its own `queue.md`, when `yass status` runs, then each folder's changes follow its own file — verify: tests/e2e.sh
+- [x] AC6 (R4) Given a ranked change that's done, when `yass archive` runs, then its line is gone from `queue.md`, the other lines are untouched, and the edit is staged with the move — verify: tests/e2e.sh
+- [x] AC7 (R5) Given a commit with code that reorders an existing `queue.md`, when the hook runs, then it flags `queue.md` as intent; a commit that creates `queue.md` with code isn't flagged — verify: tests/e2e.sh
+- [x] AC8 (R10) Given the README, the yass README template, `yass-status` and the solo-app example, when someone reads them, then they describe `queue.md` and `yass-status` uses it to answer "what's next?" — verify: manual: read them; tests/examples.sh passes
 
 ### M2
 - [ ] AC9 (R6, R7) Given change B with `blocked: <A's folder>` and A in progress, when `yass status` runs, then B shows `waiting on: <A>` — verify: tests/e2e.sh
