@@ -27,6 +27,7 @@ YASS works at a large company with one big monorepo, many teams and expensive CI
 - Branch view stays on by default everywhere, after reviewing its cost (a local walk of unmerged branches limited to YASS paths, plus reading plan files at branch tips) - safeguards: no on-demand downloads in partial clones, commit-graph recommended in the docs, freshness shown (Jaime, 2026-10-04)
 - AC4 and AC5 dropped (`[-]`) here, which lowers this change's bar: neither a Bazel repo nor a GitHub merge queue (it needs an organization-owned repo) is available yet. Testing both moves to `2026-10-04-validate-the-ci-recipes-in-the-field`, along with inviting reports for other CI systems. In their place, AC57 and AC58 hold the docs to saying plainly what's tested and what isn't; R2 and R3 are reworded to match (Jaime, 2026-10-04)
 
+- AC12 ("ready to mark" in `yass status`) dropped here: `2026-10-04-stacked-prs-and-squash-merges` takes over counting delivered parent criteria (its R5, R6), so piece 5 keeps only the rule that pieces own their files and the hook's heads-up. design.md §5 notes it (Jaime, 2026-10-04)
 ## Log
 <!-- Progress. Change-level notes; each piece keeps its own Log.
 ### YYYY-MM-DD (<who>)

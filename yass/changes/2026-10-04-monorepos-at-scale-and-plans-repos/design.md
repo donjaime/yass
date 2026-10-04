@@ -76,7 +76,7 @@ The hook appends the trailer with `git interpret-trailers`. It never overwrites 
 
 **Decision: (d)** (Jaime, 2026-10-04, after discussing the trade-offs with trackers). The conflicts come from the plan's shape, with pieces on parallel branches ticking the same parent `plan.md` and appending to the parent's Log, so the fix is the shape, not git machinery.
 - **The rule:** a branch working on a piece changes only that piece's folder (and code). The parent's `prd.md`, `plan.md`, `design.md` and `change.md` change only in intent commits, or in a closing commit with no code.
-- **Parent criteria:** a piece names what it delivers in a box like `Delivers AC1, AC3–AC5`. `yass status <change>` shows a parent criterion as *ready to mark* once every piece delivering it is done. Someone marks the parent's boxes in a closing commit with no code, on main, so there's no parallel contention.
+- **Parent criteria:** a piece names what it delivers in a box like `Delivers AC1, AC3–AC5`. Superseded on 2026-10-04 by `2026-10-04-stacked-prs-and-squash-merges` (R5, R6): a delivered criterion counts as done without a closing commit per piece, and `yass archive` marks it. Until that ships, parent boxes are marked in a closing commit with no code, on main, so there's no parallel contention.
 - **The hook** gives a heads-up when a commit with code touches the parent's files, or more than one piece's folder.
 - **What still conflicts,** and should: two people on the same piece, reorders in `queue.md` (intent), and two archive commits that each remove an adjacent `queue.md` line (rare, and resolved in seconds).
 

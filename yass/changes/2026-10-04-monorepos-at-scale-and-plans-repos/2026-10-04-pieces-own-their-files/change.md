@@ -13,7 +13,7 @@ Parallel branches on different pieces of one change never touch the same YASS fi
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC10–AC14 in [plan.md](../plan.md)
+- [ ] Delivers AC10, AC11, AC13, AC14 in [plan.md](../plan.md)
 - [ ] The README's section on large changes explains the rule and closing commits
 
 ## Steps
