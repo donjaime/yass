@@ -24,15 +24,25 @@ func git(dir string, args ...string) (string, bool) {
 	return string(out), err == nil
 }
 
-// canon makes a path absolute and resolves symlinks when it exists, so paths compare reliably.
+// canon makes a path absolute and resolves symlinks, so paths compare reliably. For a path that
+// doesn't exist yet, it resolves the deepest folder that does and keeps the rest: on macOS, a new
+// folder under /var/... must still compare as inside a repo under /private/var/....
 func canon(p string) string {
 	if a, err := filepath.Abs(p); err == nil {
 		p = a
 	}
-	if r, err := filepath.EvalSymlinks(p); err == nil {
-		return r
+	p = filepath.Clean(p)
+	for dir, rest := p, ""; ; {
+		if r, err := filepath.EvalSymlinks(dir); err == nil {
+			return filepath.Join(r, rest)
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return p
+		}
+		rest = filepath.Join(filepath.Base(dir), rest)
+		dir = parent
 	}
-	return filepath.Clean(p)
 }
 
 func within(p, dir string) bool {

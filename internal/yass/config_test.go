@@ -47,3 +47,15 @@ func TestConfigTextRoundTrips(t *testing.T) {
 		t.Errorf("unknown = %v", unknown)
 	}
 }
+
+func TestCanonResolvesMissingPathsThroughSymlinks(t *testing.T) {
+	real := t.TempDir()
+	link := filepath.Join(t.TempDir(), "link")
+	if err := os.Symlink(real, link); err != nil {
+		t.Skip("no symlinks here")
+	}
+	want := filepath.Join(canon(real), "not", "there")
+	if got := canon(filepath.Join(link, "not", "there")); got != want {
+		t.Errorf("canon = %q, want %q", got, want)
+	}
+}

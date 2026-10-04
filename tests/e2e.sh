@@ -558,7 +558,7 @@ has   "status from the top lists it" "pv-plans/$" y status
 has   "…and root" "pv-plans$" y root
 hasnt "paths leaves it out" "private" y paths
 P=$(cd private && yass new "Secret")
-case "$P" in "$W/e2e/pv-plans/changes/"*-secret) ok "new inside private/ lands in the private plans";; *) bad "new went to $P";; esac
+case "$P" in */e2e/pv-plans/changes/*-secret) ok "new inside private/ lands in the private plans";; *) bad "new went to $P";; esac
 echo code >> app.txt; git add app.txt
 hasnt "the hook ignores it" "." env YASS_STRICT=1 yass hook
 git commit -q -m "feat: code"
@@ -567,7 +567,7 @@ cd "$W/e2e/pv-wts/deep/a"
 has   "a worktree elsewhere lists the private plans" "pv-plans$" y root
 [ -L private/yass ] && [ -z "$(git status --porcelain)" ] && ok "…gets its own private/yass link, and stays clean" || bad "worktree: $(ls -la private 2>&1) $(git status --porcelain)"
 P=$(cd private && yass new "From a worktree")
-case "$P" in "$W/e2e/pv-plans/changes/"*-from-a-worktree) ok "…and new inside its private/ lands there too";; *) bad "new went to $P";; esac
+case "$P" in */e2e/pv-plans/changes/*-from-a-worktree) ok "…and new inside its private/ lands there too";; *) bad "new went to $P";; esac
 cd "$W/e2e/pv"; git worktree add -q .claude/worktrees/n -b n
 has   "a nested worktree lists them too" "pv-plans$" bash -c 'cd .claude/worktrees/n && yass root'
 git config --add yass.include gone
