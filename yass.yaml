@@ -1,0 +1,4 @@
+# YASS settings. With no path:, this project's yass folder is yass/ next to this file.
+# Each example is a project of its own, so its yass/ folders aren't this project's work.
+ignore:
+  - examples/*

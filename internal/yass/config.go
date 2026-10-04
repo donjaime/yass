@@ -21,9 +21,12 @@ type Config struct {
 	// Branch is the code branch that counts as merged when boxes cite code commits.
 	// Empty means origin/HEAD, else main, else master.
 	Branch string `yaml:"branch"`
+	// Ignore lists folders, relative to the yass.yaml, whose yass folders and yass.yaml files belong
+	// to something else (examples, fixtures, vendored projects). From inside one, it's a project of its own.
+	Ignore []string `yaml:"ignore"`
 }
 
-var knownSettings = map[string]bool{"path": true, "branch": true}
+var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true}
 
 // loadConfig reads a yass.yaml. It also returns any settings this version doesn't know.
 func loadConfig(file string) (Config, []string, error) {
@@ -89,9 +92,47 @@ func configDir(file string) (string, Config, []string, error) {
 	return dir, c, unknown, err
 }
 
+// ignoredDirs resolves a yass.yaml's ignore list (folders, or glob patterns like examples/*) to
+// folders inside the folder it sits in, and says what's wrong with any entry it can't use.
+func ignoredDirs(file string, c Config) ([]string, []string) {
+	owner := filepath.Dir(file)
+	var dirs, bad []string
+	for _, e := range c.Ignore {
+		e = strings.TrimSpace(e)
+		if e == "" {
+			continue
+		}
+		if filepath.IsAbs(filepath.FromSlash(e)) || !within(filepath.Join(owner, filepath.FromSlash(e)), owner) {
+			bad = append(bad, fmt.Sprintf("ignore: '%s' isn't inside the folder yass.yaml is in", e))
+			continue
+		}
+		matches, err := filepath.Glob(filepath.Join(owner, filepath.FromSlash(e)))
+		if err != nil {
+			bad = append(bad, fmt.Sprintf("ignore: '%s' isn't a valid pattern", e))
+			continue
+		}
+		n, self := 0, false
+		for _, m := range matches {
+			if d := canon(m); d == owner {
+				self = true
+			} else if isDir(d) {
+				dirs = append(dirs, d)
+				n++
+			}
+		}
+		if self {
+			bad = append(bad, fmt.Sprintf("ignore: '%s' is the folder yass.yaml is in", e))
+		} else if n == 0 {
+			bad = append(bad, fmt.Sprintf("ignore: '%s' doesn't match a folder under the one yass.yaml is in", e))
+		}
+	}
+	return dirs, bad
+}
+
 func configText(path string) string {
 	return `# YASS settings for this folder.
 # path: where its yass folder lives. Absolute, relative to this file, ~/…, or with environment
 # variables, e.g. ${YASS_HOME}/my-project. Without it, yass/ next to this file.
+# ignore: a list of folders (or patterns like examples/*) whose yass folders belong to something else.
 path: '` + strings.ReplaceAll(path, "'", "''") + "'\n"
 }

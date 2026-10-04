@@ -32,11 +32,20 @@ type place struct {
 
 type hook struct {
 	prefixes []string // yass folders inside the repo that yass.yaml files point to, repo-relative
+	ignored  []string // folders a yass.yaml ignores, repo-relative: their files are ordinary files
 }
 
 func newHook() *hook {
 	h := &hook{}
-	r := findRepo() // only the yass folders; the hook doesn't need to read any changes
+	// Only the yass folders, seen from the top (git's paths are relative to it); no changes are read.
+	r := &Repo{}
+	r.Top = repoTop(getwd())
+	r.Cwd = r.Top
+	r.findRoots()
+	for _, d := range r.Ignored {
+		rel, _ := filepath.Rel(r.Top, d)
+		h.ignored = append(h.ignored, filepath.ToSlash(rel))
+	}
 	for _, root := range r.Roots {
 		if root.Config != "" && within(root.Dir, r.Top) && root.Dir != r.Top {
 			rel, _ := filepath.Rel(r.Top, root.Dir)
@@ -47,6 +56,11 @@ func newHook() *hook {
 }
 
 func (h *hook) where(p string) place {
+	for _, d := range h.ignored {
+		if strings.HasPrefix(p, d+"/") {
+			return place{}
+		}
+	}
 	parts := strings.Split(p, "/")
 	if path.Base(p) == ConfigName {
 		return place{kind: "meta"}

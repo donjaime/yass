@@ -174,11 +174,23 @@ path: ../my-project-plans        # relative to this file
 - **Run your agent from the code repo** and give it the plans folder as an extra directory (Claude Code: `claude --add-dir <folder>`, or `permissions.additionalDirectories`). It finds the files through `yass`, so it only needs permission to write there.
 - **A path inside the repo works too,** under any name (`path: planning`), and the hook recognizes it.
 
-`yass.yaml` is also where YASS settings go as they're added (`path` and `branch` so far). A setting your version doesn't know is a warning, not an error.
+`yass.yaml` is also where YASS settings go as they're added (`path`, `branch` and [`ignore`](#folders-that-arent-yours) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
 
 ## Monorepos
 
 Any folder named `yass/` with `changes/` or `archive/` inside counts, and so does any `yass.yaml`, so teams opt in by running `yass init services/payments`. `yass status` shows every `yass/` folder in the repo, and `yass new` puts a change in the nearest one to where you're standing. Cross-team work is links, not copies: a root change's plan names the team changes that deliver each criterion, and each team change names the criterion it delivers. Ownership and review rules belong in your CODEOWNERS. See [examples/monorepo](examples/monorepo).
+
+### Folders that aren't yours
+
+Some `yass/` folders belong to something else: examples, test fixtures, a vendored project. List them under `ignore:` in a `yass.yaml` next to your `yass/` folder:
+
+```yaml
+ignore:                    # folders or glob patterns, relative to this file
+  - examples/*
+  - third_party/some-lib
+```
+
+Their `yass/` folders and `yass.yaml` files are left out of `yass status`, `yass root` and `yass new`, and the hook treats their files as ordinary files. From inside one, it's a project of its own: `cd examples/solo-app && yass status` shows that example's changes, not yours. That's why `examples/*` beats `examples` when each folder is a separate project. An entry that matches no folder, or one outside the folder `yass.yaml` is in, is a warning. This repo uses it for its [examples](examples).
 
 ## Harnesses
 

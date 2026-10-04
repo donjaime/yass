@@ -347,5 +347,40 @@ mkdir -p yass/changes && touch yass/changes/.gitkeep
 has   "a yass/ beside a yass.yaml that points elsewhere warns" "yass/: ignored, because yass.yaml points to" y status
 rm -rf yass
 
+echo "10. yass.yaml beside yass/: settings only, and ignore"
+newrepo "$W/e2e/ign"
+bash "$ROOT/install.sh" . >/dev/null
+mkdir -p examples/a/yass/archive/2026-01-01-old examples/b/svc/yass/changes/2026-01-02-thing vendor/x/yass/changes
+printf '# Old\n\n## Goal\nOld.\n\n## Steps\n- [x] Done\n' > examples/a/yass/archive/2026-01-01-old/change.md
+printf '# Thing\n\n## Goal\nA thing.\n\n## Steps\n- [ ] Do it\n' > examples/b/svc/yass/changes/2026-01-02-thing/change.md
+touch vendor/x/yass/changes/.gitkeep
+git add -A; git commit -q -m "chore: adopt YASS, with examples"
+has   "without ignore, nested yass folders count" "examples/b/svc/yass" y root
+printf 'ignore:\n  - examples/*\n  - vendor\n' > yass.yaml
+has   "a yass.yaml without path: keeps yass/ next to it" "^$W/e2e/ign/yass$|/ign/yass$" y root
+hasnt "…and ignored folders aren't roots" "examples|vendor" y root
+hasnt "…or in status" "thing|examples" y status
+hasnt "…and nothing warns" "warning|ignored, because" y status
+X=$(y new "Top thing")
+has   "new still goes to yass/" "^yass/changes/$TODAY-top-thing$" echo "$X"
+has   "inside an ignored folder, it's a project of its own" "thing" bash -c 'cd examples/b && yass status'
+hasnt "…without the outer yass/" "top-thing" bash -c 'cd examples/b && yass status'
+has   "…and new goes to its nearest yass/" "^svc/yass/changes/$TODAY-inner$" bash -c 'cd examples/b/svc && yass new "Inner"'
+rm -rf examples/b/svc/yass/changes/$TODAY-inner
+git add -A; git commit -q -m "yass: top thing"
+git config core.hooksPath tools/yass/githooks
+echo code >> app.txt; echo "- [x] Rewritten" >> examples/a/yass/archive/2026-01-01-old/change.md
+sub examples/b/svc/yass/changes/2026-01-02-thing/change.md '^A thing\.$' 'A different thing.'
+git add -A
+mv yass.yaml "$W/e2e/ign.yaml"
+has   "without ignore, the hook flags those edits" "append-only" y hook
+mv "$W/e2e/ign.yaml" yass.yaml
+hasnt "the hook treats ignored folders as ordinary files" "heads-up" git commit -q -m "feat: code and example edits"
+git config --unset core.hooksPath
+printf 'ignore: [../elsewhere, ".", nope/*, missing]\n' > yass.yaml
+has   "an ignore outside the folder warns" "'../elsewhere' isn't inside" y status
+has   "…so does the folder itself" "'\.' is the folder yass.yaml is in" y status
+has   "…and one that matches nothing" "'missing' doesn't match a folder" y status
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

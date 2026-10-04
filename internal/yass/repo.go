@@ -220,6 +220,7 @@ func (c *Change) label() string {
 type Repo struct {
 	Top, Cwd         string
 	Roots            []*Root
+	Ignored          []string // folders a yass.yaml ignores
 	Warnings         []string
 	Active, Archived []*Change
 }
@@ -257,8 +258,10 @@ func (r *Repo) disp(p string) string {
 
 // findRoots finds every folder named yass/ with changes/ or archive/ in it, and every yass.yaml.
 // Inside git, .gitignore decides, except that a yass.yaml at the top or above the current folder
-// always counts, so it can be kept out of the repo.
+// always counts, so it can be kept out of the repo. Folders a yass.yaml ignores don't count, unless
+// you're standing in one: then it's a project of its own, and its folder is the top.
 func (r *Repo) findRoots() {
+	warned := len(r.Warnings)
 	dirs, configs := map[string]bool{}, map[string]bool{}
 	out, ok := git(r.Top, "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--",
 		":(glob)**/yass/changes/**", ":(glob)**/yass/archive/**", ":(glob)**/"+ConfigName)
@@ -302,6 +305,42 @@ func (r *Repo) findRoots() {
 		}
 	}
 
+	// Settle ignores shallowest first: a yass.yaml in an ignored folder doesn't count, nor do its ignores.
+	files := sortedKeys(configs)
+	sort.SliceStable(files, func(i, j int) bool { return depth(files[i]) < depth(files[j]) })
+	r.Ignored = nil
+	for _, f := range files {
+		if r.ignored(f) {
+			delete(configs, f)
+			continue
+		}
+		c, _, err := loadConfig(f)
+		if err != nil {
+			continue // reported below
+		}
+		ign, bad := ignoredDirs(f, c)
+		for _, b := range bad {
+			r.warn("%s: %s", r.disp(f), b)
+		}
+		r.Ignored = append(r.Ignored, ign...)
+	}
+	var inside string
+	for _, d := range r.Ignored {
+		if within(r.Cwd, d) && len(d) > len(inside) {
+			inside = d
+		}
+	}
+	if inside != "" {
+		r.Top, r.Roots, r.Ignored, r.Warnings = inside, nil, nil, r.Warnings[:warned]
+		r.findRoots()
+		return
+	}
+	for d := range dirs {
+		if r.ignored(d) {
+			delete(dirs, d)
+		}
+	}
+
 	seen, claimed := map[string]bool{}, map[string]bool{}
 	for _, f := range sortedKeys(configs) {
 		owner := filepath.Dir(f)
@@ -337,13 +376,24 @@ func (r *Repo) findRoots() {
 	}
 	sort.SliceStable(r.Roots, func(i, j int) bool {
 		a, b := r.Roots[i].Owner, r.Roots[j].Owner
-		da, db := strings.Count(a, string(filepath.Separator)), strings.Count(b, string(filepath.Separator))
-		if da != db {
+		if da, db := depth(a), depth(b); da != db {
 			return da < db
 		}
 		return a < b
 	})
 }
+
+// ignored says whether p is inside a folder a yass.yaml ignores.
+func (r *Repo) ignored(p string) bool {
+	for _, d := range r.Ignored {
+		if within(p, d) {
+			return true
+		}
+	}
+	return false
+}
+
+func depth(p string) int { return strings.Count(p, string(filepath.Separator)) }
 
 func sortedKeys(m map[string]bool) []string {
 	out := make([]string, 0, len(m))
