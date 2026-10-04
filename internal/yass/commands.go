@@ -41,6 +41,15 @@ func cmdInit(a *args) error {
 			return fmt.Errorf("%s: %v", cfg, err)
 		}
 		y, configured = dir, strings.TrimSpace(c.Path) != ""
+		if configured && !isDir(y) {
+			found, _, linked := fromOtherCheckouts(cfg, strings.TrimSpace(c.Path))
+			if found != "" {
+				y = found
+			} else if linked {
+				return fmt.Errorf("this is a linked worktree, and %s points to %s, which no checkout of this clone has;"+
+					" run `yass init` from the main checkout, so the plans land where every checkout looks", cfg, y)
+			}
+		}
 	}
 	for _, f := range []struct{ path, text string }{
 		{filepath.Join(y, "changes", ".gitkeep"), ""},
@@ -78,6 +87,14 @@ func cmdInit(a *args) error {
 		fmt.Printf("wrote %s\n", r.disp(canon(p)))
 	}
 	if configured && !within(canon(y), top) {
+		lr := findRepo()
+		lr.link()
+		if ln := filepath.Join(base, "yass"); isSymlinkTo(ln, canon(y)) {
+			fmt.Printf("linked %s/ to %s (ignored through .git/info/exclude)\n", r.disp(ln), canon(y))
+		}
+		for _, n := range lr.Notes {
+			fmt.Printf("note: %s\n", n)
+		}
 		fmt.Printf("note: %s is outside this repo, so give your agent access to it too"+
 			" (Claude Code: claude --add-dir %s, or permissions.additionalDirectories in .claude/settings.local.json)\n", canon(y), canon(y))
 	}
@@ -109,7 +126,7 @@ func cmdNew(a *args) error {
 		root, base = parent.Root, parent.Path
 	} else {
 		if root = r.rootForCwd(); root == nil {
-			msg := "no yass/ folder here; run `yass init` first"
+			msg := r.noRoot("no yass/ folder here; run `yass init` first")
 			for _, w := range r.Warnings {
 				msg += "\n  " + w
 			}
@@ -244,10 +261,13 @@ func cmdStatus(a *args) (int, error) {
 		}
 	}
 	if len(r.Roots) == 0 {
-		fmt.Println("no yass/ folder yet; run `yass init`")
+		fmt.Println(r.noRoot("no yass/ folder yet; run `yass init`"))
 	}
 	for _, w := range r.Warnings {
 		fmt.Printf("warning: %s\n", w)
+	}
+	for _, n := range r.Notes {
+		fmt.Printf("note: %s\n", n)
 	}
 	if a.b["strict"] && len(r.Warnings) > 0 {
 		return 1, nil
@@ -379,7 +399,7 @@ func cmdArchive(a *args) error {
 func cmdRoot(a *args) error {
 	r := loadRepo()
 	if len(r.Roots) == 0 {
-		msg := "no yass folder yet; run `yass init`"
+		msg := r.noRoot("no yass folder yet; run `yass init`")
 		for _, w := range r.Warnings {
 			msg += "\n  " + w
 		}
@@ -387,6 +407,9 @@ func cmdRoot(a *args) error {
 	}
 	for _, root := range r.Roots {
 		fmt.Println(root.Dir)
+	}
+	for _, n := range r.Notes { // stderr, so scripts reading the folders aren't disturbed
+		fmt.Fprintf(os.Stderr, "note: %s\n", n)
 	}
 	return nil
 }

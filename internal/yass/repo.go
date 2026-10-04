@@ -260,6 +260,8 @@ type Repo struct {
 	Roots            []*Root
 	Ignored          []string // folders a yass.yaml ignores
 	Warnings         []string
+	Notes            []string // worth knowing, but not a problem: they don't fail --strict
+	Linked           bool     // a yass.yaml's folder wasn't found from this linked worktree
 	Active, Archived []*Change
 }
 
@@ -273,6 +275,7 @@ func findRepo() *Repo {
 
 func loadRepo() *Repo {
 	r := findRepo()
+	r.link()
 	for _, root := range r.Roots {
 		root.Queue = parseQueue(readText(filepath.Join(root.Dir, QueueName)))
 		r.Active = append(r.Active, r.load(root, "changes", true)...)
@@ -284,6 +287,19 @@ func loadRepo() *Repo {
 
 func (r *Repo) warn(format string, a ...any) {
 	r.Warnings = append(r.Warnings, fmt.Sprintf(format, a...))
+}
+
+func (r *Repo) note(format string, a ...any) {
+	r.Notes = append(r.Notes, fmt.Sprintf(format, a...))
+}
+
+// noRoot says there's no yass folder to use, and how to get one. From a linked worktree that's never
+// `yass init`: it would make a stray, empty plans folder where only this worktree looks.
+func (r *Repo) noRoot(msg string) string {
+	if r.Linked {
+		return "no yass folder found from this worktree; see the warning"
+	}
+	return msg
 }
 
 // disp shows a path relative to the repo when it's inside it, and in full when it isn't.
@@ -392,12 +408,31 @@ func (r *Repo) findRoots() {
 			r.warn("%s: %v", r.disp(f), err)
 			continue
 		}
+		if !isDir(dir) && strings.TrimSpace(cfg.Path) != "" {
+			found, looked, linked := fromOtherCheckouts(f, strings.TrimSpace(cfg.Path))
+			switch {
+			case found != "":
+				dir = found
+			case linked:
+				r.Linked = true
+				places := r.disp(dir)
+				for _, l := range looked {
+					if l != dir {
+						places += ", " + r.disp(l)
+					}
+				}
+				r.warn("%s: points to a folder that isn't there from this worktree or the clone's other checkouts (looked in %s); check `path:`, or that the plans are where the main checkout expects them",
+					r.disp(f), places)
+				continue
+			}
+		}
 		if !isDir(dir) {
 			r.warn("%s: points to %s, which doesn't exist yet (`yass init` creates it)", r.disp(f), r.disp(dir))
 			continue
 		}
 		dir = canon(dir)
-		if local := filepath.Join(owner, "yass"); dirs[local] && local != dir {
+		// On disk too, not just in git's list: info/exclude may hide a yass/ that was once a link.
+		if local := filepath.Join(owner, "yass"); (dirs[local] || isRealYassDir(local)) && local != dir {
 			r.warn("%s/: ignored, because %s points to %s", r.disp(local), r.disp(f), r.disp(dir))
 		}
 		if !seen[dir] {
@@ -412,6 +447,9 @@ func (r *Repo) findRoots() {
 		}
 		seen[d] = true
 		r.Roots = append(r.Roots, &Root{Dir: d, Owner: owner})
+	}
+	if len(r.Roots) == 0 && len(r.Warnings) == warned {
+		r.borrowConfig()
 	}
 	sort.SliceStable(r.Roots, func(i, j int) bool {
 		a, b := r.Roots[i].Owner, r.Roots[j].Owner

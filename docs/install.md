@@ -78,7 +78,7 @@ When `install.sh` is piped in like this, it downloads the latest release for you
 | `--global` | puts the playbooks in your user folder (`~/.agents/skills/`, or `$YASS_SKILLS_DIR`; `~/.claude/skills/` with `--claude`) for every repo, instead of in this one. The default is project scope: the playbooks live in the repo, so everyone working on it gets the same version. Check that your harness reads the user folder you pick |
 | `--claude` | also copies the playbooks to `.claude/skills/` and imports `AGENTS.md` from `CLAUDE.md` |
 | `--hooks` | turns on the optional hook for this clone (`git config core.hooksPath tools/yass/githooks`) |
-| `--path P` | keeps the yass folder outside the repo: writes a `yass.yaml` pointing to `P` and creates it (see [the README](../README.md#keeping-plans-out-of-the-repo)) |
+| `--path P` | keeps the yass folder outside the repo: writes a `yass.yaml` pointing to `P`, creates it, and links `yass/` to it (ignored through `.git/info/exclude`; see [the README](../README.md#keeping-plans-out-of-the-repo)) |
 | `--upgrade` | replaces the playbooks and the hook with this version's |
 
 Without `--bin-dir`, `install.sh` uses a `yass` it finds next to it, in `bin/`, on your PATH, or in `$YASS_BIN`, and stops if there's none.

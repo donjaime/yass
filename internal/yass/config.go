@@ -16,7 +16,8 @@ const ConfigName = "yass.yaml"
 // Config is what a yass.yaml holds.
 type Config struct {
 	// Path is where the yass folder lives: absolute, relative to the yass.yaml, ~/…, or with
-	// environment variables ($VAR or ${VAR}), e.g. ${YASS_HOME}/my-project. Empty means yass/ next to it.
+	// environment variables ($VAR, ${VAR}, or ${VAR:-default} for when it's unset), e.g.
+	// ${YASS_HOME:-..}/my-project. Empty means yass/ next to it.
 	Path string `yaml:"path"`
 	// Branch is the code branch that counts as merged when boxes cite code commits.
 	// Empty means origin/HEAD, else main, else master.
@@ -53,10 +54,15 @@ func loadConfig(file string) (Config, []string, error) {
 }
 
 // resolvePath expands environment variables and ~ in p, and makes it absolute relative to base.
+// ${VAR:-default} uses default when VAR is unset or empty, so side-by-side clones need no setup.
 func resolvePath(p, base string) (string, error) {
 	var missing []string
 	s := os.Expand(p, func(k string) string {
+		k, def, hasDef := strings.Cut(k, ":-")
 		v := os.Getenv(k)
+		if v == "" && hasDef {
+			return def
+		}
 		if v == "" {
 			missing = append(missing, k)
 		}
@@ -132,7 +138,8 @@ func ignoredDirs(file string, c Config) ([]string, []string) {
 func configText(path string) string {
 	return `# YASS settings for this folder.
 # path: where its yass folder lives. Absolute, relative to this file, ~/…, or with environment
-# variables, e.g. ${YASS_HOME}/my-project. Without it, yass/ next to this file.
+# variables, e.g. ${YASS_HOME}/my-project or ${YASS_HOME:-..}/my-project (.. when it's unset).
+# Without it, yass/ next to this file.
 # ignore: a list of folders (or patterns like examples/*) whose yass folders belong to something else.
 path: '` + strings.ReplaceAll(path, "'", "''") + "'\n"
 }

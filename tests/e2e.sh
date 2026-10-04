@@ -315,7 +315,7 @@ echo "9. yass.yaml: the yass folder lives somewhere else"
 newrepo "$W/e2e/ext"; rm -rf "$W/e2e/ext-yass" "$W/e2e/home-yass"
 bash "$ROOT/install.sh" . --path ../ext-yass >/dev/null
 [ -f yass.yaml ] && ok "--path writes yass.yaml" || bad "no yass.yaml"
-[ ! -e yass ] && ok "…and no yass/ in the repo" || bad "yass/ in the repo"
+[ -L yass ] && [ -z "$(git status --porcelain -- yass)" ] && ok "…and yass/ in the repo is only an ignored link" || bad "yass/ isn't an ignored link"
 [ -d "$W/e2e/ext-yass/changes" ] && ok "…and creates the folder it points to" || bad "no external folder"
 has   "root prints it" "ext-yass$" y root
 X=$(y new "Private thing")
@@ -359,7 +359,8 @@ has   "the hook finds a yass folder through yass.yaml" "prd.md is intent" git co
 echo code >> app.txt; git add -A
 hasnt "…and treats yass.yaml as YASS, not code" "heads-up" git commit -q -m "feat: plain code"
 git config --unset core.hooksPath
-mkdir -p yass/changes && touch yass/changes/.gitkeep
+has   "a link left from before the plans moved into the repo warns" "yass/ is a link to .*, but yass.yaml points to planning; remove the link" y status
+rm yass; mkdir -p yass/changes && touch yass/changes/.gitkeep
 has   "a yass/ beside a yass.yaml that points elsewhere warns" "yass/: ignored, because yass.yaml points to" y status
 rm -rf yass
 
@@ -471,6 +472,54 @@ rm -rf yass/changes/2026-06-0*
 mkdir -p svc; y init svc --no-agents >/dev/null; mkb svc/yass/changes/2026-07-01-api /
 mkb yass/changes/2026-07-02-ui "" "svc/yass/changes/2026-07-01-api"
 has   "dependencies work across yass folders" "2026-07-02-ui .*waiting on: 2026-07-01-api" y status
+
+echo "16. worktrees and the yass/ link"
+newrepo "$W/e2e/wt"; rm -rf "$W/e2e/wt-plans" "$W/e2e/wt-other" "$W/e2e/wts" "$W/e2e/wt-priv"*
+y init --path ../wt-plans --no-agents >/dev/null; git add yass.yaml; git commit -q -m "chore: adopt YASS"
+[ "$(readlink yass)" = "$(cd "$W/e2e/wt-plans" && pwd -P)" ] && ok "init links yass/ to the plans" || bad "no link: $(readlink yass)"
+y status >/dev/null; y status >/dev/null
+has   "…ignored through info/exclude, once" "^1$" grep -c '^/yass$' .git/info/exclude
+[ -z "$(git status --porcelain)" ] && [ ! -e .gitignore ] && ok "…so git status shows nothing, and .gitignore is untouched" || bad "git status: $(git status --porcelain)"
+y new "Linked" >/dev/null
+has   "a change is listed once" "^1$" bash -c 'yass status | grep -c linked'
+hasnt "…with no warnings" "warning" y status
+git worktree add -q "$W/e2e/wts/deep/feat" -b feat
+cd "$W/e2e/wts/deep/feat"
+has   "a worktree elsewhere finds the main checkout's plans" "wt-plans$" y root
+has   "…and lists its changes" "linked" y status
+[ -L yass ] && [ -z "$(git status --porcelain)" ] && ok "…and gets its own ignored link" || bad "worktree link: $(ls -la yass 2>&1) $(git status --porcelain)"
+cd "$W/e2e/wt"; git worktree add -q .claude/worktrees/n1 -b n1
+has   "a worktree nested in the repo finds them too" "wt-plans$" bash -c 'cd .claude/worktrees/n1 && yass root'
+mv "$W/e2e/wt-plans" "$W/e2e/wt-gone"
+cd "$W/e2e/wts/deep/feat"
+has   "plans missing from a worktree: the warning says where it looked" "isn't there from this worktree or the clone's other checkouts \(looked in .*wt-plans" y status
+hasnt "…and never suggests yass init" "yass init" y status
+run_fail "…root fails" y root
+has   "…and init refuses rather than make a stray folder" "run .yass init. from the main checkout" y init --no-agents
+[ ! -e "$W/e2e/wts/deep/wt-plans" ] && [ ! -e "$W/e2e/wts/wt-plans" ] && ok "…and made nothing" || bad "stray plans folder"
+cd "$W/e2e/wt"; mv "$W/e2e/wt-gone" "$W/e2e/wt-plans"
+printf 'path: ${WT_PLANS:-../wt-plans}\n' > yass.yaml
+has   "\${VAR:-default}: the default when it's unset" "wt-plans$" y root
+mkdir -p "$W/e2e/wt-other/changes"
+has   "…the variable when it's set" "wt-other$" env WT_PLANS="$W/e2e/wt-other" yass root
+case "$(readlink yass)" in *wt-other) ok "…and the link follows it";; *) bad "link not repointed: $(readlink yass)";; esac
+y root >/dev/null
+case "$(readlink yass)" in *wt-plans) ok "…and back";; *) bad "link not repointed back: $(readlink yass)";; esac
+git checkout -q yass.yaml
+rm yass; mkdir yass
+has   "a real yass/ is left alone, with one warning" "^1$" bash -c 'yass status | grep -c "yass/: already there, so it isn.t a link"'
+[ -d yass ] && [ ! -L yass ] && ok "…and kept" || bad "real yass/ replaced"
+rmdir yass
+newrepo "$W/e2e/wt-priv"; y init --path ../wt-priv-plans --no-agents >/dev/null
+echo yass.yaml > .gitignore; git add .gitignore; git commit -q -m "keep the pointer private"
+git worktree add -q "$W/e2e/wts/priv" -b feat
+has   "a gitignored yass.yaml: a worktree uses the main checkout's" "wt-priv-plans$" bash -c "cd '$W/e2e/wts/priv' && yass root"
+[ -L "$W/e2e/wts/priv/yass" ] && ok "…and gets the link" || bad "no link in the private-pointer worktree"
+cd "$W/e2e"; rm -rf bare.git bare-wts; git clone -q --bare "$W/e2e/wt" bare.git
+git -C bare.git worktree add -q "$W/e2e/bare-wts/main" main 2>/dev/null
+git -C bare.git worktree add -q "$W/e2e/bare-wts/deep/feat2" -b feat2 main
+mkdir -p "$W/e2e/bare-wts/wt-plans/changes"
+has   "a bare clone's worktrees find plans next to another worktree" "bare-wts/wt-plans$" bash -c "cd '$W/e2e/bare-wts/deep/feat2' && yass root"
 
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

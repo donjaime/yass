@@ -9,14 +9,19 @@ import (
 func TestResolvePath(t *testing.T) {
 	base := t.TempDir()
 	t.Setenv("YASS_TEST_HOME", "/srv/plans")
+	t.Setenv("YASS_TEST_EMPTY", "")
 	home, _ := os.UserHomeDir()
 	for in, want := range map[string]string{
-		"../elsewhere":              filepath.Join(filepath.Dir(base), "elsewhere"),
-		"planning":                  filepath.Join(base, "planning"),
-		"/abs/yass":                 "/abs/yass",
-		"$YASS_TEST_HOME":           "/srv/plans",
-		"${YASS_TEST_HOME}/my-repo": "/srv/plans/my-repo",
-		"~/yass/my-repo":            filepath.Join(home, "yass", "my-repo"),
+		"../elsewhere":               filepath.Join(filepath.Dir(base), "elsewhere"),
+		"planning":                   filepath.Join(base, "planning"),
+		"/abs/yass":                  "/abs/yass",
+		"$YASS_TEST_HOME":            "/srv/plans",
+		"${YASS_TEST_HOME}/my-repo":  "/srv/plans/my-repo",
+		"~/yass/my-repo":             filepath.Join(home, "yass", "my-repo"),
+		"${YASS_TEST_HOME:-..}/web":  "/srv/plans/web",
+		"${YASS_TEST_UNSET:-..}/web": filepath.Join(filepath.Dir(base), "web"),
+		"${YASS_TEST_EMPTY:-~/p}":    filepath.Join(home, "p"),
+		"${YASS_TEST_UNSET:-}":       base,
 	} {
 		got, err := resolvePath(in, base)
 		if err != nil || got != canon(want) {
