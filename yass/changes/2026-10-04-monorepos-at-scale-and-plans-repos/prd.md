@@ -25,8 +25,8 @@ Some projects really do need plans in a separate repo, usually for privacy (an o
 
 ## Requirements
 - **R1** [M1] A CI owner can tell which paths are YASS's from `yass paths`, and use that list in pipeline filters instead of hard-coding folder layouts.
-- **R2** [M1] The docs give tested recipes for skipping build and test jobs on plan-only commits: GitHub Actions (including required checks that would otherwise wait forever when a path filter skips them), Bazel or another affected-targets build, and one generic CI.
-- **R3** [M1] The docs explain how plan-only PRs go through a merge queue without full test runs.
+- **R2** [M1] The docs give recipes for skipping build and test jobs on plan-only commits: GitHub Actions (including required checks that would otherwise wait forever when a path filter skips them) and one generic CI, tested; and Bazel or another affected-targets build, documented here and tested in `2026-10-04-validate-the-ci-recipes-in-the-field`.
+- **R3** [M1] The docs explain how plan-only PRs go through a merge queue without full test runs. Testing that on a real merge queue is part of `2026-10-04-validate-the-ci-recipes-in-the-field`.
 - **R4** [M1] The docs show CODEOWNERS for each team's yass folder, so plan reviews go to the owning team.
 - **R5** [M1] `yass status` in a sparse checkout reports on the yass folders that are checked out. A `blocked:` that names a change outside the checkout says it can't see that change, instead of calling it unknown.
 - **R6** [M1] The docs give Git LFS rules for binary assets under yass folders, and say that assets live in the change folder and move with it when it's archived.

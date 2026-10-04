@@ -13,7 +13,7 @@ CI can skip plan-only changes with one gate job built on yass paths, with tested
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC1–AC5 in [plan.md](../plan.md)
+- [/] Delivers AC1–AC3, AC57, AC58 in [plan.md](../plan.md)
 - [x] `docs/monorepo.md` exists and the README's Monorepos section links to it
 
 ## Steps
@@ -25,8 +25,9 @@ CI can skip plan-only changes with one gate job built on yass paths, with tested
 - [x] This repo's `ci.yml`: the gate job (`go run ./cmd/yass`), `test`/`build` behind it, `ci-ok` aggregating, `merge_group` added (AC3)
 - [x] README: `yass paths` in the CLI list, link to docs/monorepo.md
 - [/] AC3 on GitHub: a plan-only push skips `test` and `build` and `ci-ok` passes; a code push runs them
-- [/] AC4: the Bazel recipe run against a real Bazel repo
-- [/] AC5: a plan-only pull request through a real merge queue
+- [-] AC4: the Bazel recipe run against a real Bazel repo (moved to `2026-10-04-validate-the-ci-recipes-in-the-field`)
+- [-] AC5: a plan-only pull request through a real merge queue (moved to `2026-10-04-validate-the-ci-recipes-in-the-field`)
+- [ ] Mark the Bazel and merge-queue sections of `docs/monorepo.md` as untested, with where to report results (AC57, AC58)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->

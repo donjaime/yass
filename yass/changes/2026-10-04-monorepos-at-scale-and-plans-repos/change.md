@@ -25,6 +25,7 @@ YASS works at a large company with one big monorepo, many teams and expensive CI
 - Progress stays in files rather than a tracker (Jira, Linear); a tracker's real advantage, a live view of who's working on what, comes from a git-native `yass status --branches` instead, added as R19 in M1. A one-way projection into a tracker may be a later change (Jaime)
 - Remaining design calls settled: separate = `path:` resolves outside the repo, plus a gitignored `yass/` symlink as a convenience; optional `web@sha` with names inferred; `repos:` with `${VAR:-default}` paths, offline; `yass paths` as proposed; the branch view on by default, with `--since` and `--no-branches` (Jaime, 2026-10-04)
 - Branch view stays on by default everywhere, after reviewing its cost (a local walk of unmerged branches limited to YASS paths, plus reading plan files at branch tips) - safeguards: no on-demand downloads in partial clones, commit-graph recommended in the docs, freshness shown (Jaime, 2026-10-04)
+- AC4 and AC5 dropped (`[-]`) here, which lowers this change's bar: neither a Bazel repo nor a GitHub merge queue (it needs an organization-owned repo) is available yet. Testing both moves to `2026-10-04-validate-the-ci-recipes-in-the-field`, along with inviting reports for other CI systems. In their place, AC57 and AC58 hold the docs to saying plainly what's tested and what isn't; R2 and R3 are reworded to match (Jaime, 2026-10-04)
 
 ## Log
 <!-- Progress. Change-level notes; each piece keeps its own Log.
