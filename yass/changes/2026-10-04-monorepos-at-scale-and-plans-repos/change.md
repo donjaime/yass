@@ -8,16 +8,23 @@ blocked:
 
 ## Goal
 <!-- Intent. One paragraph; the detail is in prd.md (why and what) and plan.md (how and acceptance). -->
-YASS works at a large company with one big monorepo, many teams and expensive CI. Plan-only commits cost no CI, each team owns its own plans, and the tools stay fast at that scale, so keeping plans next to the code is the clear recommendation. For projects that need private plans, a separate plans repo is a supported fallback. It works correctly in worktrees, with several code repos sharing it, and through archiving. Its link between code and plans is a `Yass-Change:` trailer that tooling enforces, and only in that setup.
+YASS works at a large company with one big monorepo, many teams and expensive CI. Plan-only commits cost no CI, each team owns its own plans, and the tools stay fast at that scale, so keeping plans next to the code is the clear recommendation. For projects that need private plans, a separate plans repo is a supported fallback. It works correctly in worktrees, with several code repos sharing it, and through archiving. Its link between code and plans is a `yass:` trailer that tooling adds automatically and checks, warning by default, and only in that setup.
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)" for calls that span the whole change. -->
 - Monorepo with plans inline is the recommended path, including for large orgs; a separate plans repo is the fallback for privacy - CI cost and size are solvable inside the monorepo (path filters, affected-target builds, LFS), and inline keeps progress in the same commit as code (Jaime)
 - No orphan branches, submodules or subtrees - they bring separate-repo semantics or submodule pain without solving privacy (Jaime)
-- Trailers on code commits are enforced strictly, but only when plans are in a separate repo - they replace the same-commit guarantee that repo loses, and the monorepo setup stays as simple as it is (Jaime)
+- Trailers on code commits are checked only when plans are in a separate repo - they replace the same-commit guarantee that repo loses, and the monorepo setup stays as simple as it is (Jaime)
 - Link code to plans with a trailer in the code commit, not only SHA citations in the plans - trailers can't be rewritten and survive squash merges, a lesson from Gerrit/Zuul `Depends-On:` (Jaime, claude)
 - Assets (mocks, images) live in the change folder, with no tooling change - checked on 2026-10-04: archiving moves them as renames, status ignores them, and the archive's append-only rule covers them (claude)
 - PRD approved, open questions to be settled during planning (Jaime, 2026-10-04)
+- Plan written: 56 criteria in eleven pieces, worktree fix first (claude)
+- Open questions settled: `code:` citations stay as optional detail; Bazel is the affected-targets recipe; the speed targets stay as written (Jaime, 2026-10-04)
+- Trailers: one lower-case `yass:` trailer with a small DSL (`yass: <change>[/<piece>] [ac:ac1,ac2]`, `yass: none`), read case-insensitively. A warning by default, with `trailers: require` in the code repo's `yass.yaml` (which separate plans need anyway) to enforce it. Added automatically by a prepare-commit-msg hook from `yass use`, the branch name, or earlier commits - so trailers are never a burden to agents or people, and teams choose how strict to be (Jaime)
+- Pieces own their files, instead of a merge driver; R7 reworded to match - the conflicts come from pieces on parallel branches sharing the parent's plan.md and Log, so the plan's shape is the fix. A driver would need setting up in every clone, wouldn't run in hosted merges, and could silently lose content. This lowers R7's bar: parallel archive commits can still conflict on adjacent queue.md lines (rare, trivial to fix), and queue reorders conflict on purpose because they're intent (Jaime)
+- Progress stays in files rather than a tracker (Jira, Linear); a tracker's real advantage, a live view of who's working on what, comes from a git-native `yass status --branches` instead, added as R19 in M1. A one-way projection into a tracker may be a later change (Jaime)
+- Remaining design calls settled: separate = `path:` resolves outside the repo, plus a gitignored `yass/` symlink as a convenience; optional `web@sha` with names inferred; `repos:` with `${VAR:-default}` paths, offline; `yass paths` as proposed; the branch view on by default, with `--since` and `--no-branches` (Jaime, 2026-10-04)
+- Branch view stays on by default everywhere, after reviewing its cost (a local walk of unmerged branches limited to YASS paths, plus reading plan files at branch tips) - safeguards: no on-demand downloads in partial clones, commit-graph recommended in the docs, freshness shown (Jaime, 2026-10-04)
 
 ## Log
 <!-- Progress. Change-level notes; each piece keeps its own Log.
