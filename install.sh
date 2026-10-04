@@ -119,6 +119,14 @@ if [ "$HOOKS" = 1 ]; then
   git config core.hooksPath tools/yass/githooks
   echo "hook   core.hooksPath = tools/yass/githooks (undo: git config --unset core.hooksPath)"
 fi
+if [ "$UPGRADE" = 1 ]; then
+cat <<'EOF'
+
+YASS is upgraded; your changes weren't touched. Next:
+  1. Review and commit it:  git add -A && git commit -m "chore: upgrade YASS"
+  2. `yass status` checks your changes with the new version.
+EOF
+else
 cat <<'EOF'
 
 YASS is set up. Next:
@@ -128,6 +136,7 @@ YASS is set up. Next:
        large:  "use yass-shape to plan <feature>"
   3. `yass status` shows what's in flight.
 EOF
+fi
 
 # Last, so it isn't scrolled away: you, the hook and your agents run `yass` from PATH, so say if
 # that finds nothing, or a different yass than the one just installed, and how to fix it.

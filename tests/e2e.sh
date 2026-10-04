@@ -28,9 +28,10 @@ newrepo() { rm -rf "$1"; mkdir -p "$1"; cd "$1"; git init -q -b main; git config
 TODAY=$(date +%F)
 
 newrepo "$W/e2e/solo"
-bash "$ROOT/install.sh" . >/dev/null
+INSTALL_OUT="$(bash "$ROOT/install.sh" .)"
 
 echo "1. install"
+has   "a first install suggests the adopting commit" "chore: adopt YASS" echo "$INSTALL_OUT"
 for f in tools/yass/githooks/pre-commit yass/README.md yass/changes/.gitkeep \
          yass/archive/.gitkeep AGENTS.md .agents/skills/yass-work/SKILL.md .agents/skills/yass-shape/SKILL.md \
          .agents/skills/yass-plan/SKILL.md .agents/skills/yass-status/SKILL.md .agents/skills/yass-log/SKILL.md; do
@@ -264,7 +265,9 @@ git add -A; hasnt "the adopting commit isn't flagged" "heads-up" git commit -q -
 echo "changed" > .agents/skills/yass-work/SKILL.md
 bash "$ROOT/install.sh" . >/dev/null
 has "re-running keeps your edits" "^changed$" cat .agents/skills/yass-work/SKILL.md
-bash "$ROOT/install.sh" . --upgrade >/dev/null
+UPGRADE_OUT="$(bash "$ROOT/install.sh" . --upgrade)"
+has   "--upgrade says it upgraded" "YASS is upgraded.*chore: upgrade YASS" bash -c 'tr "\n" " " <<<"$1"' _ "$UPGRADE_OUT"
+hasnt "…not the adoption steps" "chore: adopt YASS" echo "$UPGRADE_OUT"
 has "--upgrade replaces them" "^name: yass-work" cat .agents/skills/yass-work/SKILL.md
 has "--bin-dir copies the binary" "write  .*/bindir/yass" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
 [ -x "$W/e2e/bindir/yass" ] && ok "…and it runs" || bad "no binary in --bin-dir"
