@@ -26,8 +26,9 @@ go test ./...                                  # unit tests
 go build -o bin/yass ./cmd/yass
 YASS_BIN=$PWD/bin/yass tests/e2e.sh            # installs into temp repos and walks the lifecycle, hook included
 YASS_BIN=$PWD/bin/yass tests/examples.sh       # every example passes `yass status --strict`
+YASS_BIN=$PWD/bin/yass tests/bench.sh          # times status and the hook on generated large repos (~1 min; not in CI)
 ```
-Without `YASS_BIN`, the test scripts build the binary themselves. CI runs all of it on Linux and macOS, then cross-builds every release target with GoReleaser. Please add an e2e check for any new behavior.
+Without `YASS_BIN`, the test scripts build the binary themselves. CI runs all of it on Linux and macOS, then cross-builds every release target with GoReleaser. Please add an e2e check for any new behavior. If a change could slow `yass status` or the hook down, run `tests/bench.sh`: it fails when a speed target is missed.
 
 ## Releases
 Releases are cut from tags; nothing else publishes.
