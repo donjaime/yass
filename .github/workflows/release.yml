@@ -23,9 +23,10 @@ jobs:
       - run: YASS_BIN="$PWD/bin/yass" bash tests/e2e.sh && YASS_BIN="$PWD/bin/yass" bash tests/examples.sh
       - name: Release notes from CHANGELOG.md
         run: |
+          notes() { awk -v v="$1" 'index($0, "## " v " ") == 1 || $0 == "## " v {on=1; next} /^## / {on=0} on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"; test -s "$RUNNER_TEMP/notes.md"; }
+          # A pre-release (0.2.0-rc.1) uses its own section if there is one, else the 0.2.0 section.
           v="${GITHUB_REF_NAME#v}"
-          awk -v v="$v" 'index($0, "## " v " ") == 1 || $0 == "## " v {on=1; next} /^## / {on=0} on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
-          test -s "$RUNNER_TEMP/notes.md" || { echo "::error::CHANGELOG.md has no '## $v' section"; exit 1; }
+          notes "$v" || notes "${v%%-*}" || { echo "::error::CHANGELOG.md has no '## $v' or '## ${v%%-*}' section"; exit 1; }
       - uses: goreleaser/goreleaser-action@v6
         with: { version: "~> v2", args: "release --clean --release-notes ${{ runner.temp }}/notes.md" }
         env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
