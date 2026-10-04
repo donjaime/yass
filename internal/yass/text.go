@@ -166,8 +166,12 @@ func codeRefs(text string) []string {
 
 func slug(text string, n int) string {
 	s := strings.Trim(slugRE.ReplaceAllString(strings.ToLower(text), "-"), "-")
-	if len(s) > n {
-		s = s[:n]
+	if len(s) > n { // end on a whole word: cut at the last hyphen that fits (one right after n counts)
+		if i := strings.LastIndex(s[:n+1], "-"); i > 0 {
+			s = s[:i]
+		} else {
+			s = s[:n]
+		}
 	}
 	if s = strings.TrimRight(s, "-"); s == "" {
 		return "change"

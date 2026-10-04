@@ -2,6 +2,7 @@ package yass
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -55,6 +56,10 @@ func TestSlug(t *testing.T) {
 		"Offline sync, web badge": "offline-sync-web-badge",
 		"!!!":                     "change",
 		"A very long title that keeps going past forty characters": "a-very-long-title-that-keeps-going-past",
+		"Paths that don't exist yet compare through symlinks":      "paths-that-don-t-exist-yet-compare",
+		"Large monorepos first, separate plans repo done right":    "large-monorepos-first-separate-plans",
+		"Exactly forty characters long title here x":               "exactly-forty-characters-long-title-here",
+		strings.Repeat("a", 45):                                    strings.Repeat("a", 40),
 	} {
 		if got := slug(in, 40); got != want {
 			t.Errorf("slug(%q) = %q, want %q", in, got, want)

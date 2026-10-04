@@ -575,5 +575,13 @@ has   "an include with no yass.yaml anywhere warns, and says how to stop" "yass.
 git config --unset yass.include '^gone$'
 run_fail "--private outside a folder refuses" y init --private --path ../x --no-agents
 
+echo "23. change names end on a whole word"
+newrepo "$W/e2e/slug"; y init --no-agents >/dev/null
+P=$(y new "Paths that don't exist yet compare through symlinks")
+has   "a long title ends on its last whole word" "/$TODAY-paths-that-don-t-exist-yet-compare$" echo "$P"
+mkdir -p yass/archive/2026-01-01-paths-that-don-t-exist-yet-compare-throu
+printf -- '# Paths that don'"'"'t exist yet compare through symlinks\n\n- [x] done\n' > yass/archive/2026-01-01-paths-that-don-t-exist-yet-compare-throu/change.md
+has   "an archived change cut the old way still lists by name alone" "^2026-01-01-paths-that-don-t-exist-yet-compare-throu$" y status --archived
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]
