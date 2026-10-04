@@ -22,6 +22,7 @@ In any linked worktree, YASS finds the same plans folder as the main checkout an
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
+- The `yass/` link is ignored through `.git/info/exclude`, not `.gitignore` - editing `.gitignore` would add a diff to every repo with separate plans (and reveal the pointer in repos that keep `yass.yaml` private), while `info/exclude` is per clone, shared by its worktrees, and exactly as long-lived as the link itself; AC25 reworded to match (claude)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
