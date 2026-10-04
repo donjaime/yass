@@ -32,3 +32,7 @@ YASS works at a large company with one big monorepo, many teams and expensive CI
 ### YYYY-MM-DD (<who>)
 - Did: …
 - Next: … -->
+### 2026-10-04 (claude)
+- Did: closing commit for the two finished pieces: marked AC1–AC3, AC57, AC58 (`2026-10-04-yass-paths-and-ci-recipes`) and AC23–AC29 (`2026-10-04-worktrees-find-the-plans`) in plan.md, with no code.
+- Next: piece 4 (`2026-10-04-team-scale-docs`) and piece 5 (`2026-10-04-pieces-own-their-files`) are unblocked; piece 3 waits on the branch view (piece 6).
+
