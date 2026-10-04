@@ -1,0 +1,33 @@
+# On a v* tag: test, then build and publish a GitHub Release with GoReleaser, using that version's
+# section of CHANGELOG.md as the notes, and attest the archives' provenance
+# (check one with: gh attestation verify yass_linux_amd64.tar.gz --repo donjaime/yass).
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write     # create the release
+  id-token: write     # sign the attestations
+  attestations: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - run: go test ./...
+      - run: go build -o bin/yass ./cmd/yass
+      - run: git config --global user.email ci@example.com && git config --global user.name CI
+      - run: YASS_BIN="$PWD/bin/yass" bash tests/e2e.sh && YASS_BIN="$PWD/bin/yass" bash tests/examples.sh
+      - name: Release notes from CHANGELOG.md
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          awk -v v="$v" 'index($0, "## " v " ") == 1 || $0 == "## " v {on=1; next} /^## / {on=0} on' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          test -s "$RUNNER_TEMP/notes.md" || { echo "::error::CHANGELOG.md has no '## $v' section"; exit 1; }
+      - uses: goreleaser/goreleaser-action@v6
+        with: { version: "~> v2", args: "release --clean --release-notes ${{ runner.temp }}/notes.md" }
+        env: { GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: actions/attest-build-provenance@v2
+        with: { subject-checksums: ./dist/checksums.txt }

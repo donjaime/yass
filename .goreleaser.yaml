@@ -1,0 +1,46 @@
+# Builds the yass CLI for each platform and publishes a GitHub Release on a v* tag.
+# CI runs it with --snapshot on every push to check the builds; see .github/workflows/.
+version: 2
+project_name: yass
+
+builds:
+  - id: yass
+    main: ./cmd/yass
+    binary: yass
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags: ["-s -w -X main.version={{ .Version }}"]
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: yass
+    # No version in the name, so .../releases/latest/download/yass_<os>_<arch>.tar.gz always works.
+    name_template: "yass_{{ .Os }}_{{ .Arch }}"
+    wrap_in_directory: true
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - install.sh
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+      - kit/.agents/skills/*/SKILL.md
+      - kit/tools/yass/githooks/pre-commit
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+changelog:
+  disable: true # release notes come from CHANGELOG.md (see release.yml)
+
+release:
+  github: { owner: donjaime, name: yass }
+  prerelease: auto # v0.2.0-rc.1 is published as a pre-release
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-dev+{{ .ShortCommit }}"

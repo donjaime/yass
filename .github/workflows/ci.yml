@@ -1,0 +1,41 @@
+name: ci
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - run: go vet ./...
+      - run: go test ./...
+      - run: go build -o bin/yass ./cmd/yass
+      - run: git config --global user.email ci@example.com && git config --global user.name CI
+      - run: YASS_BIN="$PWD/bin/yass" bash tests/e2e.sh
+      - run: YASS_BIN="$PWD/bin/yass" bash tests/examples.sh
+
+  # Cross-builds every release target (linux, macOS, windows; amd64, arm64) with GoReleaser,
+  # exactly as a release would, and keeps the archives as a workflow artifact.
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-go@v5
+        with: { go-version-file: go.mod }
+      - uses: goreleaser/goreleaser-action@v6
+        with: { version: "~> v2", args: release --snapshot --clean }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: yass-snapshot
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/checksums.txt
