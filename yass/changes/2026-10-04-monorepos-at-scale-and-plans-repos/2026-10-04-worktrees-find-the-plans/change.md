@@ -13,7 +13,7 @@ In any linked worktree, YASS finds the same plans folder as the main checkout an
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC23–AC29 in [plan.md](../plan.md)
+- [x] Delivers AC23–AC29 in [plan.md](../plan.md)
 - [x] Resolving from the main worktree is covered for a bare-repo clone too, or the code says why it isn't
 
 ## Steps
@@ -26,7 +26,7 @@ In any linked worktree, YASS finds the same plans folder as the main checkout an
 - [x] e2e §16, and §9 updated for the link
 - [x] A `yass.yaml` kept out of git: a linked worktree borrows the main checkout's
 - [x] README and docs/install.md
-- [/] Manual: Claude Code reading and editing through the link (AC28)
+- [x] Manual: Claude Code reading and editing through the link (AC28)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -45,3 +45,11 @@ In any linked worktree, YASS finds the same plans folder as the main checkout an
 - Did: `${VAR:-default}` in paths; a missing relative `path:` resolves from the clone's other checkouts (bare layouts too); no `yass init` advice from a linked worktree, and `init` there refuses; the ignored `yass/` link (create, repoint, leave real folders, skip on failure, `info/exclude` once); a private `yass.yaml` is borrowed in worktrees; README and install docs. Intent fix on its own commit below this branch: the link is ignored via info/exclude, not .gitignore. Checks: go test, go vet, gofmt, e2e 253/253 (new §16, §9 updated), examples.
 - Did: AC28 manual check from this session: reading and editing a file through a link inside the project to a folder outside it both worked, and the edit landed in the target. This session runs in auto mode, so it says nothing about whether a default-permission session prompts for writes through the link; the README says to grant the folder to be safe.
 - Next: a human checks AC28 in a default-permission Claude Code session (edit `yass/changes/...` through the link without `--add-dir`; note whether it prompts), then mark it and the Delivers box. Then merge the intent commit and this branch, and move on to piece 2 (`2026-10-04-yass-paths-and-ci-recipes`).
+### 2026-10-04 (claude, with Jaime)
+- Did: AC28, run by Jaime in a Claude Code terminal session at the repo root, in auto mode (Claude Code's default permission mode), with the plans folder not granted:
+  - `yass new` run in `private/` printed the plans folder's real path, so the agent read and edited `~/dev/private/yass-private-plans/...`. The first read asked ("Read outside the working directories"); the edits after it were allowed by auto mode.
+  - Reading `private/yass/changes/.../change.md` through the link asked the same question, showing the resolved path behind the link. Claude Code resolves the link, so the link doesn't make the plans count as inside the project.
+- Did: the README now says so: the link is for finding the plans; granting the plans folder (`--add-dir`, `permissions.additionalDirectories`) is what lets an agent work there without asking. `yass init` already suggests it. Stricter permission modes weren't tried; they'd only ask more.
+- Not changed: having `yass new` print link paths instead of real ones. Without a permission benefit, it isn't worth the code.
+- Next: done. Its parent criteria (AC23–AC29) are ready to mark in a closing commit.
+
