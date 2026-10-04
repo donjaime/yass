@@ -12,8 +12,8 @@ description: Report where YASS work stands. Summarize progress across active cha
    - What happened recently (ask since when, or use a week): `git log --since=<date> -- <folder>` for each folder `yass root` prints (for one outside the repo, `git -C <folder> log --since=<date>`, if it's in a git repo) and the Log entries dated since then.
    - Decisions recorded in that time (the `yass-log` playbook does this well).
 2. **One screen:**
-   1. Progress per change (boxes ticked, pieces done), one line each. Keep changes in progress apart from ones that are planned but `not started`, and name the items marked `[/]`: that's what's actively being worked on.
-   2. Blocked changes and the reason.
+   1. Progress per change (boxes ticked, pieces done), one line each, in the order `yass status` lists them: a yass folder's `queue.md` ranks its changes, top first. Keep changes in progress apart from ones that are planned but `not started`, and name the items marked `[/]`: that's what's actively being worked on.
+   2. Blocked changes and the reason, and changes `waiting on:` others (say whether those are moving).
    3. Decisions made recently, with who made them, so the human can object.
    4. Changes `yass status` marks `done`: ready to archive.
    5. Stale changes: no activity in a while.
@@ -23,4 +23,4 @@ description: Report where YASS work stands. Summarize progress across active cha
    - **Disagreeing with a decision:** the reversal is recorded as a new decision, not by rewriting the old one.
    - **Ready to archive:** `yass archive <change>`.
    - **Stale or abandoned:** resume it with `yass-work`, or drop what's left (`[-]`, with a reason in Decisions) and archive it.
-4. **Offer one next move:** plan a shaped change, point `yass-work` at a specific change or piece, or shape something new. Don't make it until the human says so.
+4. **Offer one next move.** Asked "what's next?", it's the first change in `yass status` order that isn't `done` or blocked; without a `queue.md`, say that nothing ranks the changes and offer to start one. Plan a shaped change, point `yass-work` at a specific change or piece, or shape something new. Don't make it until the human says so.
