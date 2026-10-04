@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YASS: your agents don't lose the plot</title>
+<meta name="description" content="YASS keeps the plan, progress and decisions for every change in plain files next to your code, so any person or agent, on any harness, picks up where the last one stopped.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://donjaime.github.io/yass/">
+<meta property="og:title" content="YASS: your agents don't lose the plot">
+<meta property="og:description" content="Plan and track work with coding agents, in plain files next to your code. Spec only what changes; any person or agent picks up where the last one stopped.">
+<meta property="og:image" content="https://donjaime.github.io/yass/assets/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="YASS: your agents don't lose the plot">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-text">
+      <h1 class="logo"><img src="assets/logo.svg" alt="YASS!" width="320" height="96"></h1>
+      <p class="claim">Your agents don't lose the plot.</p>
+      <p class="lede">YASS keeps the plan, progress and decisions for every change in plain files next to your code, so any person or agent, on any harness, picks up where the last one stopped.</p>
+      <p class="kicker">A sassy “yes” to building with coding agents.</p>
+      <p class="actions">
+        <a class="button primary" href="#install">Install</a>
+        <a class="button" href="https://github.com/donjaime/yass">GitHub</a>
+      </p>
+    </div>
+    <!-- Hero art slot: to use an illustration instead of the card, replace the <figure>'s contents
+         with <img src="assets/hero.svg" alt="" width="480" height="360">. See assets/README.md. -->
+    <figure class="hero-art" aria-label="The end of a change's log">
+      <div class="file">
+        <div class="file-name">changes/2026-09-14-offline-sync/change.md</div>
+<pre><span class="dim">## Log</span>
+<span class="dim">### 2026-09-17 (claude)</span>
+- Did: queue persists across restarts;
+  AC3 and AC4 pass on iOS and Android
+- <b>Next:</b> retry with backoff (AC5), then
+  the sync badge piece</pre>
+      </div>
+      <figcaption>A new session, a different agent, or you next week: everyone starts from the last <b>Next</b>.</figcaption>
+    </figure>
+  </div>
+</header>
+
+<main>
+
+<section id="idea" class="wrap">
+  <h2>Describe the change, not the system.</h2>
+  <p class="big">Your code, docs and READMEs already say what exists. YASS doesn't write it down a second time. It specs only what needs to change, keeps that next to the code, in plain markdown that agents and humans both read.</p>
+  <div class="cards">
+    <div class="card">
+      <h3>Nothing to keep in sync</h3>
+      <p>There's no second description of your system to drift out of date. When a change is done, it moves to the archive, and the archive tells the story of how the product got here.</p>
+    </div>
+    <div class="card">
+      <h3>Ceremony scales with scope</h3>
+      <p>A bug fix is one file. A new system gets a PRD, a plan, the hard-to-undo calls, and PR-sized pieces, all in the same folder.</p>
+    </div>
+    <div class="card">
+      <h3>Decisions you can find</h3>
+      <p>Who decided what, and why, is written down as the work happens. Plan changes get their own commits, so they can be reviewed apart from the code.</p>
+    </div>
+  </div>
+</section>
+
+<section id="folder" class="wrap">
+  <h2>A change is a folder.</h2>
+  <p>Each piece of work gets a dated folder. Progress, decisions and a log travel in it, in the same commits as the code they describe.</p>
+<pre class="tree"><b>yass/</b>
+├── <b>changes/</b>                       <span class="dim">active work</span>
+│   ├── 2026-10-02-fix-double-tap-save/
+│   │   └── change.md              <span class="dim">small: goal, acceptance, steps, decisions, log</span>
+│   └── 2026-09-14-offline-sync/
+│       ├── change.md              <span class="dim">large: goal, decisions, log…</span>
+│       ├── prd.md                 <span class="dim">…why and what</span>
+│       ├── plan.md                <span class="dim">…how, and acceptance criteria</span>
+│       ├── design.md              <span class="dim">…the hard-to-undo calls (optional)</span>
+│       └── 2026-09-16-offline-queue/  <span class="dim">…and PR-sized pieces</span>
+└── <b>archive/</b>                       <span class="dim">finished changes, as they were</span></pre>
+  <p>That's the whole system: no database, no server, no config unless you want one. One small CLI, five playbooks your agent follows, and an optional git hook. YASS never commits for you.</p>
+</section>
+
+<section id="you-say" class="wrap">
+  <h2>You talk to your agent.</h2>
+  <p>The playbooks are skills your agent already knows how to follow. You don't learn a process; you ask.</p>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>You say</th><th>Playbook</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr><td>“Let's build offline sync”</td><td><code>yass-shape</code></td><td>a conversation that ends in a PRD you approve</td></tr>
+      <tr><td>“Plan it”</td><td><code>yass-plan</code></td><td>approach, acceptance criteria and PR-sized pieces; nothing gets built yet</td></tr>
+      <tr><td>“Fix the double-tap crash” or “Keep going”</td><td><code>yass-work</code></td><td>builds against the acceptance criteria, ticking boxes and logging as it goes, resuming from the last <b>Next:</b></td></tr>
+      <tr><td>“Where are we?”</td><td><code>yass-status</code></td><td>progress, blockers, recent decisions, what's ready to archive</td></tr>
+      <tr><td>“Why did we pick SQLite?”</td><td><code>yass-log</code></td><td>the decision, who made it and when, with the code that carried it out</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">The playbooks are <a href="https://agentskills.io">Agent Skills</a>, read natively by Codex, OpenCode and pi, and by Claude Code with <code>--claude</code>. Any agent that can read files and run a shell command can follow the rules. A plan from your harness’s plan mode becomes a change.</p>
+</section>
+
+<section id="install" class="wrap">
+  <h2>Install</h2>
+  <p>One <code>yass</code> binary on your PATH, plus a few plain files in your repo. The easiest way: paste this into your coding agent, from inside the repo you want to set up. It verifies the download, reads the install script, and asks before changing anything.</p>
+<pre class="copyable" data-source="docs/install.md"><code>Install YASS (https://github.com/donjaime/yass) in this repository. Go step by step, show me
+what you find, and don't run anything that changes files until I say so.
+
+1. Work out this machine's OS (darwin, linux or windows) and CPU (amd64 or arm64).
+2. In a temporary folder, download yass_&lt;os&gt;_&lt;arch&gt;.tar.gz (.zip on Windows) and checksums.txt
+   from https://github.com/donjaime/yass/releases/latest/download/.
+   If I've said "from source" instead: clone https://github.com/donjaime/yass, check out the
+   latest release tag, and build it with `go build -o bin/yass ./cmd/yass`; skip step 3.
+3. Check the archive's SHA-256 against its line in checksums.txt. If the GitHub CLI is installed,
+   also run `gh attestation verify &lt;archive&gt; --repo donjaime/yass`. Stop if either check fails.
+4. Unpack it and read install.sh in full. Tell me exactly what it will do: which files it writes
+   in this repo, anything it changes in git config, and anything it writes outside the repo.
+   Point out anything that looks unexpected.
+5. Ask me which options I want: copy the binary to ~/.local/bin (--bin-dir), Claude Code
+   files (--claude), playbooks in my user folder rather than this repo (--global), the optional
+   pre-commit hook (--hooks), or keeping the yass folder outside this repo (--path &lt;folder&gt;).
+6. Once I say go, run install.sh with those options, then `yass status` to check it works, and
+   show me `git status`. Don't commit; I'll review it and commit it myself.</code></pre>
+  <p>Or in one line, if you've read <a href="https://github.com/donjaime/yass/blob/main/install.sh">the script</a> and trust it. It downloads the latest release for your machine and checks its checksum:</p>
+<pre class="copyable" data-source="README.md"><code>curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .</code></pre>
+  <p>Prefer to check every step yourself? Install <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-a-release">from a release</a> with checksums and signed build provenance, or <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-source">from source</a> with Go. The <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#options">options</a> cover Claude Code, the git hook, and keeping plans outside the repo.</p>
+</section>
+
+</main>
+
+<footer class="wrap">
+  <p><a href="https://github.com/donjaime/yass">GitHub</a> · <a href="https://github.com/donjaime/yass/blob/main/README.md">README</a> · <a href="https://github.com/donjaime/yass/blob/main/docs/install.md">Install guide</a> · <a href="https://github.com/donjaime/yass/blob/main/LICENSE">MIT License</a></p>
+  <p class="dim">YASS: Yet Another Spec System.</p>
+</footer>
+
+<script>
+// Progressive enhancement: a copy button on each install block. The page is complete without it.
+document.querySelectorAll('pre.copyable').forEach(function (pre) {
+  if (!navigator.clipboard) return;
+  var b = document.createElement('button');
+  b.type = 'button'; b.className = 'copy'; b.textContent = 'Copy';
+  b.addEventListener('click', function () {
+    navigator.clipboard.writeText(pre.querySelector('code').textContent).then(function () {
+      b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500);
+    });
+  });
+  pre.appendChild(b);
+});
+</script>
+</body>
+</html>

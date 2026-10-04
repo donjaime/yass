@@ -43,6 +43,7 @@ jobs:
       - run: git config --global user.email ci@example.com && git config --global user.name CI
       - run: YASS_BIN="$PWD/bin/yass" bash tests/e2e.sh
       - run: YASS_BIN="$PWD/bin/yass" bash tests/examples.sh
+      - run: bash tests/site.sh
 
   # Cross-builds every release target (linux, macOS, windows; amd64, arm64) with GoReleaser,
   # exactly as a release would, and keeps the archives as a workflow artifact.
