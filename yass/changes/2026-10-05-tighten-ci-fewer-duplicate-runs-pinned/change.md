@@ -16,7 +16,7 @@ CI stays as safe for outside contributors as it is today (fork PRs get a read-on
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
 - [x] Given a push to a PR's branch, then `ci` runs once for that commit (for the PR), not also for the branch push; pushes to `main` and merge-queue runs still run it — verify: manual: push to a PR branch and list the runs for its commit (`gh run list --commit <sha>`)
 - [x] Given a PR branch pushed again while its `ci` run is in progress, then the older run is cancelled; runs on `main` are never cancelled — verify: manual: push twice in a row to a PR branch and check the first run's status
-- [ ] Given a PR that touches none of `.goreleaser.yaml`, `go.mod`, `go.sum`, `cmd/`, `kit/` or `.github/workflows/`, then the GoReleaser snapshot build is skipped and `ci-ok` still passes; on `main`, and on a PR that touches any of them, it runs — verify: manual: one PR of each kind
+- [x] Given a PR that touches none of `.goreleaser.yaml`, `go.mod`, `go.sum`, `cmd/`, `kit/` or `.github/workflows/`, then the GoReleaser snapshot build is skipped and `ci-ok` still passes; on `main`, and on a PR that touches any of them, it runs — verify: manual: one PR of each kind
 - [x] Given `release.yml`, then every third-party action is pinned to a full commit hash (with the version in a comment), and the GoReleaser version is pinned exactly — verify: manual: review; `grep -E 'uses: .*@' .github/workflows/release.yml` shows only 40-character hashes
 - [x] Given `ci.yml` and `pages.yml`, then their actions are pinned the same way — verify: manual: review
 - [x] Given a PR into `main` whose `ci-ok` hasn't passed, then GitHub won't merge it — verify: manual: a ruleset on `main` requiring `ci-ok`; try merging a PR while CI runs
@@ -66,3 +66,7 @@ CI stays as safe for outside contributors as it is today (fork PRs get a read-on
 ### 2026-10-05 (claude)
 - Did: on #22, this plans-only progress PR from a new branch: one `ci` run, from the PR only (no branch-push run), in which `changes` and `ci-ok` passed and `test` and `build` were skipped; and GitHub reported it `BLOCKED` while `ci-ok` ran, `CLEAN` after, so the ruleset enforces it.
 - Next: the last open criterion, a code PR that touches no release inputs skipping `build`, is checked on the next such PR; then archive.
+
+### 2026-10-05 (claude)
+- Did: the last criterion, seen on donjaime/yass#24 (a code PR touching `internal/yass/`, `tests/` and docs, no release inputs): one `pull_request` run in which the tests ran on Ubuntu and macOS, cross-compile check included, and `build` was skipped; #23, plans-only, ran only `changes` and `ci-ok`. Every box is done.
+- Next: done. Archive it.
