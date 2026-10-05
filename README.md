@@ -34,33 +34,47 @@ YASS doesn't commit for you. The CLI never commits (archiving only stages the mo
 
 ## Install
 
-YASS is one `yass` binary on your PATH, installed once per machine, plus a few files in each repo, set up once and committed so teammates get them from git: the playbooks in `.agents/skills/`, an empty `yass/` folder (or a [`yass.yaml`](#keeping-plans-out-of-the-repo) pointing elsewhere), a short section in `AGENTS.md`, and the optional hook in `tools/yass/githooks/`. `install.sh` sets up both, and it's short enough to read first. Pick one way; [docs/install.md](docs/install.md) has the details, including [setting up another repo](docs/install.md#another-repo) and [joining a repo that already uses YASS](docs/install.md#joining-a-repo-that-already-uses-yass), which need only one of the two parts.
+Two steps: get the `yass` binary, once per machine, then run `yass init` in each repo, once, and commit what it writes so teammates get it. [docs/install.md](docs/install.md) has the details, including monorepo folders and [joining a repo that already uses YASS](docs/install.md#joining-a-repo-that-already-uses-yass), which needs only the binary.
 
-**From a release.** Prebuilt for macOS, Linux and Windows, with checksums and signed build provenance:
+**1. Get the binary.** `install.sh` puts it in the folder you name and does nothing else; it's short enough to read first.
+
+From a release, prebuilt for macOS, Linux and Windows, with checksums and signed build provenance:
 
 ```bash
 curl -fsSLO https://github.com/donjaime/yass/releases/latest/download/yass_darwin_arm64.tar.gz   # your OS and CPU
 curl -fsSLO https://github.com/donjaime/yass/releases/latest/download/checksums.txt
 grep yass_darwin_arm64.tar.gz checksums.txt | shasum -a 256 -c
 tar -xzf yass_darwin_arm64.tar.gz && less yass_darwin_arm64/install.sh
-yass_darwin_arm64/install.sh --bin-dir ~/.local/bin path/to/your-repo
+yass_darwin_arm64/install.sh --bin-dir ~/.local/bin
 ```
 
-**From source.** With Go 1.24 or later:
+From source, with Go 1.24 or later:
 
 ```bash
 git clone https://github.com/donjaime/yass && cd yass
 go build -o bin/yass ./cmd/yass
-./install.sh --bin-dir ~/.local/bin path/to/your-repo
+./install.sh --bin-dir ~/.local/bin
 ```
 
-**With your agent.** Paste [the install prompt](docs/install.md#with-your-agent) into your coding agent. It downloads a release (or builds from source), verifies it, reads `install.sh` and tells you what it will change, and asks before running it.
+Or `go install github.com/donjaime/yass/cmd/yass@latest`. `~/.local/bin` has to be on your PATH so you, your agents and the hook can run `yass` (macOS doesn't put it there by default); if it isn't, `install.sh` ends with the line that adds it.
 
-**In one line,** from inside your repo, if you've read the script and trust it: `curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .` downloads the latest release for your machine and checks its checksum, but runs a script you haven't looked at.
+**2. Set up your repo.** From inside it:
 
-Each way copies the binary to `~/.local/bin`, which has to be on your PATH so you, your agents and the hook can run `yass` (macOS doesn't put it there by default). If it isn't, `install.sh` ends with the line that adds it. Pass a different folder to `--bin-dir` if you'd rather use one that's already on your PATH.
+```bash
+yass init
+```
 
-Then commit what it added: `git add -A && git commit -m "chore: adopt YASS"`. Add `--claude` for Claude Code, `--hooks` to turn on the hook, `--path <folder>` to keep the yass folder out of the repo, and `--global` to put the playbooks in your user folder instead of the repo. To update later, see [Upgrading](#upgrading).
+It writes the playbooks in `.agents/skills/`, a short section in `AGENTS.md`, an empty `yass/` folder (or a [`yass.yaml`](#keeping-plans-out-of-the-repo) pointing elsewhere, with `--path`) and the optional hook in `tools/yass/githooks/`, and lists them. Add `--claude` for Claude Code, `--hooks` to turn on the hook, and `--global` to put the playbooks in your user folder instead of the repo. Then commit it: `git add -A && git commit -m "chore: adopt YASS"`.
+
+**With your agent.** Paste [the install prompt](docs/install.md#with-your-agent) into your coding agent. It downloads a release (or builds from source), verifies it, reads `install.sh`, asks you for options, and runs both steps.
+
+**In one line,** from inside your repo, if you've read the script and trust it:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin && ~/.local/bin/yass init
+```
+
+It downloads the latest release for your machine and checks its checksum, but runs a script you haven't looked at. To update later, see [Upgrading](#upgrading).
 
 Then talk to your agent:
 
@@ -221,7 +235,7 @@ path: ../my-project-plans        # relative to this file
 # path: ${YASS_PLANS:-../my-project-plans}  # the variable if it's set, else a default
 ```
 
-`yass init --path <folder>` (or `install.sh --path <folder>`) writes it and creates the folder. From then on everything works as before: `yass new` puts changes there, `yass status` reads them, and `yass root` prints where it resolved. If a variable it uses isn't set (and has no `:-default`), `yass status` says so.
+`yass init --path <folder>` writes it and creates the folder. From then on everything works as before: `yass new` puts changes there, `yass status` reads them, and `yass root` prints where it resolved. If a variable it uses isn't set (and has no `:-default`), `yass status` says so.
 
 - **`yass/` is a link to it.** `yass init` and every `yass` command keep a `yass/` symlink in the checkout pointing to the plans folder, so you, your editor and your agents find them at `yass/` as usual. It's ignored through the clone's `.git/info/exclude`, so it never shows up in `git status` or in commits. Nothing depends on it: a real `yass/` already there is left alone (with a warning), and where symlinks can't be made (Windows without Developer Mode) YASS skips it with a note. Some tools don't follow links by default (`rg` needs `-L`).
 - **Worktrees find the same plans.** A relative path like `../my-project-plans` means "next to the checkout", so from a linked worktree somewhere else YASS looks where the clone's other checkouts see it, and links `yass/` there too. A `yass.yaml` kept out of git is borrowed from the main checkout the same way. If the plans aren't found from any checkout, a worktree never offers to create them: run `yass init` from the main checkout.
@@ -255,7 +269,7 @@ Their `yass/` folders and `yass.yaml` files are left out of `yass status`, `yass
 
 ## Harnesses
 
-The playbooks are [Agent Skills](https://agentskills.io) in `.agents/skills/`, which Codex, OpenCode and pi read natively. Claude Code reads `.claude/skills/`, so `install.sh --claude` copies them there and imports `AGENTS.md` from `CLAUDE.md`. The rules themselves live in `AGENTS.md` and the files, so any agent that can read files and run a shell command can follow them.
+The playbooks are [Agent Skills](https://agentskills.io) in `.agents/skills/`, which Codex, OpenCode and pi read natively. Claude Code reads `.claude/skills/`, so `yass init --claude` copies them there and imports `AGENTS.md` from `CLAUDE.md`. The rules themselves live in `AGENTS.md` and the files, so any agent that can read files and run a shell command can follow them.
 
 ### Plan mode
 

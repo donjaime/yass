@@ -28,8 +28,6 @@ archives:
       - README.md
       - LICENSE
       - CHANGELOG.md
-      - kit/.agents/skills/*/SKILL.md
-      - kit/tools/yass/githooks/pre-commit
 
 checksum:
   name_template: checksums.txt

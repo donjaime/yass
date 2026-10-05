@@ -150,7 +150,7 @@ if [ "$SELF" = 1 ]; then
   elif grep -q "assets/favicon.svg is still a placeholder" <<<"$o"; then ok "--deploy with a placeholder fails, naming it"
   else bad "--deploy with a placeholder failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
   if bash "$0" --root "$T/r" >/dev/null 2>&1; then ok "without --deploy, placeholders pass"; else bad "without --deploy, placeholders should pass"; fi
-  copy; edit "$T/r/site/index.html" 'docs/install.md#options' 'docs/install.md#no-such-heading'
+  copy; edit "$T/r/site/index.html" 'docs/install.md#from-a-release' 'docs/install.md#no-such-heading'
   if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "a link to a missing heading should fail"
   elif grep -q "has no heading for #no-such-heading" <<<"$o"; then ok "a link to a missing heading fails"
   else bad "a link to a missing heading failed for another reason"; fi
