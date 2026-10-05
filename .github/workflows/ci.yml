@@ -1,7 +1,17 @@
 name: ci
-on: [push, pull_request, merge_group]
+# Pushes to main and the merge queue; a PR's commits are checked once, as the PR (not again as a
+# branch push, whose first push has no "before" to compare with and so would run everything).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  merge_group:
 permissions:
   contents: read
+# A new push to a PR supersedes its checks still running; runs on main and in the queue always finish.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   # Commits that only change plans (yass/, yass.yaml) skip the build and tests: the recipe in
   # docs/monorepo.md, with yass built from this checkout. Branch protection should require ci-ok.
@@ -9,10 +19,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       code: ${{ steps.only.outputs.code }}
+      release: ${{ steps.release.outputs.release }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with: { fetch-depth: 0 }
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with: { go-version-file: go.mod }
       - id: only
         env:
@@ -24,6 +35,18 @@ jobs:
           else
             echo code=true >> "$GITHUB_OUTPUT"
           fi
+      # The release cross-build runs on main and in the merge queue, and on PRs that touch what it builds from.
+      - id: release
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "$EVENT" != pull_request ] ||
+             git diff --name-only "$BASE...$GITHUB_SHA" | grep -qE '^(\.goreleaser\.yaml|go\.(mod|sum)|cmd/|kit/|\.github/workflows/)'; then
+            echo release=true >> "$GITHUB_OUTPUT"
+          else
+            echo release=false >> "$GITHUB_OUTPUT"
+          fi
 
   test:
     needs: changes
@@ -34,8 +57,8 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with: { go-version-file: go.mod }
       - run: go vet ./...
       - run: go test ./...
@@ -43,21 +66,25 @@ jobs:
       - run: git config --global user.email ci@example.com && git config --global user.name CI
       - run: YASS_BIN="$PWD/bin/yass" bash tests/e2e.sh
       - run: YASS_BIN="$PWD/bin/yass" bash tests/examples.sh
+      # The release cross-build only runs where release inputs change, so check the other targets compile.
+      - if: matrix.os == 'ubuntu-latest'
+        run: for t in windows/amd64 linux/arm64 darwin/arm64; do GOOS=${t%/*} GOARCH=${t#*/} go build -o /dev/null ./cmd/yass; done
       - run: bash tests/site.sh
 
   # Cross-builds every release target (linux, macOS, windows; amd64, arm64) with GoReleaser,
   # exactly as a release would, and keeps the archives as a workflow artifact.
   build:
-    needs: test
+    needs: [changes, test]
+    if: needs.changes.outputs.release == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with: { fetch-depth: 0 }
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
         with: { go-version-file: go.mod }
-      - uses: goreleaser/goreleaser-action@v6
-        with: { version: "~> v2", args: release --snapshot --clean }
-      - uses: actions/upload-artifact@v4
+      - uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+        with: { version: "v2.18.2", args: release --snapshot --clean }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: yass-snapshot
           path: |

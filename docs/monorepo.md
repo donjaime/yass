@@ -29,8 +29,14 @@ So filter with a job, not with `on: paths`, and make one always-running job the 
 ```yaml
 on:
   push:
+    branches: [main]   # your default branch; a PR's commits are checked as the PR
   pull_request:
   merge_group:
+
+# A new push to a PR supersedes its checks still running; the default branch and the queue finish theirs.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   changes:
@@ -77,7 +83,7 @@ jobs:
       - run: echo "ok"
 ```
 
-A job that `needs:` a skipped job is skipped too, so a whole chain of jobs behind `test` drops out on a plan-only change, and `ci-ok` still reports. This repo's own [ci.yml](../.github/workflows/ci.yml) works this way, building `yass` from source instead of downloading it.
+Limit `push` to your default branch: on any other branch, a first push has no `before` commit to compare with, so the check falls back to running everything, and the PR's own run would check the same commit again. A job that `needs:` a skipped job is skipped too, so a whole chain of jobs behind `test` drops out on a plan-only change, and `ci-ok` still reports. This repo's own [ci.yml](../.github/workflows/ci.yml) works this way, building `yass` from source instead of downloading it.
 
 If you'd rather not install `yass` in CI, paste the output of `yass paths` into a plain diff check, and update it when a team adopts YASS:
 
