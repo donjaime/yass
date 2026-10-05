@@ -19,8 +19,8 @@ CI stays as safe for outside contributors as it is today (fork PRs get a read-on
 - [ ] Given a PR that touches none of `.goreleaser.yaml`, `go.mod`, `go.sum`, `cmd/`, `kit/` or `.github/workflows/`, then the GoReleaser snapshot build is skipped and `ci-ok` still passes; on `main`, and on a PR that touches any of them, it runs — verify: manual: one PR of each kind
 - [x] Given `release.yml`, then every third-party action is pinned to a full commit hash (with the version in a comment), and the GoReleaser version is pinned exactly — verify: manual: review; `grep -E 'uses: .*@' .github/workflows/release.yml` shows only 40-character hashes
 - [x] Given `ci.yml` and `pages.yml`, then their actions are pinned the same way — verify: manual: review
-- [/] Given a PR into `main` whose `ci-ok` hasn't passed, then GitHub won't merge it — verify: manual: a ruleset on `main` requiring `ci-ok`; try merging a PR while CI runs
-- [ ] Given a new PR branch that changes only plans (for example, an archive move), when it's pushed and its PR opens, then no run tests or builds anything: only the `changes` gate and `ci-ok` run — verify: manual: open a plans-only PR from a new branch and list the jobs of every run for its commit
+- [x] Given a PR into `main` whose `ci-ok` hasn't passed, then GitHub won't merge it — verify: manual: a ruleset on `main` requiring `ci-ok`; try merging a PR while CI runs
+- [x] Given a new PR branch that changes only plans (for example, an archive move), when it's pushed and its PR opens, then no run tests or builds anything: only the `changes` gate and `ci-ok` run — verify: manual: open a plans-only PR from a new branch and list the jobs of every run for its commit
 - [x] Given the change, then no workflow uses `pull_request_target` or `workflow_run`, workflow tokens default to read, and fork PRs from first-time contributors still need approval — verify: manual: `gh api repos/donjaime/yass/actions/permissions/workflow` and `…/fork-pr-contributor-approval`; review
 
 ## Steps
@@ -62,3 +62,7 @@ CI stays as safe for outside contributors as it is today (fork PRs get a read-on
 ### 2026-10-05 (claude)
 - Did: #19 and #20 merged (602d44a, 6b4b94e). On #20 before merging: its branch got only `pull_request` runs, never `push` ones, and the rebase's push cancelled the run for the older commit (one run per PR commit; superseded runs cancelled). On main after the merge, `ci` ran everything, `build` included, and `pages` redeployed because `pages.yml` itself changed. Still true: no `pull_request_target` or `workflow_run` in any workflow, workflow tokens default to read, fork-PR approval is `first_time_contributors`.
 - Next: this progress PR is plans-only, so it should run only `changes` and `ci-ok`, and stay blocked from merging until `ci-ok` passes; check both on it. The build-skip criterion needs a code PR that touches no release inputs (the next one will do). Then archive.
+
+### 2026-10-05 (claude)
+- Did: on #22, this plans-only progress PR from a new branch: one `ci` run, from the PR only (no branch-push run), in which `changes` and `ci-ok` passed and `test` and `build` were skipped; and GitHub reported it `BLOCKED` while `ci-ok` ran, `CLEAN` after, so the ruleset enforces it.
+- Next: the last open criterion, a code PR that touches no release inputs skipping `build`, is checked on the next such PR; then archive.
