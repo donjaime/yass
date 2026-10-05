@@ -759,5 +759,23 @@ cd "$W/e2e/hk-husky"; git add -A; git commit -q -m "chore: adopt YASS" --no-veri
 "$(vbin 0.5.0)" upgrade >/dev/null
 has   "yass upgrade leaves core.hooksPath alone" "^\.husky$" git config core.hooksPath
 
+echo "29. same-day changes list in creation order"
+newrepo "$W/e2e/created"; y init --no-agents >/dev/null
+PZ=$(y new "Zebra"); PA=$(y new "Apple"); PP=$(y new "Parent" --large); PC=$(y new "Piece zebra" --in Parent); PB=$(y new "Piece apple" --in Parent)
+has   "yass new stamps created: in UTC" "^created: [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" cat "$PZ/change.md"
+has   "…and keeps the dated folder name" "^yass/changes/$TODAY-zebra$" echo "$PZ"
+has   "…a large change too" "^created: .*Z$" cat "$PP/change.md"
+has   "…and a piece" "^created: .*Z$" cat "$PC/change.md"
+sub "$PZ/change.md" '^created: .*$' "created: ${TODAY}T00:00:01Z"; sub "$PA/change.md" '^created: .*$' "created: ${TODAY}T00:00:02Z"
+sub "$PP/change.md" '^created: .*$' "created: ${TODAY}T00:00:03Z"
+sub "$PC/change.md" '^created: .*$' "created: ${TODAY}T00:00:04Z"; sub "$PB/change.md" '^created: .*$' "created: ${TODAY}T00:00:05Z"
+mkdir -p "yass/changes/$TODAY-mango"; printf -- '---\nblocked:\n---\n# Mango\n\n- [ ] a\n' > "yass/changes/$TODAY-mango/change.md"
+has   "same-day changes list in creation order, unstamped first" "mango .*zebra .*apple .*parent .*piece-zebra .*piece-apple " bash -c 'yass status | tr "\n" " "'
+has   "an unstamped change still resolves" "# Mango|Mango" y status mango
+hasnt "…and draws no warning" "created" y status
+sub "$PA/change.md" '^created: .*$' "created: yesterday"
+has   "a created: that isn't a time warns" "apple: created 'yesterday' isn't a time" y status
+has   "…and sorts as unstamped (by date, then name)" "apple .*mango .*zebra " bash -c 'yass status | tr "\n" " "'
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

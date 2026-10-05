@@ -10,6 +10,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"time"
 )
 
 // skipDirs are only used outside git; inside git, .gitignore decides.
@@ -92,6 +93,23 @@ func (root *Root) rank(name string) int {
 		}
 	}
 	return len(root.Queue)
+}
+
+// created is when a change was made, for ordering: its created: stamp, else its folder's date,
+// which sorts before any stamp from the same day.
+func (c *Change) created() string {
+	if t, err := time.Parse(time.RFC3339, c.Meta["created"]); err == nil {
+		return t.UTC().Format(time.RFC3339)
+	}
+	if nameRE.MatchString(c.Name) {
+		return c.Name[:10]
+	}
+	return ""
+}
+
+// byCreated orders changes oldest first; ties keep their order (by name, as loaded).
+func byCreated(cs []*Change) {
+	sort.SliceStable(cs, func(i, j int) bool { return cs[i].created() < cs[j].created() })
 }
 
 type fileBox struct{ file, mark, text string }
@@ -550,7 +568,9 @@ func (r *Repo) load(root *Root, kind string, warn bool) []*Change {
 				return nil
 			})
 		}
+		byCreated(c.Pieces)
 	}
+	byCreated(out)
 	return out
 }
 
@@ -565,6 +585,11 @@ func (r *Repo) check() {
 	for _, c := range r.everything() {
 		if f := c.Meta["follows"]; f != "" && !known[path.Base(strings.TrimRight(f, "/"))] {
 			r.warn("%s: follows '%s', which isn't in changes/ or archive/", r.disp(c.Path), f)
+		}
+		if t := c.Meta["created"]; t != "" {
+			if _, err := time.Parse(time.RFC3339, t); err != nil {
+				r.warn("%s: created '%s' isn't a time like 2026-10-05T14:32:07Z", r.disp(c.Path), t)
+			}
 		}
 	}
 	r.checkDeps()

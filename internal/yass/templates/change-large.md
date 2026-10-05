@@ -3,6 +3,7 @@ platforms: [{{platforms}}]
 source: {{source}}
 follows: {{follows}}
 blocked:
+created: {{created}}
 ---
 # {{title}}
 
