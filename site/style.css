@@ -56,7 +56,7 @@ code, pre { font-family: var(--mono); font-size: 0.86em; }
 @media (min-width: 900px) { .hero { padding: 56px 0 80px; } }
 .hero-inner { display: flex; flex-direction: column; align-items: center; }
 .emblem {
-  width: clamp(170px, 26vw, 260px);
+  width: clamp(160px, 24vw, 240px);
   height: auto;
   filter: drop-shadow(0 14px 32px rgb(0 0 0 / 0.35));
 }

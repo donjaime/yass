@@ -4,7 +4,7 @@ Every image the page uses lives here, at a fixed path, so new graphics replace f
 
 | File | Required | Spec | Where it shows |
 |---|---|---|---|
-| `emblem.webp` | yes | square, at least 460×460, ideally 600×600, transparent background; the hex emblem trimmed close to its edges (the page draws it at up to 260 px) | top of the hero, above the YASS! wordmark (which is HTML text, not an image) |
+| `emblem.webp` | yes | square, at least 460×460, ideally 600×600, transparent background; the hex emblem trimmed close to its edges (the page draws it at up to 240 px) | top of the hero, above the YASS! wordmark (which is HTML text, not an image) |
 | `favicon.svg` | yes | square; reads at 16 px (the hex emblem alone, without the robot's detail, reads best) | browser tab |
 | `favicon-32.png` | yes | 32×32 | browser tab, for browsers without SVG favicons |
 | `apple-touch-icon.png` | yes | 180×180, opaque (no transparency) | home-screen icon on iOS |
