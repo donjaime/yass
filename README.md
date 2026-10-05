@@ -34,7 +34,7 @@ YASS doesn't commit for you. The CLI never commits (archiving only stages the mo
 
 ## Install
 
-YASS is one `yass` binary on your PATH, plus a few files in your repo: the playbooks in `.agents/skills/`, an empty `yass/` folder (or a [`yass.yaml`](#keeping-plans-out-of-the-repo) pointing elsewhere), a short section in `AGENTS.md`, and the optional hook in `tools/yass/githooks/`. `install.sh` sets up both, and it's short enough to read first. Pick one way; [docs/install.md](docs/install.md) has the details.
+YASS is one `yass` binary on your PATH, installed once per machine, plus a few files in each repo, set up once and committed so teammates get them from git: the playbooks in `.agents/skills/`, an empty `yass/` folder (or a [`yass.yaml`](#keeping-plans-out-of-the-repo) pointing elsewhere), a short section in `AGENTS.md`, and the optional hook in `tools/yass/githooks/`. `install.sh` sets up both, and it's short enough to read first. Pick one way; [docs/install.md](docs/install.md) has the details, including [setting up another repo](docs/install.md#another-repo) and [joining a repo that already uses YASS](docs/install.md#joining-a-repo-that-already-uses-yass), which need only one of the two parts.
 
 **From a release.** Prebuilt for macOS, Linux and Windows, with checksums and signed build provenance:
 
@@ -60,7 +60,7 @@ go build -o bin/yass ./cmd/yass
 
 Each way copies the binary to `~/.local/bin`, which has to be on your PATH so you, your agents and the hook can run `yass` (macOS doesn't put it there by default). If it isn't, `install.sh` ends with the line that adds it. Pass a different folder to `--bin-dir` if you'd rather use one that's already on your PATH.
 
-Then commit what it added: `git add -A && git commit -m "chore: adopt YASS"`. Add `--claude` for Claude Code, `--hooks` to turn on the hook, `--path <folder>` to keep the yass folder out of the repo, and `--global` to put the playbooks in your user folder instead of the repo. Re-run a newer release with `--upgrade` to update the binary, the playbooks and the hook, wherever they were installed; your changes are never touched ([upgrading](docs/install.md#upgrading)).
+Then commit what it added: `git add -A && git commit -m "chore: adopt YASS"`. Add `--claude` for Claude Code, `--hooks` to turn on the hook, `--path <folder>` to keep the yass folder out of the repo, and `--global` to put the playbooks in your user folder instead of the repo. To update later, see [Upgrading](#upgrading).
 
 Then talk to your agent:
 
@@ -75,6 +75,13 @@ Then talk to your agent:
 | "Where are we?" | `yass-status` | progress, blockers, recent decisions, what's ready to archive; changes nothing |
 | "Why did we pick SQLite?" | `yass-log` | the decision, who made it and when, from the folders and git, with the code that carried it out |
 | "Why does sync.go merge like this?" | `yass-log` | from the file's commits back to the change and decision that cite them |
+
+### Upgrading
+
+Like installing, upgrading has two parts. Upgrade the binary once per machine, then each repo you use YASS in:
+- Get the newer release and run its `install.sh --upgrade --bin-dir ~/.local/bin` in one repo: it replaces the binary, the playbooks and the hook, wherever they were installed. In your other repos, run the same command again; copying the same binary is harmless. Your changes, `yass.yaml` and your own parts of `AGENTS.md` are never touched.
+- Review the diff and commit it (`chore: upgrade YASS`), so teammates get the new playbooks. They upgrade their binary when the repo's playbooks move ahead.
+- Read the [release notes](https://github.com/donjaime/yass/releases) first: before 1.0, a minor version can change the file format or the CLI. [docs/install.md](docs/install.md#upgrading) has the details.
 
 ## The CLI
 

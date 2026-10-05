@@ -2,10 +2,10 @@
 
 YASS has two parts:
 
-- **The `yass` binary,** installed once per machine (and in CI if you use the hook there). It's a single Go binary with no runtime dependencies.
-- **A few files in each repo:** the playbooks in `.agents/skills/` (and `.claude/skills/` with `--claude`; or in your user folder with `--global`), the optional hook in `tools/yass/githooks/pre-commit`, a short section in `AGENTS.md`, and an empty `yass/` folder, or a `yass.yaml` pointing to one elsewhere with `--path`.
+- **The `yass` binary,** installed once per machine, on your PATH (and in CI if you use the hook there). It's a single Go binary with no runtime dependencies.
+- **A few files in each repo,** set up once and committed, so everyone who clones the repo gets them: the playbooks in `.agents/skills/` (and `.claude/skills/` with `--claude`; or in your user folder with `--global`), the optional hook in `tools/yass/githooks/pre-commit`, a short section in `AGENTS.md`, and an empty `yass/` folder, or a `yass.yaml` pointing to one elsewhere with `--path`.
 
-`install.sh` does both. It's about a hundred lines of bash; read it before you run it. It never touches your changes, and it only installs the binary when you pass `--bin-dir`.
+`install.sh` does both: `--bin-dir` installs the binary, and the repo you point it at (`.` for the one you're in) gets the files. It's about a hundred lines of bash; read it before you run it. It never touches your changes, and it only installs the binary when you pass `--bin-dir`. Already have `yass` and setting up [another repo](#another-repo), or [joining a repo that already uses YASS](#joining-a-repo-that-already-uses-yass)? Those need only one of the two parts.
 
 Two things to know before you start:
 - **Run it for the repo you want to set up:** from inside it (that's the `.` in the one-line install), or with that repo's path last.
@@ -77,6 +77,29 @@ curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bas
 
 When `install.sh` is piped in like this, it downloads the latest release for your machine (or `YASS_VERSION=v0.1.0`) and checks it against the release's `checksums.txt` before using it. That protects against a corrupted download, but not against the script itself: you're running code you haven't read. Prefer one of the ways above.
 
+## Another repo
+
+With `yass` already on your PATH, run the install again for the other repo. In one line, from inside it, drop `--bin-dir`: `install.sh` then uses the `yass` on your PATH.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- .
+```
+
+From a clone or an unpacked release, run `./install.sh --bin-dir ~/.local/bin path/to/other-repo` as before; copying the same binary again is harmless. (Without `--bin-dir`, it uses the binary next to it and warns that the one on your PATH is a different one.)
+
+Then commit what it added. Use the same release for every repo on a machine; if the playbooks it would install are newer than your binary, [upgrade](#upgrading) the binary first.
+
+## Joining a repo that already uses YASS
+
+The repo's files are already committed, so you only need the binary; don't run `install.sh`. Download and verify a release as in [From a release](#from-a-release), then copy the binary onto your PATH:
+
+```bash
+tar -xzf "yass_${os}_${arch}.tar.gz"
+cp "yass_${os}_${arch}/yass" ~/.local/bin/
+```
+
+Or, with Go, `go install github.com/donjaime/yass/cmd/yass@latest`. Run `yass status` in the repo to check it works. If the repo has been upgraded to a newer YASS than the latest you can get, or an older one you need to match, pick that release by its tag (replace `latest/download` with `download/v0.2.0`); the repo's upgrade commit (`chore: upgrade YASS`) says when it moved.
+
 ## Options
 
 | Option | What it does |
@@ -92,7 +115,7 @@ Without `--bin-dir`, `install.sh` uses a `yass` it finds next to it, in `bin/`, 
 
 ## Upgrading
 
-Get the newer release (or pull and rebuild), then run its `install.sh --upgrade --bin-dir ~/.local/bin` in your repo. It replaces the binary, the playbooks and the hook; your changes, `yass.yaml` and anything outside the `yass:begin`/`yass:end` markers in `AGENTS.md` are left alone. Review the diff and commit it (`chore: upgrade YASS`).
+Upgrading has the same two parts as installing: the binary, once per machine, and each repo's files, once per repo. Get the newer release (or pull and rebuild), then run its `install.sh --upgrade --bin-dir ~/.local/bin` in your repo; that does both. It replaces the binary, the playbooks and the hook; your changes, `yass.yaml` and anything outside the `yass:begin`/`yass:end` markers in `AGENTS.md` are left alone. Review the diff and commit it (`chore: upgrade YASS`). In your other repos, run the same command again (copying the same binary is harmless), or, from inside each, the one-line form below without `--bin-dir`, which uses the upgraded `yass` on your PATH.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --upgrade --bin-dir ~/.local/bin .

@@ -93,7 +93,7 @@
 
 <section id="install" class="wrap">
   <h2>Install</h2>
-  <p>One <code>yass</code> binary on your PATH, plus a few plain files in your repo. Pick a way in:</p>
+  <p>Two parts: the <code>yass</code> binary on your PATH, once per machine, and a few plain files in each repo, committed so your teammates get them. Pick a way in:</p>
   <div class="tabs">
     <div class="tablist" hidden>
       <button type="button" id="tab-terminal" aria-controls="install-terminal">Terminal</button>
@@ -102,11 +102,11 @@
     </div>
     <div class="panel" id="install-terminal">
       <h3>Terminal</h3>
-      <p>From inside the repo you want to set up: downloads the latest release for your machine, checks its checksum, and sets the repo up. <a href="https://github.com/donjaime/yass/blob/main/install.sh">Read the script</a> first.</p>
+      <p>Run it from inside the repo you want to set up. It does both parts: installs the <code>yass</code> binary to <code>~/.local/bin</code> (once per machine) and sets up this repo, ready for you to commit (once per repo). It downloads the latest release and checks its checksum; <a href="https://github.com/donjaime/yass/blob/main/install.sh">read the script</a> first.</p>
 <pre class="copyable" data-source="docs/install.md"><code>cd path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .</code></pre>
       <p class="note"><code>~/.local/bin</code> has to be on your PATH, and macOS doesn't put it there by default. If it isn't, the script ends with the line that adds it.</p>
-      <p class="note">Rather check each step? Install <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-a-release">from a release</a>, with checksums and signed build provenance.</p>
+      <p class="note">Rather check each step? Install <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-a-release">from a release</a>, with checksums and signed build provenance. Already have <code>yass</code>? See <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#another-repo">another repo</a>, or <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#joining-a-repo-that-already-uses-yass">joining a repo that already uses YASS</a>.</p>
     </div>
     <div class="panel" id="install-source">
       <h3>From Source</h3>
