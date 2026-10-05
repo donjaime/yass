@@ -3,46 +3,48 @@
      the code and its docs are that. Edit this file only in commits without code. -->
 
 ## Why
-Large YASS changes are split into pieces, and building them produces a stack of feature branches. At companies with mature review, each piece lands on main as its own pull request, one at a time, usually squash-merged, and the rest of the stack is rebased on top (`gh stack`, Graphite and similar tools exist for this). YASS should make that flow easy, not push people toward one big merge at the end.
+<!-- The problem, with evidence. -->
+People land YASS work in many ways: stacked pull requests squash-merged one at a time, branches merged with merge commits, or local merges with no code host at all. YASS's rules hold in all of them because they're about commits: intent edits, archive moves and `queue.md` reorders each get their own commit, and progress rides in the same commit as its code. How a branch is split, stacked and merged is the team's workflow, which their harness learns from them; YASS doesn't need to teach it.
 
-Most of YASS already fits: one piece is one PR, plan revisions go in their own branch underneath the code, and progress rides in the same commit as its code, which a squash keeps. Building `2026-10-04-monorepos-at-scale-and-plans-repos` in this repo showed where it rubs:
-- **Rules assume commits survive.** Intent edits, archive moves and `queue.md` reorders each "get their own commit", and the hook checks commit by commit. A squash merge folds a PR's commits into one, so a PR with an intent commit and a code commit lands as one mixed commit. The hook passed it, and `yass-log` can no longer tell intent from code.
+Landing large changes in this repo with squash-merged stacks (2026-10-04 and 2026-10-05) showed four places where YASS itself falls short, whatever the workflow:
+- **A squash folds a PR's commits into one,** so a commit that has to stay apart from code (an archive move, a plan revision, a queue reorder) needs a PR apart from code. Nothing in YASS says so, and "in its own commit" reads stricter than the hook's actual rule (apart from code): an agent split a change's last progress from its archive move, and a PRD revision from its plan, into separate PRs that could have shared one.
+- **`yass-work` asks for latitude to commit, branch and rebase, but not to push or open PRs,** so an agent following it published two PRs before the human had reviewed them locally.
 - **Closing commits multiply PRs.** With pieces owning their files, a parent's criteria are marked in a separate closing commit, so every finished piece costs an extra plan-only PR.
-- **Separate plans cite SHAs a squash rewrites.** Citations to branch commits stop resolving after a squash merge.
-- **Stacks get deeper than they need to be.** Here, pieces that didn't depend on each other were stacked anyway, which means more rebasing and more waiting.
+- **`yass-log` reads commits,** and after a squash merge the PR is what a decision maps to.
 
 ## Users and outcomes
-Teams that land YASS work through pull requests, stacked or not, with squash merges or merge commits. And the CI owners who pay for each run.
-- **The basic rule** (Jaime): a pull request that only changes YASS files (PRDs, plans, designs, archive moves, queue reorders) runs no build or tests. Code and the YASS progress it delivers (boxes, Log, Decisions) land together, in pull requests that run CI.
-- A large change with N pieces lands as N code PRs plus at most one closing PR, plus one plan-only PR for each plan revision. No extra PR per finished piece.
-- In a simulated stack where every PR is squash-merged and the rest are rebased onto main, YASS files cause no conflicts, and main's history passes the hook.
+<!-- Who it's for, and measurable targets ("p50 time to log < 5s"). -->
+Anyone landing YASS work, through pull requests (squash-merged or not) or local merges.
+- Someone who squash-merges learns from YASS's own docs and `yass-work` that a commit that must stand alone needs its own PR, before it bites.
+- An agent following `yass-work` never pushes or opens a PR without the latitude to.
+- A large change with N pieces lands with no closing commit per piece: its parent criteria count as done once the pieces delivering them are, and the archive is the one closing commit.
+- `yass-log` names the PR behind a squash-merged decision.
 
 ## Requirements
-- **R1** [M1] `docs/monorepo.md` states the basic rule and shows how to apply it. A PR that only touches YASS paths skips build and tests, and a PR with code runs them, its YASS progress included.
-- **R2** [M1] `docs/monorepo.md` explains how YASS work lands as PRs: which kinds of PR there are (plan-only, code with progress, closing), how they stack, and what changes with squash merges.
-- **R3** [M2] `merges: squash | commits` in `yass.yaml` says how the repo merges, and defaults to `squash`. With squash merges, `yass hook --range A...B` checks the whole range as the single commit it will become: intent with code, an archive move with code, or a `queue.md` reorder with code is reported.
-- **R4** [M2] With squash merges, the pre-commit hook warns when a commit would mix intent and code within its branch: committing code on a branch that already changes intent since it left its base, or the other way round.
+<!-- One line each: "- **R1** [M1] A user can …". IDs are never reused. -->
+- **R2** [M1] `docs/monorepo.md` says what squash merges mean for YASS's rules: a squash folds a PR into one commit, so a plan revision, an archive move or a `queue.md` reorder needs a PR apart from code, though intent, progress and archive commits can share one; how a team splits and stacks its branches is up to it.
+- **R13** [M1] `yass-work` and the `AGENTS.md` section say the same where they ask for intent and archives in their own commits: "their own commit" means apart from code, and under squash merges that means a PR apart from code.
+- **R14** [M1] `yass-work` treats pushing a branch and opening or updating a PR like committing, branching and rebasing: only with that latitude, otherwise it shows the human the commands.
+- **R9** [M1] `yass-log` attributes a squash-merged commit to its PR, from the `(#N)` in its subject, when it explains a decision.
 - **R5** [M2] A parent criterion counts as done in `yass status` and `yass archive` once every piece delivering it (by its `Delivers AC…` box) is done, so no closing commit is needed per piece.
-- **R6** [M2] `yass archive` marks a large change's delivered parent criteria `[x]` as part of the archive move, so the one closing PR is the archive itself.
-- **R7** [M2] `yass-work` starts a piece's branch from main, unless the piece's `blocked:` names a piece that hasn't landed yet. Then it stacks the branch on that piece's branch.
-- **R8** [M2] `yass-work` and `yass-plan` keep plan revisions, archives and queue reorders in their own plan-only PRs, and progress in the PR of the code it describes. A PR description names the change or piece (and, with separate plans, carries the `yass:` trailer).
-- **R9** [M2] `yass-log` reads squash-merged history: it attributes a squash commit to its PR, and judges intent against code per PR rather than per commit.
-- **R10** [M3] An e2e scenario lands a three-piece stack one squash-merged PR at a time, rebasing the rest onto main after each. It checks that YASS files cause no conflicts, that `yass status` is right after each landing, and that `yass hook --range` passes on main's history and flags a mixed PR before it lands.
-- **R11** [M3] This repo lands its next pieces through squash merges, and records what worked and what didn't in the Log.
+- **R6** [M2] `yass archive` marks a large change's delivered parent criteria `[x]` as part of the archive move, so the archive is the one closing commit.
+- **R10** [M2] An e2e scenario lands a three-piece change one squash-merged branch at a time: `yass status` is right after each landing, no piece needs a closing commit, the archive closes it, and main's history passes the hook.
 
 ## Non-goals
-- A stacking tool. Rebasing a stack after a squash is the job of `gh stack`, Graphite and similar tools; YASS only stays out of their way.
-- Opening, updating or merging pull requests from `yass`. It never talks to a code host's API.
+<!-- What this change will not do. Agents treat these as walls. -->
+- Workflow guidance: how to branch, stack, sync, choose a merge style or land a stack, or which tools to use (`gh stack`, Graphite and the like teach their own). The playbooks stay compatible with however people work, and their harness learns the rest from them.
+- Checking PRs or branches as a whole. The hook stays per commit: a commit that mixes intent and code is the line YASS draws, and a branch with separate intent and code commits can always be split into stacked branches by whoever needs it.
+- Settings for any of this in `yass.yaml`.
+- A stacking tool, or talking to a code host's API.
 - Limits on PR size or stack depth.
-- Changing the rule that progress rides in the same commit (or PR) as the code it describes.
-- The `yass:` trailer itself, and how it survives squash merges. That's `2026-10-04-monorepos-at-scale-and-plans-repos` (M3); this change only makes sure the PR guidance carries it.
+- Changing the rule that progress rides in the same commit as the code it describes.
+- The `yass:` trailer and SHA citations under squash merges: `2026-10-04-monorepos-at-scale-and-plans-repos` (M3).
 
 ## Milestones
 | Milestone | When it ships, a user can … |
 |---|---|
-| M1 | set CI up so that plan-only PRs cost nothing and code PRs carry their progress, from one page of docs |
-| M2 | land a large change as a stack of squash-merged PRs, one per piece, with YASS checking each PR as the commit it becomes, and no closing PR per piece |
-| M3 | trust it: an e2e stack lands cleanly, and this repo works that way |
+| M1 | squash-merge YASS work knowing which commits need their own PR, trust an agent not to publish without the latitude to, and trace a squash-merged decision to its PR |
+| M2 | land a large change with no closing commit per piece, the archive closing it, as an e2e test shows |
 
 ## Open questions
-None. Both raised while shaping were settled on 2026-10-04 (see `change.md` Decisions).
+None.
