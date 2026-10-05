@@ -35,3 +35,7 @@ Using YASS takes two steps that each say what they do: get the `yass` binary, on
 ### YYYY-MM-DD (<who>)
 - Did: …
 - Next: … -->
+
+### 2026-10-05 (claude)
+- Did: all five pieces merged through the stacked PRs donjaime/yass#1–#8 (squash-merged bottom up with `gh stack`); `v0.3.0-rc.1` tagged on 5a67c7d and published as a pre-release; the release-candidate checks in the plan's Validation passed (see the `install-sh-installs-the-binary` piece's Log); this repo's own YASS files upgraded to `0.3.0-rc.1` with `yass upgrade`.
+- Next: done. Archive it. The final `v0.3.0` release (dating the changelog entry) is a release step, not part of this change.
