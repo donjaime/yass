@@ -14,7 +14,7 @@ A parent criterion counts as done in yass status and yass archive once every pie
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC6–AC12 in [plan.md](../plan.md)
+- [ ] Delivers AC7–AC13 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->

@@ -14,12 +14,13 @@ docs/monorepo.md and yass-work say what squash merges mean for YASS's rules (a c
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC1–AC5 in [plan.md](../plan.md)
+- [ ] Delivers AC1–AC6 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
 - [ ] `docs/monorepo.md`: a short section on squash merges
-- [ ] `yass-work`: the own-PR sentence; push and PRs need latitude
+- [ ] `yass-work`: "apart from code" and the squash-merge sentence; push and PRs need latitude
+- [ ] `templates/agents.md`: "apart from code" on the intent and archive lines
 - [ ] `yass-log`: name a squash-merged commit's PR
 - [ ] Review the diff: no workflow guidance
 
