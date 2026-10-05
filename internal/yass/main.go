@@ -16,9 +16,11 @@ const usage = `yass: Yet Another Spec System. Planned work as change folders.
 
 usage: yass <command> [options]
 
-  init [dir] [--path P] [--no-agents]   set up YASS: the yass folder (in dir, for a team folder), the
-       [--claude] [--global] [--hooks]  AGENTS.md section, and (for the repo itself) the playbooks and
-       [--private]                      the hook script; --path writes a yass.yaml pointing to P;
+  init [dir] [--path P] [--agents]      set up YASS: the yass folder, and for the repo itself the
+       [--claude] [--global] [--hooks]  AGENTS.md section, the playbooks and the hook script; for a
+       [--no-agents] [--private]        folder (dir), only its planning, or with --agents its own
+                                        AGENTS.md section and playbooks too (the hook stays at the root);
+                                        --path writes a yass.yaml pointing to P;
                                         --claude adds Claude Code's copies and the CLAUDE.md import;
                                         --global puts the playbooks in your user folder; --hooks turns
                                         the hook on; --no-agents skips AGENTS.md, the playbooks and the
@@ -45,7 +47,7 @@ type spec struct {
 }
 
 var specs = map[string]spec{
-	"init":     {[]string{"no-agents", "private", "claude", "global", "hooks"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--claude] [--global] [--hooks] [--no-agents] [--private]"},
+	"init":     {[]string{"no-agents", "private", "claude", "global", "hooks", "agents"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--agents] [--claude] [--global] [--hooks] [--no-agents] [--private]"},
 	"new":      {[]string{"large", "design"}, []string{"in", "goal", "platforms", "source", "follows"}, 1, 1, `yass new "<title>" [--large] [--design] [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]`},
 	"status":   {[]string{"archived", "strict"}, nil, 0, 1, "yass status [<change>] [--archived] [--strict]"},
 	"archive":  {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},

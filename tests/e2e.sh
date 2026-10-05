@@ -631,5 +631,44 @@ mkdir -p svc; yass init svc >/dev/null
 newrepo "$W/e2e/alone-noagents"; yass init --no-agents >/dev/null
 [ ! -e .agents ] && [ ! -e tools ] && [ ! -e AGENTS.md ] && ok "--no-agents skips AGENTS.md, the playbooks and the hook" || bad "--no-agents wrote agent files"
 
+# vbin VERSION: a yass binary that reports VERSION ("dev" for none), built once, for checks that
+# depend on versions; CI's own build reports whatever its checkout gives it.
+vbin() { local d="$W/vbin/$1"
+  if [ ! -x "$d/yass" ]; then mkdir -p "$d"
+    if [ "$1" = dev ]; then (cd "$ROOT" && go build -buildvcs=false -o "$d/yass" ./cmd/yass)
+    else (cd "$ROOT" && go build -ldflags "-X main.version=$1" -o "$d/yass" ./cmd/yass); fi
+  fi; echo "$d/yass"; }
+
+echo "25. agent files per folder, for monorepos"
+newrepo "$W/e2e/mono"; yass init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+ROOT_AGENTS="$(cksum < AGENTS.md)"
+mkdir -p apps/web services/api
+yass init services/api >/dev/null
+[ -d services/api/yass/changes ] && ok "a folder without --agents gets its planning" || bad "no services/api/yass"
+[ ! -e services/api/AGENTS.md ] && [ ! -e services/api/.agents ] && ok "…and no agent files" || bad "folder init wrote agent files"
+[ "$(cksum < AGENTS.md)" = "$ROOT_AGENTS" ] && ok "…and leaves the root AGENTS.md alone" || bad "folder init changed the root AGENTS.md"
+mkdir -p services/ext; yass init services/ext --path ../../../mono-ext-plans >/dev/null
+[ -f services/ext/yass.yaml ] && [ ! -e services/ext/AGENTS.md ] && ok "…or its yass.yaml, with --path" || bad "folder --path init wrote the wrong files"
+printf '# Web rules\n' > apps/web/AGENTS.md
+WEB_OUT="$(yass init apps/web --agents --claude)"
+has   "--agents puts the YASS section in the folder's AGENTS.md" "yass:begin version=" cat apps/web/AGENTS.md
+has   "…keeping what was there" "# Web rules" cat apps/web/AGENTS.md
+[ -f apps/web/.agents/skills/yass-work/SKILL.md ] && ok "…and the playbooks under the folder" || bad "no apps/web/.agents/skills"
+[ -f apps/web/.claude/skills/yass-work/SKILL.md ] && has "…with Claude's copies and import there, with --claude" "^@AGENTS.md$" head -1 apps/web/CLAUDE.md || bad "no Claude files in apps/web"
+[ ! -e apps/web/tools ] && ok "…and no second hook" || bad "--agents wrote a hook into the folder"
+[ -d apps/web/yass/changes ] && ok "…along with its planning" || bad "no apps/web/yass"
+[ "$(cksum < AGENTS.md)" = "$ROOT_AGENTS" ] && ok "…and the root AGENTS.md is untouched" || bad "--agents changed the root AGENTS.md"
+has   "it lists what it wrote" "wrote apps/web/.agents/skills/yass-work/SKILL.md" echo "$WEB_OUT"
+echo "Ours" > .agents/skills/yass-plan/SKILL.md; rm .agents/skills/yass-log/SKILL.md
+REINIT="$("$(vbin 0.5.0)" init)"
+has   "re-running init writes what's missing" "wrote .agents/skills/yass-log/SKILL.md" echo "$REINIT"
+has   "…and keeps what's there" "^Ours$" cat .agents/skills/yass-plan/SKILL.md
+has   "…and says yass upgrade would update files older than the binary (an unstamped one here)" "yass upgrade. updates them" echo "$REINIT"
+git checkout -q -- .agents; git clean -qfd .agents
+hasnt "a repo at the binary's version gets no upgrade note" "yass upgrade" yass init
+sub AGENTS.md 'yass:begin version=\S+' 'yass:begin version=0.0.1'
+has   "…an AGENTS.md section stamped older gets one" "yass upgrade. updates them" "$(vbin 0.5.0)" init
+has   "…and init leaves the section as it is" "version=0.0.1 " cat AGENTS.md
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

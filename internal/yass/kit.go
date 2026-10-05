@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/mod/semver"
+
 	"github.com/donjaime/yass/kit"
 )
 
@@ -86,59 +88,118 @@ func userClaudeSkillsDir() string {
 	return filepath.Join(home, ".claude", "skills")
 }
 
-// writeKit writes the playbooks (in the repo, or the user folder with global), Claude Code's copies
-// and the CLAUDE.md import (with claude), and the hook script, all stamped with this binary's
-// version. Files that already exist are kept. It returns the files it wrote.
-func writeKit(top string, claude, global bool) ([]string, error) {
-	var made []string
-	place := func(p, text string, mode os.FileMode) error {
-		if exists(p) {
-			return nil
-		}
-		if err := write(p, text); err != nil {
-			return err
-		}
-		if mode != 0 {
-			if err := os.Chmod(p, mode); err != nil {
-				return err
-			}
-		}
-		made = append(made, p)
+// kitWriter writes stamped kit files, keeping any that already exist; it remembers which it
+// wrote and which it kept, so init can list the first and check the second's versions.
+type kitWriter struct{ made, kept []string }
+
+func (w *kitWriter) place(p, text string, mode os.FileMode) error {
+	if exists(p) {
+		w.kept = append(w.kept, p)
 		return nil
 	}
+	if err := write(p, text); err != nil {
+		return err
+	}
+	if mode != 0 {
+		if err := os.Chmod(p, mode); err != nil {
+			return err
+		}
+	}
+	w.made = append(w.made, p)
+	return nil
+}
+
+// agentFiles writes the playbooks into dir's .agents/skills (or the user folder, with global) and,
+// with claude, Claude Code's copies and the CLAUDE.md import in dir. dir is the repo root, or a
+// monorepo folder that keeps its own agent files (yass init <folder> --agents).
+func (w *kitWriter) agentFiles(dir string, claude, global bool) error {
 	v := stampVersion()
-	skills, claudeSkills := filepath.Join(top, ".agents", "skills"), filepath.Join(top, ".claude", "skills")
+	skills, claudeSkills := filepath.Join(dir, ".agents", "skills"), filepath.Join(dir, ".claude", "skills")
 	if global {
 		skills, claudeSkills = userSkillsDir(), userClaudeSkillsDir()
 	}
 	names, text := kitSkills()
 	for _, n := range names {
 		stamped := stampSkill(text[n], v)
-		if err := place(filepath.Join(skills, n, "SKILL.md"), stamped, 0); err != nil {
-			return made, err
+		if err := w.place(filepath.Join(skills, n, "SKILL.md"), stamped, 0); err != nil {
+			return err
 		}
 		if claude {
-			if err := place(filepath.Join(claudeSkills, n, "SKILL.md"), stamped, 0); err != nil {
-				return made, err
+			if err := w.place(filepath.Join(claudeSkills, n, "SKILL.md"), stamped, 0); err != nil {
+				return err
 			}
 		}
 	}
-	hook, _ := kit.FS.ReadFile(HookPath + "/pre-commit")
-	if err := place(filepath.Join(top, filepath.FromSlash(HookPath), "pre-commit"), stampHook(string(hook), v), 0o755); err != nil {
-		return made, err
-	}
 	if claude {
-		cm := filepath.Join(top, "CLAUDE.md")
+		cm := filepath.Join(dir, "CLAUDE.md")
 		if cur := read(cm); !strings.Contains(cur, "@AGENTS.md") {
 			next := "@AGENTS.md\n"
 			if cur != "" {
 				next += "\n" + cur
 			}
 			if err := write(cm, next); err != nil {
-				return made, err
+				return err
 			}
-			made = append(made, cm)
+			w.made = append(w.made, cm)
 		}
 	}
-	return made, nil
+	return nil
+}
+
+// hook writes the hook script, which belongs to the repo root: git hooks are per repo.
+func (w *kitWriter) hook(top string) error {
+	b, _ := kit.FS.ReadFile(HookPath + "/pre-commit")
+	return w.place(filepath.Join(top, filepath.FromSlash(HookPath), "pre-commit"), stampHook(string(b), stampVersion()), 0o755)
+}
+
+var (
+	skillStampRE  = regexp.MustCompile(`(?m)^[ \t]+yass-version:[ \t]*"?([^"\s]+)"?[ \t]*$`)
+	agentsStampRE = regexp.MustCompile(`<!-- yass:begin version=(\S+)`)
+	hookStampRE   = regexp.MustCompile(`(?m)^# yass-version:[ \t]*(\S+)[ \t]*$`)
+)
+
+// readStamp returns the version stamped in a YASS file (a playbook, an AGENTS.md or the hook), or ""
+// for a file with none, as v0.1 and v0.2 wrote them.
+func readStamp(p string) string {
+	text := read(p)
+	var m []string
+	switch {
+	case filepath.Base(p) == "SKILL.md":
+		if f := fmRE.FindStringSubmatch(text); f != nil {
+			m = skillStampRE.FindStringSubmatch(f[1])
+		}
+	case filepath.Base(p) == "AGENTS.md":
+		m = agentsStampRE.FindStringSubmatch(text)
+	default:
+		m = hookStampRE.FindStringSubmatch(text)
+	}
+	if m == nil {
+		return ""
+	}
+	return m[1]
+}
+
+// semverOf turns a stamp or the binary's version into SemVer ("0.3.0" -> "v0.3.0"); "" if it isn't one.
+func semverOf(v string) string {
+	if v == "" {
+		return ""
+	}
+	if !strings.HasPrefix(v, "v") {
+		v = "v" + v
+	}
+	if !semver.IsValid(v) {
+		return ""
+	}
+	return v
+}
+
+// olderThanBinary says whether a stamp is older than this binary's version. An unstamped file is
+// older than any stamped one (design §3); a binary without a version compares with nothing.
+func olderThanBinary(stamp string) bool {
+	bin := semverOf(binVersion)
+	if bin == "" {
+		return false
+	}
+	s := semverOf(stamp)
+	return s == "" || semver.Compare(s, bin) < 0
 }
