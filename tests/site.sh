@@ -36,6 +36,14 @@ folder="$(section folder)"
 for f in change.md prd.md plan.md design.md archive/; do
   if grep -qF "$f" <<<"$folder"; then ok "#folder shows $f"; else bad "#folder doesn't show $f"; fi
 done
+install="$(section install)"
+for spec in terminal:Terminal "source:From Source" "agent:Agent Prompt"; do
+  id="install-${spec%%:*}"; name="${spec#*:}"
+  if ID="$id" NAME="$name" perl -0777 -e '$_ = <STDIN>; exit !(/<div class="panel" id="\Q$ENV{ID}\E">\s*<h3>\Q$ENV{NAME}\E<\/h3>.*?<pre/s)' <<<"$install"; then
+    ok "#$id has its heading and commands in the HTML"; else bad "#$id is missing, or has no <h3>$name</h3> and <pre>"; fi
+  if grep -qF "aria-controls=\"$id\">$name</button>" <<<"$install"; then ok "the $name tab controls #$id"; else bad "no $name tab controlling #$id"; fi
+done
+if grep -q '<div class="tablist" hidden>' <<<"$install"; then ok "the tab bar is hidden without JavaScript"; else bad "the tab bar should start hidden, so the page works without JavaScript"; fi
 yousay="$(section you-say)"
 for s in yass-shape yass-plan yass-work yass-status yass-log; do
   if grep -qF "<code>$s</code>" <<<"$yousay"; then ok "#you-say has $s"; else bad "#you-say has no row for $s"; fi
@@ -76,12 +84,20 @@ for l in $(perl -ne 'print "$1\n" while m{href="https://github\.com/donjaime/yas
 done
 
 echo "Assets"
-dims() { perl -0777 -ne 'my ($w, $h) = unpack("NN", substr($_, 16, 8)); print "${w}x$h" if substr($_, 1, 3) eq "PNG"' "$1"; }
-for spec in logo.svg: favicon.svg: favicon-32.png:32x32 apple-touch-icon.png:180x180 og.png:1200x630; do
+# dims FILE: WxH of a PNG, or of a WebP with a VP8X header (what cwebp writes with metadata or alpha)
+dims() { perl -0777 -ne '
+  if (substr($_, 1, 3) eq "PNG") { my ($w, $h) = unpack("NN", substr($_, 16, 8)); print "${w}x$h" }
+  elsif (substr($_, 8, 8) eq "WEBPVP8X") { my @b = unpack("C6", substr($_, 24, 6));
+    printf "%dx%d", 1 + $b[0] + ($b[1] << 8) + ($b[2] << 16), 1 + $b[3] + ($b[4] << 8) + ($b[5] << 16) }' "$1"; }
+for spec in emblem.webp:square favicon.svg: favicon-32.png:32x32 apple-touch-icon.png:180x180 og.png:1200x630; do
   f="${spec%%:*}"; want="${spec#*:}"
   if [ ! -f "$SITE/assets/$f" ]; then bad "assets/$f is missing"; continue; fi
   if ! grep -qF "assets/$f" "$PAGE"; then bad "the page doesn't reference assets/$f"; continue; fi
-  if [ -n "$want" ] && [ "$(dims "$SITE/assets/$f")" != "$want" ]; then bad "assets/$f is $(dims "$SITE/assets/$f"), not $want"; continue; fi
+  got="$(dims "$SITE/assets/$f")"
+  if [ "$want" = square ]; then
+    w="${got%x*}"
+    if [ -z "$got" ] || [ "$got" != "${w}x$w" ] || [ "$w" -lt 460 ]; then bad "assets/$f is ${got:-unreadable}, not square and at least 460×460"; continue; fi
+  elif [ -n "$want" ] && [ "$got" != "$want" ]; then bad "assets/$f is $(dims "$SITE/assets/$f"), not $want"; continue; fi
   ok "assets/$f"
 done
 for p in og:title og:description twitter:card; do
@@ -114,9 +130,9 @@ if [ "$SELF" = 1 ]; then
   if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "an edited agent prompt in docs/install.md should fail"
   elif grep -q "doesn't match docs/install.md" <<<"$o"; then ok "an edited agent prompt in docs/install.md fails, naming the block"
   else bad "an edited agent prompt failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
-  copy; printf '\n<!-- yass-placeholder -->\n' >> "$T/r/site/assets/logo.svg"
+  copy; printf '\n<!-- yass-placeholder -->\n' >> "$T/r/site/assets/favicon.svg"
   if o="$(bash "$0" --root "$T/r" --deploy 2>&1)"; then bad "--deploy with a placeholder should fail"
-  elif grep -q "assets/logo.svg is still a placeholder" <<<"$o"; then ok "--deploy with a placeholder fails, naming it"
+  elif grep -q "assets/favicon.svg is still a placeholder" <<<"$o"; then ok "--deploy with a placeholder fails, naming it"
   else bad "--deploy with a placeholder failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
   if bash "$0" --root "$T/r" >/dev/null 2>&1; then ok "without --deploy, placeholders pass"; else bad "without --deploy, placeholders should pass"; fi
   copy; edit "$T/r/site/index.html" 'docs/install.md#options' 'docs/install.md#no-such-heading'

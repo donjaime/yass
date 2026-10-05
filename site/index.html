@@ -3,17 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>YASS: your agents don't lose the plot</title>
-<meta name="description" content="YASS keeps the plan, progress and decisions for every change in plain files next to your code, so any person or agent, on any harness, picks up where the last one stopped.">
+<title>YASS! Yet Another Spec System</title>
+<meta name="description" content="YASS keeps the plan, progress and decisions for every change in plain files next to your code, so any person or agent can follow along.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://donjaime.github.io/yass/">
-<meta property="og:title" content="YASS: your agents don't lose the plot">
-<meta property="og:description" content="Plan and track work with coding agents, in plain files next to your code. Spec only what changes; any person or agent picks up where the last one stopped.">
+<meta property="og:title" content="YASS! Yet Another Spec System">
+<meta property="og:description" content="Plan and track work with coding agents, in plain files next to your code. Spec only what changes, so any person or agent can follow along.">
 <meta property="og:image" content="https://donjaime.github.io/yass/assets/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="YASS: your agents don't lose the plot">
+<meta property="og:image:alt" content="YASS! Yet Another Spec System">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
@@ -23,31 +23,15 @@
 <body>
 
 <header class="hero">
-  <div class="wrap hero-grid">
-    <div class="hero-text">
-      <h1 class="logo"><img src="assets/logo.svg" alt="YASS!" width="320" height="96"></h1>
-      <p class="sub-header">Yet Another Spec System.</p>
-      <p class="lede">YASS keeps the plan, progress and decisions for every change in plain files next to your code, so any person or agent can follow along.</p>
-      <p class="kicker">A sassy “yes” to building with coding agents.</p>
-      <p class="actions">
-        <a class="button primary" href="#install">Install</a>
-        <a class="button" href="https://github.com/donjaime/yass">GitHub</a>
-      </p>
-    </div>
-    <!-- Hero art slot: to use an illustration instead of the card, replace the <figure>'s contents
-         with <img src="assets/hero.svg" alt="" width="480" height="360">. See assets/README.md. -->
-    <figure class="hero-art" aria-label="The end of a change's log">
-      <div class="file">
-        <div class="file-name">changes/2026-09-14-offline-sync/change.md</div>
-<pre><span class="dim">## Log</span>
-<span class="dim">### 2026-09-17 (claude)</span>
-- Did: queue persists across restarts;
-  AC3 and AC4 pass on iOS and Android
-- <b>Next:</b> retry with backoff (AC5), then
-  the sync badge piece</pre>
-      </div>
-      <figcaption>A new session, a different agent, or you next week: everyone starts from the last <b>Next</b>.</figcaption>
-    </figure>
+  <div class="wrap hero-inner">
+    <img class="emblem" src="assets/emblem.webp" alt="" width="240" height="240">
+    <h1><span class="wordmark">YASS<span class="bang">!</span></span> <span class="sub-header">Yet Another Spec System.</span></h1>
+    <p class="lede">YASS keeps the plan, progress and decisions for every change in plain files next to your code, so any person or agent can follow along.</p>
+    <p class="kicker">A sassy “yes” to building with coding agents.</p>
+    <p class="actions">
+      <a class="button primary" href="#install">Install</a>
+      <a class="button" href="https://github.com/donjaime/yass">GitHub</a>
+    </p>
   </div>
 </header>
 
@@ -109,7 +93,29 @@
 
 <section id="install" class="wrap">
   <h2>Install</h2>
-  <p>One <code>yass</code> binary on your PATH, plus a few plain files in your repo. The easiest way: paste this into your coding agent, from inside the repo you want to set up. It verifies the download, reads the install script, and asks before changing anything.</p>
+  <p>One <code>yass</code> binary on your PATH, plus a few plain files in your repo. Pick a way in:</p>
+  <div class="tabs">
+    <div class="tablist" hidden>
+      <button type="button" id="tab-terminal" aria-controls="install-terminal">Terminal</button>
+      <button type="button" id="tab-source" aria-controls="install-source">From Source</button>
+      <button type="button" id="tab-agent" aria-controls="install-agent">Agent Prompt</button>
+    </div>
+    <div class="panel" id="install-terminal">
+      <h3>Terminal</h3>
+      <p>Downloads the latest release for your machine, checks its checksum, and sets up the repo you're in. <a href="https://github.com/donjaime/yass/blob/main/install.sh">Read the script</a> first.</p>
+<pre class="copyable" data-source="README.md"><code>curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .</code></pre>
+      <p class="note">Rather check each step? Install <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-a-release">from a release</a>, with checksums and signed build provenance.</p>
+    </div>
+    <div class="panel" id="install-source">
+      <h3>From Source</h3>
+      <p>With Go 1.22 or later. Point the last line at the repo you want to set up.</p>
+<pre class="copyable" data-source="README.md"><code>git clone https://github.com/donjaime/yass &amp;&amp; cd yass
+go build -o bin/yass ./cmd/yass
+./install.sh --bin-dir ~/.local/bin path/to/your-repo</code></pre>
+    </div>
+    <div class="panel" id="install-agent">
+      <h3>Agent Prompt</h3>
+      <p>Paste this into your coding agent, from inside the repo you want to set up. It verifies the download, reads the install script, and asks before changing anything.</p>
 <pre class="copyable" data-source="docs/install.md"><code>Install YASS (https://github.com/donjaime/yass) in this repository. Go step by step, show me
 what you find, and don't run anything that changes files until I say so.
 
@@ -128,9 +134,9 @@ what you find, and don't run anything that changes files until I say so.
    pre-commit hook (--hooks), or keeping the yass folder outside this repo (--path &lt;folder&gt;).
 6. Once I say go, run install.sh with those options, then `yass status` to check it works, and
    show me `git status`. Don't commit; I'll review it and commit it myself.</code></pre>
-  <p>Or in one line, if you've read <a href="https://github.com/donjaime/yass/blob/main/install.sh">the script</a> and trust it. It downloads the latest release for your machine and checks its checksum:</p>
-<pre class="copyable" data-source="README.md"><code>curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .</code></pre>
-  <p>Prefer to check every step yourself? Install <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-a-release">from a release</a> with checksums and signed build provenance, or <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-source">from source</a> with Go. The <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#options">options</a> cover Claude Code, the git hook, and keeping plans outside the repo.</p>
+    </div>
+  </div>
+  <p>Then commit what it added, and talk to your agent. The <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#options">options</a> cover Claude Code, the git hook, and keeping plans outside the repo.</p>
 </section>
 
 </main>
@@ -141,17 +147,42 @@ what you find, and don't run anything that changes files until I say so.
 </footer>
 
 <script>
-// Progressive enhancement: a copy button on each install block. The page is complete without it.
+// Progressive enhancement. Without it, the install methods show one after another and the page is complete.
+document.querySelectorAll('.tabs').forEach(function (tabs) {
+  var list = tabs.querySelector('.tablist'), buttons = list.querySelectorAll('button');
+  list.hidden = false; list.setAttribute('role', 'tablist'); list.setAttribute('aria-label', 'Install methods');
+  tabs.classList.add('tabbed');
+  function select(b, focus) {
+    buttons.forEach(function (o) {
+      var on = o === b, panel = document.getElementById(o.getAttribute('aria-controls'));
+      o.setAttribute('aria-selected', on); o.tabIndex = on ? 0 : -1; panel.hidden = !on;
+    });
+    if (focus) b.focus();
+  }
+  buttons.forEach(function (b, i) {
+    b.setAttribute('role', 'tab');
+    var panel = document.getElementById(b.getAttribute('aria-controls'));
+    panel.setAttribute('role', 'tabpanel'); panel.setAttribute('aria-labelledby', b.id); panel.tabIndex = 0;
+    b.addEventListener('click', function () { select(b); });
+    b.addEventListener('keydown', function (e) {
+      var n = buttons.length, k = { ArrowRight: i + 1, ArrowLeft: i - 1 + n, Home: 0, End: n - 1 }[e.key];
+      if (k === undefined) return;
+      e.preventDefault(); select(buttons[k % n], true);
+    });
+  });
+  select(buttons[0]);
+});
 document.querySelectorAll('pre.copyable').forEach(function (pre) {
   if (!navigator.clipboard) return;
-  var b = document.createElement('button');
+  var box = document.createElement('div'), b = document.createElement('button');
+  box.className = 'codebox'; pre.parentNode.insertBefore(box, pre); box.appendChild(pre);
   b.type = 'button'; b.className = 'copy'; b.textContent = 'Copy';
   b.addEventListener('click', function () {
     navigator.clipboard.writeText(pre.querySelector('code').textContent).then(function () {
       b.textContent = 'Copied'; setTimeout(function () { b.textContent = 'Copy'; }, 1500);
     });
   });
-  pre.appendChild(b);
+  box.appendChild(b);
 });
 </script>
 </body>
