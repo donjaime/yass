@@ -49,6 +49,19 @@ for s in yass-shape yass-plan yass-work yass-status yass-log; do
   if grep -qF "<code>$s</code>" <<<"$yousay"; then ok "#you-say has $s"; else bad "#you-say has no row for $s"; fi
 done
 
+echo "Category line and easter egg"
+CAT="Lightweight project management for people and coding agents"
+if perl -0777 -ne 'exit !(/<section id="idea"[^>]*>\s*<p class="eyebrow">\Q'"$CAT"'\E\.<\/p>/s)' "$PAGE"; then ok "#idea opens with the category line"; else bad "#idea doesn't open with <p class=\"eyebrow\">$CAT.</p>"; fi
+if perl -0777 -ne 'exit !(/<footer.*\Q'"$CAT"'\E.*<\/footer>/s)' "$PAGE"; then ok "the footer has the category line"; else bad "the footer doesn't say $CAT"; fi
+for m in 'name="description"' 'property="og:description"'; do
+  if grep -qF "<meta $m content=\"$CAT" "$PAGE"; then ok "$m starts with the category line"; else bad "$m doesn't start with $CAT"; fi
+done
+EGG="A sassy “yes” to building with coding agents."
+for el in '<img class="emblem"' '<span class="wordmark"'; do
+  if grep -F "$el" "$PAGE" | grep -qF "title=\"$EGG\""; then ok "${el#<} has the easter egg"; else bad "${el#<} has no title=\"$EGG\""; fi
+done
+if [ "$(grep -oF "$EGG" "$PAGE" | wc -l | tr -d ' ')" = 2 ]; then ok "the easter egg shows only on hover"; else bad "the easter egg appears outside its two title attributes"; fi
+
 echo "Install text matches its source"
 n=0
 while IFS= read -r -d '' rec; do

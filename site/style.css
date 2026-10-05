@@ -76,8 +76,7 @@ code, pre { font-family: var(--mono); font-size: 0.86em; }
   letter-spacing: -0.01em;
   line-height: 1.15;
 }
-.lede { font-size: 1.15rem; margin: 22px auto 6px; max-width: 34em; color: #e3e9f0; }
-.kicker { color: #a9b6c6; margin: 0 0 28px; }
+.lede { font-size: 1.15rem; margin: 22px auto 30px; max-width: 34em; color: #e3e9f0; }
 .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; }
 .button {
   display: inline-block;
@@ -101,6 +100,16 @@ h2::before {
   content: ""; display: block; width: 48px; height: 4px; border-radius: 2px;
   background: var(--brand-gradient); margin-bottom: 18px;
 }
+/* A section's label above its heading takes over the heading's gradient bar. */
+.eyebrow {
+  margin: 0 0 10px; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--accent);
+}
+.eyebrow::before {
+  content: ""; display: block; width: 48px; height: 4px; border-radius: 2px;
+  background: var(--brand-gradient); margin-bottom: 18px;
+}
+.eyebrow + h2::before { display: none; }
 h3 { font-size: 1.1rem; margin: 0 0 8px; }
 section > p { max-width: 42em; }
 .big { font-size: 1.2rem; }
