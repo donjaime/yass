@@ -74,6 +74,12 @@ func kitSkills() (names []string, text map[string]string) {
 	return names, text
 }
 
+// kitFile reads one file the binary carries.
+func kitFile(p string) (string, error) {
+	b, err := kit.FS.ReadFile(p)
+	return string(b), err
+}
+
 // userSkillsDir is where --global puts the playbooks: $YASS_SKILLS_DIR, or ~/.agents/skills.
 func userSkillsDir() string {
 	if d := os.Getenv("YASS_SKILLS_DIR"); d != "" {

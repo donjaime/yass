@@ -670,5 +670,62 @@ sub AGENTS.md 'yass:begin version=\S+' 'yass:begin version=0.0.1'
 has   "…an AGENTS.md section stamped older gets one" "yass upgrade. updates them" "$(vbin 0.5.0)" init
 has   "…and init leaves the section as it is" "version=0.0.1 " cat AGENTS.md
 
+echo "26. yass upgrade"
+Y4="$(vbin 0.4.0)"; Y5="$(vbin 0.5.0)"; Y5D="$(vbin 0.5.0+dirty)"; YDEV="$(vbin dev)"
+stamps() { grep -rhoE 'yass-version: "?[^" ]+|yass:begin version=[^ ]+' . --include=SKILL.md --include=AGENTS.md --include=pre-commit 2>/dev/null | sed -E 's/.*(version: "?|version=)//' | sort | uniq -c | tr -s ' '; }
+newrepo "$W/e2e/up"; "$Y4" init --claude --hooks >/dev/null
+printf '# Ours, before\n\n%s\n\n# Ours, after\n' "$(cat AGENTS.md)" > AGENTS.md; printf '\n# Our Claude notes\n' >> CLAUDE.md
+"$Y4" new "Keep me" >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+KEEP="$(cat yass/changes/*-keep-me/change.md | cksum) $(grep -c 'Ours' AGENTS.md) $(grep -c 'Our Claude notes' CLAUDE.md)"
+echo "edited" > .agents/skills/yass-work/SKILL.md; git commit -qam "edit a playbook"
+UP="$("$Y5" upgrade)"
+has   "upgrade says what it upgraded, from and to" "upgraded YASS's files from 0.4.0.* to 0.5.0" echo "$UP"
+has   "…and lists each file" "wrote .claude/skills/yass-work/SKILL.md" echo "$UP"
+has   "every stamp is the new version" "^ ?[0-9]+ 0.5.0$" stamps
+hasnt "…none left at the old one" "0.4.0" stamps
+[ -x tools/yass/githooks/pre-commit ] && ok "…and the hook stays executable" || bad "hook lost its mode"
+[ "$(cat yass/changes/*-keep-me/change.md | cksum) $(grep -c 'Ours' AGENTS.md) $(grep -c 'Our Claude notes' CLAUDE.md)" = "$KEEP" ] && ok "changes, text outside the AGENTS.md markers and CLAUDE.md are untouched" || bad "upgrade touched what isn't YASS's"
+has   "a hand edit is replaced, and the diff shows it" "^-edited$" git diff -- .agents/skills/yass-work/SKILL.md
+git add -A; git commit -qm "chore: upgrade YASS"
+has   "at the binary's version, it's already up to date" "already up to date: YASS's files are at 0.5.0" "$Y5" upgrade
+[ -z "$(git status --porcelain)" ] && ok "…and changes nothing" || bad "an up-to-date upgrade changed files"
+run_fail "an older binary refuses" "$Y4" upgrade
+has   "…naming the newer version and the fix" "written by yass 0.5.0, newer than this one \(0.4.0\); upgrade your yass binary" "$Y4" upgrade
+[ -z "$(git status --porcelain)" ] && ok "…and writes nothing" || bad "a refused upgrade changed files"
+has   "a +dirty build rewrites its own version" "wrote AGENTS.md" "$Y5D" upgrade
+git checkout -q -- .
+run_fail "a binary with no version refuses to upgrade" "$YDEV" upgrade
+has   "…saying how to get a versioned build" "has no version .*Go 1.24" "$YDEV" upgrade
+newrepo "$W/e2e/up-dev"; run_fail "…or to init" "$YDEV" init
+[ ! -e AGENTS.md ] && ok "…writing nothing" || bad "an unversioned init wrote files"
+newrepo "$W/e2e/up-global"; H="$W/e2e/up-home"; rm -rf "$H"
+has   "init labels files outside version control" "wrote .*up-home/.agents/skills/yass-work/SKILL.md \(outside version control\)" env HOME="$H" "$Y4" init --global
+GUP="$(HOME="$H" "$Y5" upgrade)"
+has   "upgrade upgrades user-folder playbooks, labeled outside version control" "up-home/.agents/skills/yass-work/SKILL.md \(outside version control\)" echo "$GUP"
+has   "…to the new version" "yass-version: \"0.5.0\"" cat "$H/.agents/skills/yass-work/SKILL.md"
+[ ! -e .agents ] && ok "…without adding repo copies" || bad "upgrade added repo playbooks"
+newrepo "$W/e2e/up-legacy"
+for f in "$ROOT"/kit/.agents/skills/*/SKILL.md; do n="$(basename "$(dirname "$f")")"
+  mkdir -p ".agents/skills/$n" ".claude/skills/$n"; cp "$f" ".agents/skills/$n/"; cp "$f" ".claude/skills/$n/"; done
+mkdir -p tools/yass/githooks yass/changes yass/archive; cp "$ROOT/kit/tools/yass/githooks/pre-commit" tools/yass/githooks/
+"$Y5" template agents > AGENTS.md; printf '@AGENTS.md\n' > CLAUDE.md
+has   "a repo set up by v0.2 (no stamps) upgrades" "from unstamped \(v0.2 or earlier\) to 0.5.0" "$Y5" upgrade
+newrepo "$W/e2e/up-fresh"; "$Y5" init --claude --hooks >/dev/null
+same=1; for f in .agents .claude tools AGENTS.md CLAUDE.md; do diff -r -q "$W/e2e/up-legacy/$f" "$f" >/dev/null || same=0; done
+[ "$same" = 1 ] && ok "…ending up exactly like a fresh init" || bad "upgraded v0.2 repo differs from a fresh init: $(diff -rq "$W/e2e/up-legacy/.agents" .agents; diff -q "$W/e2e/up-legacy/AGENTS.md" AGENTS.md)"
+NG2="$W/e2e/up-nogit"; rm -rf "$NG2"; mkdir -p "$NG2"
+run_fail "upgrade outside a git repo refuses" bash -c 'cd "$1" && "$2" upgrade' _ "$NG2" "$Y5"
+has   "…and says why" "works inside a git repo" bash -c 'cd "$1" && "$2" upgrade' _ "$NG2" "$Y5"
+newrepo "$W/e2e/up-mono"; "$Y4" init >/dev/null; mkdir -p apps/web services/api vendor/x
+"$Y4" init apps/web --agents >/dev/null; "$Y4" init services/api --agents >/dev/null
+mkdir -p vendor/x/.agents/skills/yass-work; cp apps/web/.agents/skills/yass-work/SKILL.md vendor/x/.agents/skills/yass-work/
+printf 'ignore:\n  - vendor/*\n' > yass.yaml
+rm apps/web/.agents/skills/yass-log/SKILL.md; git add -A; git commit -q -m "chore: adopt YASS"
+MUP="$(cd services/api && "$Y5" upgrade)"
+has   "upgrade from a monorepo folder upgrades every copy in the repo" "wrote apps/web/AGENTS.md" echo "$MUP"
+hasnt "…leaving none at the old version" "0.4.0" bash -c 'grep -rh "yass-version\|yass:begin" --include=SKILL.md --include=AGENTS.md --include=pre-commit apps services tools .agents AGENTS.md'
+[ -f apps/web/.agents/skills/yass-log/SKILL.md ] && ok "…and adds a playbook missing from a skills folder" || bad "missing playbook not added"
+has   "…but leaves folders yass.yaml ignores alone" "0.4.0" cat vendor/x/.agents/skills/yass-work/SKILL.md
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]
