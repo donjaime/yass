@@ -8,7 +8,7 @@ blocked: 2026-10-04-the-binary-carries-the-playbooks/2026-10-04-init-upgrades-by
 
 ## Goal
 <!-- Intent. What is true when this change is finished, in a paragraph. Edit it only in a commit without code. -->
-install.sh installs the yass binary and says where and whether it's on PATH; given a path, it then runs yass init with its setup options. Without a path it's the joining-a-repo install. Release archives drop the kit files. The README, docs/install.md and the landing page describe the new model.
+install.sh only installs the yass binary, and says where, whether it's on PATH, and that yass init sets up a repo; the documented one-liner chains yass init itself. Given old-style repo arguments, install.sh installs nothing and prints the two commands instead. Release archives drop the kit files. The README, docs/install.md and the landing page describe the new model.
 
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
@@ -17,11 +17,11 @@ install.sh installs the yass binary and says where and whether it's on PATH; giv
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
-- [ ] `install.sh`: binary install and PATH report; `yass init` with setup options when given a path; check the path first
+- [ ] `install.sh`: binary install and PATH report only; refuse old-style repo arguments with the two commands
 - [ ] `.goreleaser.yaml`: archives without `kit/`
 - [ ] e2e: rework the `install.sh` sections; unpacked release without `kit/`
 - [ ] README, `docs/install.md`, landing page: the new model and joining
-- [ ] Release candidate: the one-liner in and outside a repo (AC24)
+- [ ] Release candidate: the one-liner in a fresh repo (AC24)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->

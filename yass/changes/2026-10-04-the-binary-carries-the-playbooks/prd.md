@@ -14,7 +14,7 @@ The binary already does part of the repo setup: `yass init` writes the yass fold
 
 ## Users and outcomes
 <!-- Who it's for, and measurable targets ("p50 time to log < 5s"). -->
-- **Someone adopting YASS** in a repo. Outcome: two steps, each saying what it did: get the binary, then `yass init`. The one-line install still does both in one go.
+- **Someone adopting YASS** in a repo. Outcome: two steps, each saying what it did: get the binary, then `yass init`. The one-line install runs both, visibly.
 - **A teammate joining a repo that already uses YASS.** Outcome: they get the binary and they're done; nothing in the repo needs to change.
 - **Someone who uses YASS in several repos.** Outcome: setting up another repo, or upgrading one, needs no download: `yass init` in each.
 - **Anyone whose binary and repo are out of step.** Outcome: `yass status` says so, and says which to upgrade.
@@ -30,8 +30,8 @@ Targets:
 - **R2** [M1] `yass init` takes the setup options `install.sh` has today: `--claude` (Claude Code's copies and the `CLAUDE.md` import), `--global` (playbooks in the user folder), `--hooks` (turn on the hook for this clone) and `--path`, alongside the options it already has.
 - **R3** [M1] `yass init` is idempotent. Run on a repo that's already set up, it upgrades the YASS files that are there, wherever they were installed, to the binary's version, and says it upgraded and from which version. It never touches changes, `yass.yaml` or anything outside the `AGENTS.md` markers.
 - **R4** [M1] A repo set up by an earlier `install.sh` upgrades with `yass init` and ends up exactly as a fresh `yass init` at the same version would leave it.
-- **R5** [M1] `install.sh` installs the binary and says so: where it put it, and whether that folder is on PATH. Run from inside a repo, or given a repo's path, it then runs `yass init` with any setup options it was given, so today's one-line install keeps working (its `--upgrade` flag too), and its output says which step did what.
-- **R6** [M1] A teammate joining a repo that already uses YASS installs only the binary, with a documented one-liner or `go install`, and doesn't run `yass init`.
+- **R5** [M1] `install.sh` only installs the binary: it says where it put it, whether that folder is on PATH, and that `yass init` sets up a repo. The documented one-line install runs it and then `yass init` explicitly, so it still sets up a repo in one go. Given a repo path or a setup option the way earlier versions took them, it installs nothing and prints the two commands to use instead.
+- **R6** [M1] A teammate joining a repo that already uses YASS installs only the binary, with `install.sh` or `go install`, and doesn't run `yass init`.
 - **R7** [M1] Every file YASS installs records the version that wrote it, committed with it: the playbooks in their frontmatter, the `AGENTS.md` section in its marker, the hook script in a header. `yass init` decides what to do by comparing those versions with its own. `yass --version` reports the binary's.
 - **R8** [M2] `yass status` warns when the binary is older than the version that wrote a repo's YASS files (upgrade your binary), and notes when it's newer (`yass init` would upgrade the repo).
 - **R9** [M1] The README, `docs/install.md` and the landing page describe the new model: get the binary, run `yass init` in each repo to set it up or upgrade it, and joining needs only the binary.
@@ -54,7 +54,7 @@ Targets:
 ## Milestones
 | Milestone | When it ships, a user can … |
 |---|---|
-| M1 | set up or upgrade any repo with `yass init`, with no download after the binary, and see which it did (or that it was already up to date); join a repo with just the binary; and read docs that describe it that way. The one-line install still works. |
+| M1 | set up or upgrade any repo with `yass init`, with no download after the binary, and see which it did (or that it was already up to date); join a repo with just the binary; and read docs that describe it that way. A one-line install still sets up a repo, by running `yass init` itself. |
 | M2 | see from `yass status` when their binary and a repo's YASS files are out of step, and which to upgrade |
 
 ## Open questions
