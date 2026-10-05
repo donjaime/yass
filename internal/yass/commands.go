@@ -223,7 +223,7 @@ func cmdNew(a *args) error {
 		platforms = "all"
 	}
 	kw := map[string]string{"title": title, "platforms": platforms, "source": a.v["source"],
-		"follows": a.v["follows"], "goal": a.v["goal"]}
+		"follows": a.v["follows"], "goal": a.v["goal"], "created": time.Now().UTC().Format(time.RFC3339)}
 	head := "change.md"
 	if a.b["large"] {
 		head = "change-large.md"

@@ -155,6 +155,7 @@ platforms: [ios, android]
 source: gh#41
 follows:
 blocked:
+created: 2026-10-02T09:14:07Z
 ---
 # Fix double-tap save crash
 
@@ -177,7 +178,7 @@ Tapping Save twice quickly saves one entry and never crashes.
 - Next: disable Save while saving, then the unit test.
 ```
 
-- **Frontmatter:** `platforms` is what "done" has to cover. `source` is the issue, alert or request it came from. `follows` names the archived change it follows up. `blocked` says why work can't continue: a reason for a human, or the [changes it waits on](#waiting-on-another-change). All optional.
+- **Frontmatter:** `platforms` is what "done" has to cover. `source` is the issue, alert or request it came from. `follows` names the archived change it follows up. `blocked` says why work can't continue: a reason for a human, or the [changes it waits on](#waiting-on-another-change). `created` is when `yass new` made it (UTC), so changes from the same day list in the order they were made; without it, a change sorts by its folder's date. All optional.
 - **Intent:** the title, `## Goal` and `## Acceptance`. They change only in commits without code.
 - **Progress:** `## Steps` (your working checklist), `## Decisions` (`- <decision> - <why> (<who>)`) and `## Log` (ending in `- Next:`, which `yass status` shows). These change with the code.
 
