@@ -56,9 +56,9 @@
 - [x] AC35 (R9) Given the README and `docs/install.md`, then each says how to upgrade: reinstall the binary, then run `yass upgrade` in each repo and commit what changed; the landing page doesn't mention upgrading — verify: manual: review
 
 ### M2
-- [ ] AC28 (R8) Given a repo whose YASS files are stamped newer than the binary, when you run `yass status`, then it warns which version wrote them and says to upgrade the binary — verify: e2e
-- [ ] AC29 (R8) Given a repo whose YASS files are stamped older than the binary, when you run `yass status`, then it notes that `yass upgrade` would upgrade the repo — verify: e2e
-- [ ] AC30 (R8) Given a repo at the binary's version, or with no YASS files installed, then `yass status` says nothing about versions — verify: e2e
+- [x] AC28 (R8) Given a repo whose YASS files are stamped newer than the binary, when you run `yass status`, then it warns which version wrote them and says to upgrade the binary — verify: e2e
+- [x] AC29 (R8) Given a repo whose YASS files are stamped older than the binary, when you run `yass status`, then it notes that `yass upgrade` would upgrade the repo — verify: e2e
+- [x] AC30 (R8) Given a repo at the binary's version, or with no YASS files installed, then `yass status` says nothing about versions — verify: e2e
 
 ## Pieces
 <!-- PR-sized pieces, each its own folder in here: `yass new "<title>" --in <this change>`.

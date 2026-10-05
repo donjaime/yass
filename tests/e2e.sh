@@ -718,5 +718,15 @@ hasnt "…leaving none at the old version" "0.4.0" bash -c 'grep -rh "yass-versi
 [ -f apps/web/.agents/skills/yass-log/SKILL.md ] && ok "…and adds a playbook missing from a skills folder" || bad "missing playbook not added"
 has   "…but leaves folders yass.yaml ignores alone" "0.4.0" cat vendor/x/.agents/skills/yass-work/SKILL.md
 
+echo "27. yass status knows the versions"
+Y4="$(vbin 0.4.0)"; Y5="$(vbin 0.5.0)"; Y6="$(vbin 0.6.0)"
+newrepo "$W/e2e/st"; "$Y5" init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+has   "an older binary hears the repo is newer, and to upgrade the binary" "note: YASS's files here were written by yass 0.5.0, newer than this one \(0.4.0\); upgrade your yass binary" "$Y4" status
+run_ok "…as a note, so --strict doesn't fail on it" "$Y4" status --strict
+has   "a newer binary hears yass upgrade would upgrade the repo" "note: YASS's files here are older than this yass \(0.6.0\); .yass upgrade. would upgrade them" "$Y6" status
+hasnt "the same version says nothing about versions" "YASS's files" "$Y5" status
+newrepo "$W/e2e/st-none"; "$Y5" init --no-agents >/dev/null
+hasnt "…nor does a repo with no YASS files" "YASS's files" "$Y6" status
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]
