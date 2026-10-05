@@ -22,6 +22,9 @@ Using YASS takes two steps that each say what they do: get the `yass` binary, on
 - Builds from a clone carry the release they follow plus a commit, and `+dirty`; a `+dirty` build rewrites files stamped with its own version, and a newer release upgrades over a clone build (Jaime). Versions compare as SemVer, with Go's pseudo-versions for clone builds (claude; design.md §1)
 - No edit detection: upgrading replaces YASS's files, and since they're committed, the replacement shows up in `git diff` for review. Hashes, a prompt and `--force` were considered and dropped as more than the problem needs (Jaime). `yass init` lists what it writes and labels files outside version control (`--global` playbooks); unstamped files from v0.1 and v0.2 count as older and get upgraded (claude)
 - PRD and design approved 2026-10-04 (Jaime)
+- Planned in four pieces: `yass init` writes everything, then upgrades by version, then `install.sh` becomes a binary installer with the docs rewritten, and the `yass status` line (claude)
+- `install.sh` runs `yass init` only when given a path (`.` for the repo you're in); without one it installs just the binary. That makes the PRD's "run from inside a repo" mean "with `.`", as the documented one-liner already does, and the same one-liner without `.` is the joining install (claude, while planning)
+- Version comparison uses `golang.org/x/mod/semver` (design §4), and building from source needs Go 1.24, so clone builds carry a version (design §5) (claude, while planning; for review)
 
 ## Log
 <!-- Progress. Change-level notes; each piece keeps its own Log.

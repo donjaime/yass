@@ -37,6 +37,23 @@
 
 **Decision: (b)** (Jaime, 2026-10-04). The playbooks, the hook and the `AGENTS.md` section are committed with the repo, so an upgrade that replaces an edited file shows up in `git diff` and review before it's committed; git already does the auditing. (a) added hashes, a frozen table, a prompt and its no-terminal fallback for little gain. Two cheap things stay (claude): `yass init` lists every file it writes, and labels any outside version control (playbooks in the user folder, with `--global`), the one place an edit could vanish unseen. A file with no stamp, as v0.1 and v0.2 wrote them, counts as older than any stamped version, so it's upgraded.
 
+## 4. Comparing versions in code
+**Options.**
+- (a) **`golang.org/x/mod/semver`,** the Go team's SemVer package, which the `go` command uses for module versions, pseudo-versions included. A second dependency beside `yaml.v3`.
+- (b) A small comparison written in YASS, with its own tests.
+
+**Decision: (a)** (proposed, claude, while planning). It's the reference implementation of the exact rules design §1 picks, and it's maintained by the Go team. A home-grown comparison would have to get pre-release ordering and pseudo-versions right for no gain.
+
+## 5. Versioned builds from a clone
+Go stamps a pseudo-version into a binary built from a clone (`go build` in a git checkout) since Go 1.24; older Go builds report `(devel)`, which YASS reads as no version (design §1: refuses to write).
+
+**Options.**
+- (a) **Require Go 1.24 or later** to build from source (`go 1.24` in `go.mod`), and update the docs that say 1.22.
+- (b) Keep Go 1.22, and have the docs' build command pass the version itself (`-ldflags "-X main.version=$(git describe --tags --dirty)"`).
+- (c) Keep Go 1.22, and let unversioned builds write anyway.
+
+**Decision: (a)** (proposed, claude, while planning). The build command stays one plain `go build`, and design §1's rules hold for every build. Go 1.24 shipped in February 2025, and the release binaries don't need Go at all. (c) would break the never-downgrade guarantee.
+
 ## Consequences and rollback
 - Every repo gets a few lines of metadata in each playbook and the `AGENTS.md` marker, and they show up in diffs on upgrade, which is the point.
 - Reading stays lenient: a file without a stamp is older than any stamped one, never an error, and unknown `metadata` keys or marker attributes are ignored. So a later format change can add fields without breaking older repos.
