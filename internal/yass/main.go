@@ -16,9 +16,13 @@ const usage = `yass: Yet Another Spec System. Planned work as change folders.
 
 usage: yass <command> [options]
 
-  init [dir] [--path P] [--no-agents]   create the yass folder (in dir, for a team folder) and the
-       [--private]                      AGENTS.md section; --path writes a yass.yaml pointing to P;
-                                        --private keeps dir out of git, for this clone only
+  init [dir] [--path P] [--no-agents]   set up YASS: the yass folder (in dir, for a team folder), the
+       [--claude] [--global] [--hooks]  AGENTS.md section, and (for the repo itself) the playbooks and
+       [--private]                      the hook script; --path writes a yass.yaml pointing to P;
+                                        --claude adds Claude Code's copies and the CLAUDE.md import;
+                                        --global puts the playbooks in your user folder; --hooks turns
+                                        the hook on; --no-agents skips AGENTS.md, the playbooks and the
+                                        hook; --private keeps dir out of git, for this clone only
   new "<title>" [--large] [--design]    a change: a dated folder from a template
       [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]
   status [<change>] [--archived] [--strict]
@@ -41,7 +45,7 @@ type spec struct {
 }
 
 var specs = map[string]spec{
-	"init":     {[]string{"no-agents", "private"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--no-agents] [--private]"},
+	"init":     {[]string{"no-agents", "private", "claude", "global", "hooks"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--claude] [--global] [--hooks] [--no-agents] [--private]"},
 	"new":      {[]string{"large", "design"}, []string{"in", "goal", "platforms", "source", "follows"}, 1, 1, `yass new "<title>" [--large] [--design] [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]`},
 	"status":   {[]string{"archived", "strict"}, nil, 0, 1, "yass status [<change>] [--archived] [--strict]"},
 	"archive":  {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
@@ -105,6 +109,7 @@ func parse(sp spec, argv []string) (*args, error) {
 
 // Main runs the CLI and returns its exit code.
 func Main(argv []string, version string) int {
+	binVersion = version
 	cmd, explicit := "status", false
 	if len(argv) > 0 && !strings.HasPrefix(argv[0], "-") {
 		cmd, argv, explicit = argv[0], argv[1:], true

@@ -122,7 +122,8 @@ if [ "$CLAUDE" = 1 ]; then
 fi
 
 cd "$DEST"
-if [ -n "$YPATH" ]; then "$BIN" init --path "$YPATH"; else "$BIN" init; fi
+INIT=(); [ "$GLOBAL" = 1 ] && INIT+=(--global)   # so init doesn't add repo copies of user-folder playbooks
+if [ -n "$YPATH" ]; then "$BIN" init --path "$YPATH" ${INIT[@]+"${INIT[@]}"}; else "$BIN" init ${INIT[@]+"${INIT[@]}"}; fi
 if [ "$HOOKS" = 1 ]; then
   git config core.hooksPath tools/yass/githooks
   echo "hook   core.hooksPath = tools/yass/githooks (undo: git config --unset core.hooksPath)"

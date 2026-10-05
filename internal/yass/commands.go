@@ -70,7 +70,7 @@ func cmdInit(a *args) error {
 	}
 	if !a.b["no-agents"] {
 		ap := filepath.Join(top, "AGENTS.md")
-		cur, block := read(ap), strings.TrimSpace(render("agents.md", nil))
+		cur, block := read(ap), stampAgents(strings.TrimSpace(render("agents.md", nil)), stampVersion())
 		var next string
 		if strings.Contains(cur, "<!-- yass:begin") {
 			next = agentsRE.ReplaceAllLiteralString(cur, block)
@@ -87,9 +87,24 @@ func cmdInit(a *args) error {
 			made = append(made, ap)
 		}
 	}
+	// The playbooks, the hook and Claude's files belong to the repo as a whole: written when init sets
+	// up the repo itself, not a team folder in it, and not with --no-agents.
+	if len(a.pos) == 0 && !a.b["no-agents"] {
+		kitMade, err := writeKit(top, a.b["claude"], a.b["global"])
+		made = append(made, kitMade...)
+		if err != nil {
+			return err
+		}
+	}
 	r := &Repo{Top: top}
 	for _, p := range made {
 		fmt.Printf("wrote %s\n", r.disp(canon(p)))
+	}
+	if a.b["hooks"] {
+		if _, ok := git(top, "config", "core.hooksPath", HookPath); !ok {
+			return fmt.Errorf("couldn't set git config core.hooksPath (is this a git repo?)")
+		}
+		fmt.Printf("hook  core.hooksPath = %s (undo: git config --unset core.hooksPath)\n", HookPath)
 	}
 	if configured && !within(canon(y), top) {
 		lr := findRepo()

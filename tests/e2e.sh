@@ -583,5 +583,53 @@ mkdir -p yass/archive/2026-01-01-paths-that-don-t-exist-yet-compare-throu
 printf -- '# Paths that don'"'"'t exist yet compare through symlinks\n\n- [x] done\n' > yass/archive/2026-01-01-paths-that-don-t-exist-yet-compare-throu/change.md
 has   "an archived change cut the old way still lists by name alone" "^2026-01-01-paths-that-don-t-exist-yet-compare-throu$" y status --archived
 
+echo "24. yass init sets up a repo from the binary alone"
+B="$W/e2e/alone-bin"; rm -rf "$B"; mkdir -p "$B"; cp "$YASS_BIN" "$B/yass"
+V="$("$B/yass" --version | sed 's/^yass v\{0,1\}//')"
+VR="$(printf '%s' "$V" | sed 's/[.+]/\\&/g')"   # the version as a regex: pseudo-versions have . and +
+newrepo "$W/e2e/alone"
+INIT_OUT="$(env -u YASS_BIN PATH="$B:/usr/bin:/bin" yass init)"
+for f in .agents/skills/yass-log/SKILL.md .agents/skills/yass-plan/SKILL.md .agents/skills/yass-shape/SKILL.md \
+         .agents/skills/yass-status/SKILL.md .agents/skills/yass-work/SKILL.md AGENTS.md yass/changes/.gitkeep; do
+  [ -e "$f" ] && ok "writes $f" || bad "missing $f"
+done
+[ -x tools/yass/githooks/pre-commit ] && ok "…and an executable hook script" || bad "no executable hook"
+[ ! -e .claude ] && [ ! -e CLAUDE.md ] && ok "…and no Claude files without --claude" || bad "Claude files without --claude"
+hasnt "…and leaves the hook off" "githooks" git config core.hooksPath
+has   "it lists what it wrote" "wrote .agents/skills/yass-work/SKILL.md" echo "$INIT_OUT"
+same=1; for f in "$ROOT"/kit/.agents/skills/*/SKILL.md; do
+  n="$(basename "$(dirname "$f")")"
+  diff -q <(grep -v -e '^metadata:$' -e '^  yass-version: ' ".agents/skills/$n/SKILL.md") "$f" >/dev/null || same=0
+done
+diff -q <(grep -v '^# yass-version: ' tools/yass/githooks/pre-commit) "$ROOT/kit/tools/yass/githooks/pre-commit" >/dev/null || same=0
+[ "$same" = 1 ] && ok "…each matching its source in kit/ but for the version stamp" || bad "an installed file differs from kit/ beyond its stamp"
+has   "playbooks carry the version in their frontmatter" "^  yass-version: \"$VR\"$" cat .agents/skills/yass-work/SKILL.md
+has   "…the AGENTS.md marker too" "<!-- yass:begin version=$VR " cat AGENTS.md
+has   "…and the hook" "^# yass-version: $VR$" cat tools/yass/githooks/pre-commit
+echo "changed" > .agents/skills/yass-work/SKILL.md
+has   "re-running keeps what's there" "already set up" yass init
+has   "…edits included" "^changed$" cat .agents/skills/yass-work/SKILL.md
+newrepo "$W/e2e/alone-claude"; printf '# Our rules\n' > CLAUDE.md
+yass init --claude --hooks >/dev/null; yass init --claude >/dev/null
+[ -f .claude/skills/yass-work/SKILL.md ] && ok "--claude copies the playbooks for Claude Code" || bad "no .claude/skills"
+has   "…imports AGENTS.md at the top of CLAUDE.md" "^@AGENTS.md$" head -1 CLAUDE.md
+has   "…once, keeping what was there" "^1 1$" bash -c 'echo "$(grep -c "@AGENTS.md" CLAUDE.md) $(grep -c "# Our rules" CLAUDE.md)"'
+has   "--hooks turns the hook on" "^tools/yass/githooks$" git config core.hooksPath
+newrepo "$W/e2e/alone-claude2"; yass init --claude >/dev/null
+has   "…and writes a CLAUDE.md when there's none" "^@AGENTS.md$" cat CLAUDE.md
+newrepo "$W/e2e/alone-global"; H="$W/e2e/alone-home"; rm -rf "$H"
+GL_OUT="$(HOME="$H" yass init --global --claude)"
+[ -f "$H/.agents/skills/yass-work/SKILL.md" ] && [ -f "$H/.claude/skills/yass-work/SKILL.md" ] && ok "--global puts the playbooks (and Claude's) in the user folder" || bad "no user-folder playbooks"
+[ ! -e .agents ] && [ ! -e .claude ] && ok "…none in the repo" || bad "--global wrote playbooks into the repo"
+[ -x tools/yass/githooks/pre-commit ] && ok "…while the hook still goes in the repo" || bad "no hook with --global"
+newrepo "$W/e2e/alone-skillsdir"; SD="$W/e2e/alone-skills"; rm -rf "$SD"
+YASS_SKILLS_DIR="$SD" HOME="$H" yass init --global >/dev/null
+[ -f "$SD/yass-work/SKILL.md" ] && ok "…or in \$YASS_SKILLS_DIR" || bad "\$YASS_SKILLS_DIR ignored"
+newrepo "$W/e2e/alone-team"; yass init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+mkdir -p svc; yass init svc >/dev/null
+[ ! -e svc/.agents ] && [ ! -e svc/tools ] && ok "a team folder's init writes no playbooks or hook" || bad "team init wrote kit files"
+newrepo "$W/e2e/alone-noagents"; yass init --no-agents >/dev/null
+[ ! -e .agents ] && [ ! -e tools ] && [ ! -e AGENTS.md ] && ok "--no-agents skips AGENTS.md, the playbooks and the hook" || bad "--no-agents wrote agent files"
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

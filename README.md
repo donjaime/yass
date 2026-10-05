@@ -86,8 +86,13 @@ Like installing, upgrading has two parts. Upgrade the binary once per machine, t
 ## The CLI
 
 ```
-yass init [dir]                 create yass/ (in dir, for a team folder) and the AGENTS.md section
+yass init [dir]                 set up YASS: yass/ (in dir, for a team folder), the AGENTS.md section,
+                                and, for the repo itself, the playbooks and the hook script
           [--path <folder>]     …or a yass.yaml pointing to a yass folder somewhere else
+          [--claude]            …plus Claude Code's copies of the playbooks and the CLAUDE.md import
+          [--global]            …with the playbooks in your user folder instead of the repo
+          [--hooks]             …and turn the hook on for this clone
+          [--no-agents]         …leaving AGENTS.md, the playbooks and the hook alone
 yass new "<title>"              a small change
          [--large] [--design]   …with prd.md and plan.md, and design.md
          [--in <change>]        …as a piece of a large change

@@ -21,14 +21,14 @@
 ### M1
 - [ ] AC1 (R1) Given …, when …, then … — verify: <test, flow, or manual steps> -->
 ### M1
-- [ ] AC1 (R1) Given a fresh git repo and a `yass` binary with no release files beside it, when you run `yass init`, then it writes the five playbooks under `.agents/skills/`, an executable `tools/yass/githooks/pre-commit`, the `AGENTS.md` section and the yass folder — verify: e2e (binary copied alone into an empty folder on PATH)
-- [ ] AC2 (R1) Given that repo, then each file matches its source in `kit/` (or `templates/agents.md`) except for its version stamp — verify: e2e (diff with the stamp lines removed)
-- [ ] AC3 (R1) Given a binary built by `go install` or a release, then it carries all five playbooks and the hook — verify: go test (the embedded files list)
-- [ ] AC4 (R2) Given `yass init --claude`, then it also writes the playbooks under `.claude/skills/` and puts `@AGENTS.md` at the top of `CLAUDE.md` once, keeping what was there — verify: e2e (with and without an existing `CLAUDE.md`, run twice)
-- [ ] AC5 (R2) Given `yass init --global`, then the playbooks go to `~/.agents/skills/` (or `$YASS_SKILLS_DIR`), and to `~/.claude/skills/` with `--claude`, and none to the repo — verify: e2e (with a temporary `HOME`)
-- [ ] AC6 (R2) Given `yass init --hooks`, then `core.hooksPath` is `tools/yass/githooks` for this clone — verify: e2e
-- [ ] AC7 (R2) Given `--path`, `--private` and `--no-agents`, then they behave as they do today — verify: e2e (the existing sections, run through `yass init`)
-- [ ] AC8 (R7) Given a fresh `yass init` by a binary at version V, then every playbook's frontmatter has `metadata.yass-version: "V"` and still has its `name` and `description`, the `AGENTS.md` begin marker has `version=V`, and the hook has `# yass-version: V` — verify: go test (the frontmatter parses as YAML); e2e (all three stamps)
+- [x] AC1 (R1) Given a fresh git repo and a `yass` binary with no release files beside it, when you run `yass init`, then it writes the five playbooks under `.agents/skills/`, an executable `tools/yass/githooks/pre-commit`, the `AGENTS.md` section and the yass folder — verify: e2e (binary copied alone into an empty folder on PATH)
+- [x] AC2 (R1) Given that repo, then each file matches its source in `kit/` (or `templates/agents.md`) except for its version stamp — verify: e2e (diff with the stamp lines removed)
+- [x] AC3 (R1) Given a binary built by `go install` or a release, then it carries all five playbooks and the hook — verify: go test (the embedded files list)
+- [x] AC4 (R2) Given `yass init --claude`, then it also writes the playbooks under `.claude/skills/` and puts `@AGENTS.md` at the top of `CLAUDE.md` once, keeping what was there — verify: e2e (with and without an existing `CLAUDE.md`, run twice)
+- [x] AC5 (R2) Given `yass init --global`, then the playbooks go to `~/.agents/skills/` (or `$YASS_SKILLS_DIR`), and to `~/.claude/skills/` with `--claude`, and none to the repo — verify: e2e (with a temporary `HOME`)
+- [x] AC6 (R2) Given `yass init --hooks`, then `core.hooksPath` is `tools/yass/githooks` for this clone — verify: e2e
+- [x] AC7 (R2) Given `--path`, `--private` and `--no-agents`, then they behave as they do today — verify: e2e (the existing sections, run through `yass init`)
+- [x] AC8 (R7) Given a fresh `yass init` by a binary at version V, then every playbook's frontmatter has `metadata.yass-version: "V"` and still has its `name` and `description`, the `AGENTS.md` begin marker has `version=V`, and the hook has `# yass-version: V` — verify: go test (the frontmatter parses as YAML); e2e (all three stamps)
 - [ ] AC9 (R3) Given a repo whose YASS files are stamped with an older version, when you run `yass upgrade`, then every one is rewritten at the binary's version, and it prints that it upgraded, from which version to which — verify: e2e
 - [ ] AC10 (R3) Given a repo set up with `--claude`, or with playbooks only in the user folder, when you run `yass upgrade`, then those copies are upgraded too, where they are, and no new ones are added — verify: e2e
 - [ ] AC11 (R3) Given changes, a `yass.yaml`, text outside the `AGENTS.md` markers and other content in `CLAUDE.md`, when `yass upgrade` runs, then none of them changes — verify: e2e (checksums before and after)
