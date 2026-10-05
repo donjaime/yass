@@ -2,7 +2,7 @@
 platforms: [all]
 source: 
 follows: 
-blocked: 2026-10-04-separate-plans-mode, 2026-10-04-repo-qualified-citations
+blocked: 2026-10-04-separate-plans-mode, 2026-10-04-repo-qualified-citations, 2026-10-04-the-binary-carries-the-playbooks
 ---
 # yass: trailers
 
@@ -14,7 +14,7 @@ With separate plans, every code commit names its change in a `yass:` trailer tha
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
 - [ ] Delivers AC40–AC52 in [plan.md](../plan.md)
-- [ ] `install.sh --hooks` and `--upgrade` install the new `prepare-commit-msg` and `commit-msg` scripts beside `pre-commit`
+- [ ] `yass init` (with `--hooks` to turn them on) installs and upgrades the new `prepare-commit-msg` and `commit-msg` scripts beside `pre-commit`
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -22,6 +22,7 @@ With separate plans, every code commit names its change in a `yass:` trailer tha
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
+- Waits for 2026-10-04-the-binary-carries-the-playbooks and ships its hook scripts through `yass init`, which installs and upgrades everything a repo gets once that change lands; this criterion said `install.sh` before (Jaime)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
