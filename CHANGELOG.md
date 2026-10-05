@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (unreleased)
+## 0.3.0 (2026-10-05)
 Installing and upgrading are now two plain steps. To install: get the `yass` binary, then run `yass init` in your repo. To upgrade: get the newer binary, then run `yass upgrade` in each repo.
 - **The binary carries the playbooks and the hook.** `yass init` sets up a whole repo from the binary alone: the playbooks, the hook script, the `AGENTS.md` section and the yass folder, with `--claude`, `--global`, `--hooks` and `--path`. Nothing is downloaded after the binary. Running it again writes only what's missing, and it ends with the next steps (commit it, then ask your agent).
 - **`yass upgrade`:** run anywhere in a repo, it finds every YASS file from the repo root down (playbooks in any `.agents/skills/` or `.claude/skills/`, each `AGENTS.md` section, the hook) and your user folder's playbooks, and brings them to the binary's version. It lists what it wrote, says when everything is already up to date, skips folders `yass.yaml` ignores, and never downgrades: if the repo is newer than your binary, it says to upgrade the binary.
