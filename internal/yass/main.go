@@ -25,6 +25,8 @@ usage: yass <command> [options]
                                         --global puts the playbooks in your user folder; --hooks turns
                                         the hook on; --no-agents skips AGENTS.md, the playbooks and the
                                         hook; --private keeps dir out of git, for this clone only
+  upgrade                               bring every YASS file in the repo (playbooks, AGENTS.md sections,
+                                        the hook) and your user folder's playbooks up to this version
   new "<title>" [--large] [--design]    a change: a dated folder from a template
       [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]
   status [<change>] [--archived] [--strict]
@@ -55,6 +57,7 @@ var specs = map[string]spec{
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
 	"template": {nil, nil, 1, 1, "yass template <change|change-large|prd|plan|design|readme|agents>"},
 	"hook":     {[]string{"strict"}, []string{"range"}, 0, 0, "yass hook [--range A..B] [--strict]"},
+	"upgrade":  {nil, nil, 0, 0, "yass upgrade"},
 	"version":  {nil, nil, 0, 0, "yass version"},
 }
 
@@ -158,6 +161,8 @@ func Main(argv []string, version string) int {
 		err = cmdTemplate(a)
 	case "hook":
 		return cmdHook(a)
+	case "upgrade":
+		code, err = cmdUpgrade(a)
 	case "version":
 		fmt.Println("yass " + version)
 	}

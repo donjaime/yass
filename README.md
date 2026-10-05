@@ -46,7 +46,7 @@ tar -xzf yass_darwin_arm64.tar.gz && less yass_darwin_arm64/install.sh
 yass_darwin_arm64/install.sh --bin-dir ~/.local/bin path/to/your-repo
 ```
 
-**From source.** With Go 1.22 or later:
+**From source.** With Go 1.24 or later:
 
 ```bash
 git clone https://github.com/donjaime/yass && cd yass
@@ -78,10 +78,12 @@ Then talk to your agent:
 
 ### Upgrading
 
-Like installing, upgrading has two parts. Upgrade the binary once per machine, then each repo you use YASS in:
-- Get the newer release and run its `install.sh --upgrade --bin-dir ~/.local/bin` in one repo: it replaces the binary, the playbooks and the hook, wherever they were installed. In your other repos, run the same command again; copying the same binary is harmless. Your changes, `yass.yaml` and your own parts of `AGENTS.md` are never touched.
-- Review the diff and commit it (`chore: upgrade YASS`), so teammates get the new playbooks. They upgrade their binary when the repo's playbooks move ahead.
-- Read the [release notes](https://github.com/donjaime/yass/releases) first: before 1.0, a minor version can change the file format or the CLI. [docs/install.md](docs/install.md#upgrading) has the details.
+Like installing, upgrading has two parts: the binary, once per machine, then each repo you use YASS in.
+1. **Get the newer binary,** the same way you got it: a [release](https://github.com/donjaime/yass/releases), `go install github.com/donjaime/yass/cmd/yass@latest`, or a rebuilt clone.
+2. **Run `yass upgrade` in each repo,** from anywhere in it. It finds every YASS file from the repo root down (the playbooks wherever they are, each `AGENTS.md` section, the hook) and your user folder's playbooks, and brings them to the binary's version. It lists what it wrote, says when everything is already up to date, and won't downgrade: if the repo is newer than your binary, it tells you to upgrade the binary instead. Your changes, `yass.yaml` and your own parts of `AGENTS.md` are never touched; hand edits to YASS's own files are replaced, so check the diff.
+3. **Commit it** (`chore: upgrade YASS`), so teammates get the new playbooks. They upgrade their binary when the repo moves ahead; `yass upgrade` tells anyone whose binary is older.
+
+Read the [release notes](https://github.com/donjaime/yass/releases) first: before 1.0, a minor version can change the file format or the CLI. [docs/install.md](docs/install.md#upgrading) has the details.
 
 ## The CLI
 
@@ -94,6 +96,8 @@ yass init [dir]                 set up YASS: yass/, and for the repo itself the 
           [--global]            …with the playbooks in your user folder instead of the repo
           [--hooks]             …and turn the hook on for this clone
           [--no-agents]         …leaving AGENTS.md, the playbooks and the hook alone
+yass upgrade                    bring every YASS file in the repo, and your user folder's playbooks,
+                                up to this binary's version (after you upgrade the binary)
 yass new "<title>"              a small change
          [--large] [--design]   …with prd.md and plan.md, and design.md
          [--in <change>]        …as a piece of a large change

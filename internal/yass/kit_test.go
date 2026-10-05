@@ -116,3 +116,23 @@ func TestReadStampAndOlder(t *testing.T) {
 		t.Error("a binary without a version shouldn't call anything older")
 	}
 }
+
+func TestUpgradeAction(t *testing.T) {
+	cases := []struct{ stamp, bin, want string }{
+		{"", "0.3.0", actWrite},                                     // unstamped (v0.1, v0.2): older than anything
+		{"0.2.0", "0.3.0", actWrite},                                // older release
+		{"0.3.0", "0.3.0", actKeep},                                 // same release: up to date
+		{"0.4.0", "0.3.0", actNewer},                                // newer: upgrade the binary
+		{"0.3.0", "v0.3.1-0.20261005034705-35527c13ffaf", actWrite}, // a clone build after a release upgrades it
+		{"0.3.1-0.20261005034705-35527c13ffaf", "0.3.1", actWrite},  // a later release upgrades the clone build
+		{"0.3.1", "v0.3.1-0.20261005034705-35527c13ffaf", actNewer}, // a clone build doesn't downgrade a release
+		{"0.3.0", "v0.3.0+dirty", actWrite},                         // +dirty rewrites its own version
+		{"0.3.0+dirty", "0.3.0", actKeep},                           // build metadata is ignored in comparing
+		{"0.3.0-rc.1", "0.3.0", actWrite},                           // a release candidate is older than its release
+	}
+	for _, c := range cases {
+		if got := upgradeAction(c.stamp, c.bin); got != c.want {
+			t.Errorf("upgradeAction(%q, %q) = %s, want %s", c.stamp, c.bin, got, c.want)
+		}
+	}
+}

@@ -30,7 +30,7 @@ To pin a version, replace `latest/download` with `download/v0.1.0`. On Windows, 
 
 ## From source
 
-With Go 1.22 or later:
+With Go 1.24 or later:
 
 ```bash
 git clone https://github.com/donjaime/yass && cd yass
@@ -115,17 +115,27 @@ Without `--bin-dir`, `install.sh` uses a `yass` it finds next to it, in `bin/`, 
 
 ## Upgrading
 
-Upgrading has the same two parts as installing: the binary, once per machine, and each repo's files, once per repo. Get the newer release (or pull and rebuild), then run its `install.sh --upgrade --bin-dir ~/.local/bin` in your repo; that does both. It replaces the binary, the playbooks and the hook; your changes, `yass.yaml` and anything outside the `yass:begin`/`yass:end` markers in `AGENTS.md` are left alone. Review the diff and commit it (`chore: upgrade YASS`). In your other repos, run the same command again (copying the same binary is harmless), or, from inside each, the one-line form below without `--bin-dir`, which uses the upgraded `yass` on your PATH.
+Upgrading has the same two parts as installing: the binary, once per machine, and each repo's files, once per repo.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --upgrade --bin-dir ~/.local/bin .
-```
+1. **Get the newer binary** the way you got it: download and verify a [release](#from-a-release) and copy its `yass` onto your PATH (or run its `install.sh --bin-dir ~/.local/bin`), `go install github.com/donjaime/yass/cmd/yass@latest`, or pull and rebuild a clone. `yass --version` shows what you have.
+2. **Run `yass upgrade` in each repo,** from anywhere in it:
 
-does the same in one line, with the same caveat as [the one-line install](#in-one-line): it runs a script you haven't read.
+   ```bash
+   yass upgrade
+   ```
 
-- **You don't need to remember how you installed it.** An upgrade refreshes the copies that are there: Claude's playbooks in `.claude/skills/` if the repo has them, and, when the repo has no playbooks of its own but your user folder does, the ones there (as if you'd passed `--global`, which updates them for every repo that uses them).
+   It finds every YASS file from the repo root down, with `git ls-files`: playbooks in any folder's `.agents/skills/` or `.claude/skills/` (so monorepo folders set up with `yass init <folder> --agents` are included), every `AGENTS.md` with the YASS section, and the hook. It adds your user folder's playbooks, if you installed them with `--global`. It skips folders `yass.yaml` lists under `ignore:`.
+3. **Review the diff and commit it** (`chore: upgrade YASS`).
+
+What it does with each file depends on the version stamped in it:
+- **Older, or no stamp** (files written by v0.2 or earlier): replaced with this binary's version. A skills folder also gets any playbook it's missing.
+- **The same version:** left alone. When nothing needs doing, it says everything is already up to date.
+- **Newer:** nothing is written, and it says to upgrade your binary first. `yass upgrade` never downgrades.
+
+Your changes, `yass.yaml` and anything outside the `yass:begin`/`yass:end` markers in `AGENTS.md` are left alone. Hand edits to YASS's own files are replaced; since they're committed, the diff shows them. Files outside version control (user-folder playbooks) are labeled as such in the list of what it wrote.
+
 - **Read the [release notes](https://github.com/donjaime/yass/releases)** for what changed. Before 1.0, a minor version can change the file format or the CLI; the notes say how to migrate.
-- **The binary is per machine; the playbooks are per repo.** Upgrading the binary affects every repo on your machine, so upgrade each repo you use YASS in, and teammates should upgrade their binary when the repo's playbooks move ahead.
+- **The binary is per machine; the files are per repo.** Upgrading the binary affects every repo on your machine, so upgrade each repo you use YASS in, and teammates should upgrade their binary when the repo moves ahead.
 
 ## Removing it
 

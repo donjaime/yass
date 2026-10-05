@@ -10,6 +10,9 @@ import (
 )
 
 func cmdInit(a *args) error {
+	if semverOf(binVersion) == "" {
+		return noVersion()
+	}
 	cwd := getwd()
 	top := repoTop(cwd)
 	base := top
@@ -109,7 +112,7 @@ func cmdInit(a *args) error {
 	made = append(made, kw.made...)
 	r := &Repo{Top: top}
 	for _, p := range made {
-		fmt.Printf("wrote %s\n", r.disp(canon(p)))
+		fmt.Printf("wrote %s%s\n", r.disp(canon(p)), outsideNote(!within(canon(p), canon(top))))
 	}
 	if a.b["hooks"] {
 		if _, ok := git(top, "config", "core.hooksPath", HookPath); !ok {
