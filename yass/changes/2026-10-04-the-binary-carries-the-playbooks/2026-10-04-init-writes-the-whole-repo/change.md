@@ -39,3 +39,7 @@ Every yass binary carries the kit (the playbooks and the hook script) for its ve
 ### 2026-10-04 (claude)
 - Did: `kit/` is a Go package embedding the playbooks and the hook; `yass init` writes them stamped (`metadata.yass-version` in the frontmatter, `version=` in the `AGENTS.md` marker, `# yass-version:` in the hook) with `--claude`, `--global` and `--hooks`, keeping files that exist; `install.sh` passes `--global` on. Tests: `go test` (the kit's contents, stamping keeps the frontmatter valid YAML with name and description), e2e §24 (init from the binary alone, each option, files match `kit/` but for the stamp), all 309 e2e checks, examples, `tests/site.sh`. README's CLI reference lists the options.
 - Next: Jaime reviews; then piece 2, `init-upgrades-by-version`.
+
+### 2026-10-05 (claude)
+- Did: rebased onto the plan revision (`yass upgrade`, agent files per folder); `go test` passes.
+- Next: piece 2 is now `agent-files-per-folder`, which also moves the agent files' location away from the repo root's and stops `yass init <folder>` writing the root `AGENTS.md`.
