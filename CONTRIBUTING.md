@@ -5,11 +5,12 @@ Thanks for helping. YASS tries to stay small. Before adding something, ask wheth
 ## Layout
 ```
 cmd/yass/                           the CLI's entry point
-internal/yass/                      the CLI and the hook check (`yass hook`): Go, one dependency (yaml.v3)
+internal/yass/                      the CLI and the hook check (`yass hook`): Go, two dependencies (yaml.v3, x/mod/semver)
 internal/yass/templates/            what `yass init` and `yass new` write, built into the binary
-install.sh                          installs or upgrades YASS into a repo
+install.sh                          installs the yass binary (yass init and yass upgrade handle repos)
+kit/                                what `yass init` and `yass upgrade` put in a repo, embedded in the binary (kit/embed.go)
 kit/tools/yass/githooks/pre-commit  the optional hook: a shim that runs `yass hook`
-kit/.agents/skills/                 the playbooks (Agent Skills format)
+kit/.agents/skills/                 the playbooks (Agent Skills format), unstamped; `yass.yaml` ignores kit/
 .goreleaser.yaml                    release builds; .github/workflows/ runs CI and releases
 docs/  examples/  tests/
 ```

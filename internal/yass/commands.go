@@ -83,7 +83,7 @@ func cmdInit(a *args) error {
 	if a.b["no-agents"] {
 		agentDir = ""
 	}
-	kw := &kitWriter{}
+	kw, freshAgents := &kitWriter{}, false
 	if agentDir != "" {
 		ap := filepath.Join(agentDir, "AGENTS.md")
 		cur := read(ap)
@@ -98,7 +98,7 @@ func cmdInit(a *args) error {
 			if err := write(ap, next); err != nil {
 				return err
 			}
-			made = append(made, ap)
+			made, freshAgents = append(made, ap), true
 		}
 		if err := kw.agentFiles(agentDir, a.b["claude"], a.b["global"]); err != nil {
 			return err
@@ -140,6 +140,16 @@ func cmdInit(a *args) error {
 	}
 	if len(made) == 0 {
 		fmt.Println("already set up")
+	}
+	if freshAgents && len(a.pos) == 0 {
+		fmt.Print(`
+YASS is set up. Next:
+  1. Commit it:  git add -A && git commit -m "chore: adopt YASS"
+  2. Ask your agent to start something:
+       small:  "use yass-work to fix <bug>"
+       large:  "use yass-shape to plan <feature>"
+  3. ` + "`yass status`" + ` shows what's in flight.
+`)
 	}
 	for _, p := range kw.kept {
 		if olderThanBinary(readStamp(p)) {

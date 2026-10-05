@@ -28,7 +28,7 @@ newrepo() { rm -rf "$1"; mkdir -p "$1"; cd "$1"; git init -q -b main; git config
 TODAY=$(date +%F)
 
 newrepo "$W/e2e/solo"
-INSTALL_OUT="$(bash "$ROOT/install.sh" .)"
+INSTALL_OUT="$(y init)"
 
 echo "1. install"
 has   "a first install suggests the adopting commit" "chore: adopt YASS" echo "$INSTALL_OUT"
@@ -255,65 +255,56 @@ has   "…and the hook sees intent edits there" "café/yass/changes/$TODAY-accen
 git commit -qm "feat: mixed" >/dev/null 2>&1
 rm -rf "apps"; git add -A; git commit -qm "chore: tidy" >/dev/null
 
-echo "8. installer options"
+echo "8. install.sh installs the binary"
 newrepo "$W/e2e/claude"
-bash "$ROOT/install.sh" . --claude --hooks >/dev/null
+y init --claude --hooks >/dev/null
 [ -f .claude/skills/yass-work/SKILL.md ] && ok "--claude copies the playbooks" || bad "no .claude/skills"
 has "--claude imports AGENTS.md" "^@AGENTS.md" cat CLAUDE.md
 has "--hooks sets the hook path" "tools/yass/githooks" git config core.hooksPath
 git add -A; hasnt "the adopting commit isn't flagged" "heads-up" git commit -q -m "chore: adopt YASS"
-echo "changed" > .agents/skills/yass-work/SKILL.md
-bash "$ROOT/install.sh" . >/dev/null
-has "re-running keeps your edits" "^changed$" cat .agents/skills/yass-work/SKILL.md
-UPGRADE_OUT="$(bash "$ROOT/install.sh" . --upgrade)"
-has   "--upgrade says it upgraded" "YASS is upgraded.*chore: upgrade YASS" bash -c 'tr "\n" " " <<<"$1"' _ "$UPGRADE_OUT"
-hasnt "…not the adoption steps" "chore: adopt YASS" echo "$UPGRADE_OUT"
-has   "…and points to the release notes" "github.com/.*/releases" echo "$UPGRADE_OUT"
-has "--upgrade replaces them" "^name: yass-work" cat .agents/skills/yass-work/SKILL.md
-echo "changed" > .claude/skills/yass-work/SKILL.md
-bash "$ROOT/install.sh" . --upgrade >/dev/null
-has   "--upgrade refreshes Claude's copies without --claude" "^name: yass-work" cat .claude/skills/yass-work/SKILL.md
-newrepo "$W/e2e/noclaude"; bash "$ROOT/install.sh" . >/dev/null; bash "$ROOT/install.sh" . --upgrade >/dev/null
-[ ! -e .claude ] && ok "…and doesn't create them when there are none" || bad ".claude written by --upgrade"
-cd "$W/e2e/claude"
-has "--bin-dir copies the binary" "write  .*/bindir/yass" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
-[ -x "$W/e2e/bindir/yass" ] && ok "…and it runs" || bad "no binary in --bin-dir"
-has   "…and warns that another yass on PATH comes first" "is .*, not the one just installed" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
-has   "…or that --bin-dir isn't on PATH" "yass isn't on your PATH" \
-      env PATH=/usr/bin:/bin SHELL=/bin/zsh bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir2"
+BD="$W/e2e/bindir"; rm -rf "$BD" "$W/e2e/bindir2" "$W/e2e/bindir3" "$W/e2e/bindir4" "$W/e2e/onebin" "$W/e2e/nobin"
+IOUT="$(bash "$ROOT/install.sh" --bin-dir "$BD")"
+has   "--bin-dir copies the binary" "installed yass .* to .*/bindir/yass" echo "$IOUT"
+[ -x "$BD/yass" ] && ok "…and it runs" || bad "no binary in --bin-dir"
+[ -z "$(git status --porcelain)" ] && ok "…and, run in a repo that uses YASS, changes nothing there (joining a repo)" || bad "install.sh changed the repo: $(git status --porcelain)"
+has   "…and says yass init sets up a repo" "yass init .*set it up" echo "$IOUT"
+mkdir -p "$W/e2e/plain"; rm -rf "$W/e2e/plain/"*
+run_ok "…run outside a repo too" bash -c 'cd "$1" && bash "$2" --bin-dir "$3"' _ "$W/e2e/plain" "$ROOT/install.sh" "$W/e2e/bindir3"
+[ -z "$(ls -A "$W/e2e/plain")" ] && ok "…writing nothing where it's run" || bad "install.sh wrote into the folder it ran in"
+has   "…and warns that another yass on PATH comes first" "is .*, not the one just installed" bash "$ROOT/install.sh" --bin-dir "$BD"
+has   "…or that --bin-dir isn't on PATH" "bindir2 isn't on your PATH" \
+      env PATH=/usr/bin:/bin SHELL=/bin/zsh bash "$ROOT/install.sh" --bin-dir "$W/e2e/bindir2"
 has   "…with the fix for the shell" "Fix it with:  echo 'export PATH=\".*/bindir2:\\\$PATH\"' >> ~/.zshenv" \
-      env PATH=/usr/bin:/bin SHELL=/bin/zsh bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir2"
-hasnt "no warning when the installed yass is the one on PATH" "WARNING" \
-      env PATH="$W/e2e/bindir:/usr/bin:/bin" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
-U="$W/e2e/unpacked"; rm -rf "$U"; mkdir -p "$U"; cp -R "$ROOT/install.sh" "$ROOT/kit" "$U/"; cp "$YASS_BIN" "$U/yass"
-has   "an unpacked release with an older yass on PATH suggests --bin-dir, not a PATH edit" \
-      "run this script again with:  --bin-dir .*/bindir$" \
-      env -u YASS_BIN PATH="$W/e2e/bindir:/usr/bin:/bin" bash "$U/install.sh" .
-hasnt "…and no PATH edit" "Fix it with" env -u YASS_BIN PATH="$W/e2e/bindir:/usr/bin:/bin" bash "$U/install.sh" .
-K="$W/e2e/kit-only"; rm -rf "$K"; mkdir -p "$K"; cp -R "$ROOT/install.sh" "$ROOT/kit" "$K/"
-has      "a web install with no --bin-dir and no yass stops before downloading" "pass --bin-dir" \
-         bash -c 'env -u YASS_BIN PATH=/usr/bin:/bin bash -s -- . < "$1"' _ "$ROOT/install.sh"
-run_fail "no binary anywhere: refuses" env -u YASS_BIN PATH=/usr/bin:/bin bash "$K/install.sh" .
-has      "…and says how to get one" "no yass binary found" env -u YASS_BIN PATH=/usr/bin:/bin bash "$K/install.sh" .
-newrepo "$W/e2e/global"
-HOME="$W/e2e/home" bash "$ROOT/install.sh" . --global --claude >/dev/null
-[ -f "$W/e2e/home/.agents/skills/yass-work/SKILL.md" ] && ok "--global puts the playbooks in the user folder" || bad "no user-level playbooks"
-[ -f "$W/e2e/home/.claude/skills/yass-work/SKILL.md" ] && ok "…and Claude's, with --claude" || bad "no user-level Claude playbooks"
-[ ! -e .agents ] && [ ! -e .claude ] && ok "…not in the repo" || bad "playbooks written into the repo"
-[ -f tools/yass/githooks/pre-commit ] && [ -d yass/changes ] && ok "…while the hook and yass/ still are" || bad "repo files missing"
-echo "changed" > "$W/e2e/home/.agents/skills/yass-work/SKILL.md"; echo "changed" > "$W/e2e/home/.claude/skills/yass-work/SKILL.md"
-GOUT="$(HOME="$W/e2e/home" bash "$ROOT/install.sh" . --upgrade)"
-has   "--upgrade without --global finds the user folder's playbooks" "upgrading the ones in your user folder" echo "$GOUT"
-has   "…and replaces them" "^name: yass-work" cat "$W/e2e/home/.agents/skills/yass-work/SKILL.md"
-has   "…and Claude's" "^name: yass-work" cat "$W/e2e/home/.claude/skills/yass-work/SKILL.md"
-[ ! -e .agents ] && [ ! -e .claude ] && ok "…without writing any into the repo" || bad "--upgrade wrote playbooks into the repo"
+      env PATH=/usr/bin:/bin SHELL=/bin/zsh bash "$ROOT/install.sh" --bin-dir "$W/e2e/bindir2"
+hasnt "no warning when the installed yass is the one on PATH" "WARNING" env PATH="$BD:/usr/bin:/bin" bash "$ROOT/install.sh" --bin-dir "$BD"
+has   "…and it says so" "it's on your PATH" env PATH="$BD:/usr/bin:/bin" bash "$ROOT/install.sh" --bin-dir "$BD"
+run_fail "an old-style install (a repo and setup options) refuses" bash "$ROOT/install.sh" . --claude --bin-dir "$W/e2e/nobin"
+[ ! -e "$W/e2e/nobin" ] && ok "…before installing anything" || bad "an old-style install installed the binary"
+has   "…printing the commands to use, options carried over" "^  yass init --claude$" bash "$ROOT/install.sh" . --claude --bin-dir "$W/e2e/nobin"
+has   "…a repo path becoming a cd" "^  cd apps/web && yass init --hooks --path \.\./p$" bash "$ROOT/install.sh" apps/web --hooks --path ../p
+has   "…and --upgrade pointing at yass upgrade" "^  yass upgrade$" bash "$ROOT/install.sh" --upgrade
+has   "…after the binary install" "^  install.sh --bin-dir ~/.local/bin$" bash "$ROOT/install.sh" --global
+run_fail "without --bin-dir it refuses" bash "$ROOT/install.sh"
+has   "…and says what to pass" "pass --bin-dir" bash "$ROOT/install.sh"
+has   "a piped install without --bin-dir stops before downloading" "pass --bin-dir" \
+      bash -c 'env -u YASS_BIN PATH=/usr/bin:/bin bash -s < "$1"' _ "$ROOT/install.sh"
+U="$W/e2e/unpacked"; rm -rf "$U"; mkdir -p "$U"; cp "$ROOT/install.sh" "$U/"; cp "$YASS_BIN" "$U/yass"
+has   "an unpacked release with no kit/ installs its binary" "installed yass .* to .*/bindir4/yass" \
+      env -u YASS_BIN PATH=/usr/bin:/bin bash "$U/install.sh" --bin-dir "$W/e2e/bindir4"
+K="$W/e2e/script-only"; rm -rf "$K"; mkdir -p "$K"; cp "$ROOT/install.sh" "$K/"
+run_fail "no binary next to the script: refuses" env -u YASS_BIN PATH=/usr/bin:/bin bash "$K/install.sh" --bin-dir "$W/e2e/nobin"
+has      "…and says how to get one" "no yass binary next to this script" env -u YASS_BIN PATH=/usr/bin:/bin bash "$K/install.sh" --bin-dir "$W/e2e/nobin"
+newrepo "$W/e2e/oneliner"
+run_ok "the one-liner's two commands set up a repo, with --bin-dir not on PATH" \
+       env PATH=/usr/bin:/bin bash -c 'bash "$1" --bin-dir "$2" >/dev/null && "$2/yass" init >/dev/null' _ "$ROOT/install.sh" "$W/e2e/onebin"
+[ -f .agents/skills/yass-work/SKILL.md ] && [ -x tools/yass/githooks/pre-commit ] && ok "…playbooks, hook and all" || bad "the one-liner didn't set up the repo"
 newrepo "$W/e2e/bare"
 run_fail "new before init explains itself" y new "x"
 has      "…with the fix" "run .*yass init" y new "x"
 
 echo "9. yass.yaml: the yass folder lives somewhere else"
 newrepo "$W/e2e/ext"; rm -rf "$W/e2e/ext-yass" "$W/e2e/home-yass"
-bash "$ROOT/install.sh" . --path ../ext-yass >/dev/null
+y init --path ../ext-yass >/dev/null
 [ -f yass.yaml ] && ok "--path writes yass.yaml" || bad "no yass.yaml"
 [ -L yass ] && [ -z "$(git status --porcelain -- yass)" ] && ok "…and yass/ in the repo is only an ignored link" || bad "yass/ isn't an ignored link"
 [ -d "$W/e2e/ext-yass/changes" ] && ok "…and creates the folder it points to" || bad "no external folder"
@@ -366,7 +357,7 @@ rm -rf yass
 
 echo "10. yass.yaml beside yass/: settings only, and ignore"
 newrepo "$W/e2e/ign"
-bash "$ROOT/install.sh" . >/dev/null
+y init >/dev/null
 mkdir -p examples/a/yass/archive/2026-01-01-old examples/b/svc/yass/changes/2026-01-02-thing vendor/x/yass/changes
 printf '# Old\n\n## Goal\nOld.\n\n## Steps\n- [x] Done\n' > examples/a/yass/archive/2026-01-01-old/change.md
 printf '# Thing\n\n## Goal\nA thing.\n\n## Steps\n- [ ] Do it\n' > examples/b/svc/yass/changes/2026-01-02-thing/change.md
@@ -401,7 +392,7 @@ has   "…and one that matches nothing" "'missing' doesn't match a folder" y sta
 
 echo "11. queue.md: the order to tackle changes in"
 newrepo "$W/e2e/queue"
-bash "$ROOT/install.sh" . >/dev/null
+y init >/dev/null
 mk() { mkdir -p "$1"; printf '# %s\n\n## Goal\nIt.\n\n## Steps\n- [%s] Do it\n' "$(basename "$1")" "${2:- }" > "$1/change.md"; }
 mk yass/changes/2026-01-01-alpha; mk yass/changes/2026-02-01-bravo; mk yass/changes/2026-03-01-charlie; mk yass/changes/2026-04-01-delta x
 mk yass/changes/2026-03-01-charlie/2026-03-02-piece; mk yass/archive/2025-12-01-old x
@@ -440,7 +431,7 @@ git config --unset core.hooksPath
 
 echo "12. blocked: naming changes is a dependency"
 newrepo "$W/e2e/deps"
-bash "$ROOT/install.sh" . >/dev/null
+y init >/dev/null
 mkb() { mkdir -p "$1"; printf -- '---\nblocked: %s\n---\n# %s\n\n## Goal\nIt.\n\n## Steps\n- [%s] Do it\n' "${3:-}" "$(basename "$1")" "${2:- }" > "$1/change.md"; }
 mkb yass/changes/2026-01-01-alpha /; mkb yass/changes/2026-02-01-bravo x "2026-01-01-alpha"
 mkb yass/changes/2026-03-01-big; mkb yass/changes/2026-03-01-big/2026-03-02-part

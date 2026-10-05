@@ -10,7 +10,7 @@ export YASS_BIN; export PATH="$(dirname "$YASS_BIN"):$PATH"
 for ex in "$ROOT"/examples/*/; do
   name="$(basename "$ex")"; d="$W/example-$name"; rm -rf "$d"; mkdir -p "$d"; cd "$d"
   git init -q -b main && git config user.email t@t && git config user.name Tester
-  bash "$ROOT/install.sh" . >/dev/null
+  yass init >/dev/null
   cp -R "$ex"/. .
   git add -A >/dev/null && git commit -q -m "chore: example"
   if out="$(yass status --strict 2>&1)"; then echo "ok   $name: status is clean"; else echo "FAIL $name"; echo "$out"; fail=1; fi

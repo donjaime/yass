@@ -1,6 +1,6 @@
 # The playbooks
 
-YASS ships five playbooks, as [Agent Skills](https://agentskills.io) in [`kit/.agents/skills/`](../kit/.agents/skills). `install.sh` copies them to `.agents/skills/` in your repo (project scope), and `--claude` also copies them to `.claude/skills/`. With `--global`, they go in your user folder instead. Agents pick one by matching your request against its `description`.
+YASS ships five playbooks, as [Agent Skills](https://agentskills.io) in [`kit/.agents/skills/`](../kit/.agents/skills). Every `yass` binary carries them, and `yass init` writes them to `.agents/skills/` in your repo (project scope); `--claude` also copies them to `.claude/skills/`. With `--global`, they go in your user folder instead. `yass upgrade` brings them up to a newer binary's version. Agents pick one by matching your request against its `description`.
 
 This page is an index for reviewing what each playbook lets an agent do. The `SKILL.md` files are the source of truth; if this page and a playbook disagree, the playbook wins and this page needs fixing.
 
