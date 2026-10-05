@@ -13,7 +13,7 @@ install.sh only installs the yass binary, and says where, whether it's on PATH, 
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC20–AC27 in [plan.md](../plan.md)
+- [x] Delivers AC20–AC27 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -21,7 +21,7 @@ install.sh only installs the yass binary, and says where, whether it's on PATH, 
 - [x] `.goreleaser.yaml`: archives without `kit/`
 - [x] e2e: rework the `install.sh` sections; unpacked release without `kit/`
 - [x] README, `docs/install.md`, landing page: the new model and joining
-- [ ] Release candidate: the one-liner in a fresh repo (AC24)
+- [x] Release candidate: the one-liner in a fresh repo (AC24)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -39,3 +39,7 @@ install.sh only installs the yass binary, and says where, whether it's on PATH, 
 ### 2026-10-05 (claude)
 - Did: `install.sh` only installs the binary: from `$YASS_BIN`, the binary next to it (a release folder or a clone's `bin/`), or a downloaded release checked against `checksums.txt`; it reports PATH and points at `yass init`; old-style arguments (a repo path, `--claude`, `--global`, `--hooks`, `--path`, `--upgrade`) install nothing and print the commands to use. Release archives drop `kit/`. e2e §8 rewritten for it; every e2e and `tests/examples.sh` setup now uses `yass init`. README install section, `docs/install.md`, `CONTRIBUTING.md`, `docs/skills.md` and the landing page's install tabs describe the two steps. Checks: e2e 355, examples, `tests/site.sh` 60, `go test`; a GoReleaser snapshot build, whose archive's `install.sh` installed the binary and whose `yass init` set up a fresh repo.
 - Next: AC24, the piped one-liner against a real release candidate (`v0.3.0-rc.1`), which needs the branches merged and a tag; then piece 5, `status-knows-the-versions`.
+
+### 2026-10-05 (claude)
+- Did: release-candidate checks against `v0.3.0-rc.1`, published as a GitHub pre-release (latest stays v0.2.0). The documented one-liner with `YASS_VERSION=v0.3.0-rc.1`, in a fresh repo with `--bin-dir` not on PATH: downloaded, checksum ok, installed, PATH warning with the `~/.zshenv` fix, and the chained `yass init` set up the repo stamped `0.3.0-rc.1` (AC24). The README's manual route: checksum ok, `gh attestation verify` passes (SLSA provenance signed by `release.yml` at the tag), the archive holds only the binary, `install.sh` and docs, and its `install.sh` installs the binary. A repo set up by v0.2.0's own `install.sh --claude --hooks` gets `yass status`'s note, and the release candidate's `yass upgrade` leaves it identical to a fresh `yass init --claude --hooks`, hook setting kept. `yass upgrade` on this repo: stamps only, `kit/` untouched.
+- Next: done.

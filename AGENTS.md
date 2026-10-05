@@ -1,4 +1,4 @@
-<!-- yass:begin (managed by `yass init`; edit outside these markers) -->
+<!-- yass:begin version=0.3.0-rc.1 (managed by `yass init`; edit outside these markers) -->
 ## Changes (YASS)
 Planned work lives in the yass folder's `changes/`, one dated folder per change: `yass/` in the repo, or wherever `yass.yaml` points (`yass root` prints it; see its README.md). CLI: `yass`, on your PATH. Playbooks: the `yass-*` skills, in `.agents/skills/` or your user skills folder.
 - `yass status` shows what's in flight. If `yass root` is outside this repo, plans and code are committed separately: see "Plans in another folder" in `yass-work`. Work only on the change you're pointed at (unless you've been put in charge of choosing), and resume it from the last **Next:** in its Log. `not started` means planned but not built yet; its plan may still need approval.
