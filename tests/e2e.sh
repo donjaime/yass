@@ -631,6 +631,14 @@ mkdir -p svc; yass init svc >/dev/null
 newrepo "$W/e2e/alone-noagents"; yass init --no-agents >/dev/null
 [ ! -e .agents ] && [ ! -e tools ] && [ ! -e AGENTS.md ] && ok "--no-agents skips AGENTS.md, the playbooks and the hook" || bad "--no-agents wrote agent files"
 
+# vbin VERSION: a yass binary that reports VERSION ("dev" for none), built once, for checks that
+# depend on versions; CI's own build reports whatever its checkout gives it.
+vbin() { local d="$W/vbin/$1"
+  if [ ! -x "$d/yass" ]; then mkdir -p "$d"
+    if [ "$1" = dev ]; then (cd "$ROOT" && go build -buildvcs=false -o "$d/yass" ./cmd/yass)
+    else (cd "$ROOT" && go build -ldflags "-X main.version=$1" -o "$d/yass" ./cmd/yass); fi
+  fi; echo "$d/yass"; }
+
 echo "25. agent files per folder, for monorepos"
 newrepo "$W/e2e/mono"; yass init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
 ROOT_AGENTS="$(cksum < AGENTS.md)"
@@ -652,14 +660,14 @@ has   "…keeping what was there" "# Web rules" cat apps/web/AGENTS.md
 [ "$(cksum < AGENTS.md)" = "$ROOT_AGENTS" ] && ok "…and the root AGENTS.md is untouched" || bad "--agents changed the root AGENTS.md"
 has   "it lists what it wrote" "wrote apps/web/.agents/skills/yass-work/SKILL.md" echo "$WEB_OUT"
 echo "Ours" > .agents/skills/yass-plan/SKILL.md; rm .agents/skills/yass-log/SKILL.md
-REINIT="$(yass init)"
+REINIT="$("$(vbin 0.5.0)" init)"
 has   "re-running init writes what's missing" "wrote .agents/skills/yass-log/SKILL.md" echo "$REINIT"
 has   "…and keeps what's there" "^Ours$" cat .agents/skills/yass-plan/SKILL.md
 has   "…and says yass upgrade would update files older than the binary (an unstamped one here)" "yass upgrade. updates them" echo "$REINIT"
 git checkout -q -- .agents; git clean -qfd .agents
 hasnt "a repo at the binary's version gets no upgrade note" "yass upgrade" yass init
 sub AGENTS.md 'yass:begin version=\S+' 'yass:begin version=0.0.1'
-has   "…an AGENTS.md section stamped older gets one" "yass upgrade. updates them" yass init
+has   "…an AGENTS.md section stamped older gets one" "yass upgrade. updates them" "$(vbin 0.5.0)" init
 has   "…and init leaves the section as it is" "version=0.0.1 " cat AGENTS.md
 
 echo; echo "passed: $pass  failed: $fail"

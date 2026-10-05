@@ -38,3 +38,7 @@ yass init <folder> --agents puts the AGENTS.md section and the playbooks (and Cl
 ### 2026-10-05 (claude)
 - Did: `yass init <folder> --agents` puts the `AGENTS.md` section and playbooks (and Claude's copies and import with `--claude`) in the folder, with the hook only at the repo root; `yass init <folder>` alone is planning only and leaves every `AGENTS.md` alone; re-running `yass init` writes what's missing, keeps the rest, and notes `yass upgrade` when kept files are older or unstamped. Added `readStamp` and `olderThanBinary` (go test). e2e §25 (18 checks); all 327 e2e checks, examples and `tests/site.sh` pass. README CLI reference lists `--agents`.
 - Next: Jaime reviews; then piece 3, `yass-upgrade` (its first step, the comparison, is already here).
+
+### 2026-10-05 (claude)
+- Did: fixed two e2e §25 checks that failed in CI on this PR (donjaime/yass#5). At this commit `go.mod` says Go 1.23, which builds `yass` without a version (`dev`), so "`yass upgrade` updates them" never appeared; one check also hard-coded a `0.0.1` stamp, which a CI build's `v0.0.0-…` sorts below. Both now use a binary built with a known version (`vbin`, the helper the `yass-upgrade` piece adds). e2e passes with an unversioned build (as CI's Go 1.23 makes) and a versioned one: 327 each.
+- Next: rebase the stack onto this, and merge #5 once CI is green.
