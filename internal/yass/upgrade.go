@@ -187,3 +187,45 @@ func outsideNote(outside bool) string {
 	}
 	return ""
 }
+
+// versionNote is yass status's one line about versions: whether this binary is older than the
+// version that wrote the repo's YASS files (upgrade the binary), or newer (yass upgrade would
+// upgrade them). It only reads the files at the repo root and the user folder's playbooks, so
+// status stays fast in large repos; yass upgrade is what searches the whole repo.
+func versionNote(r *Repo) string {
+	if semverOf(binVersion) == "" {
+		return ""
+	}
+	var paths []string
+	if ap := filepath.Join(r.Top, "AGENTS.md"); strings.Contains(read(ap), "<!-- yass:begin") {
+		paths = append(paths, ap)
+	}
+	for _, d := range []string{filepath.Join(r.Top, ".agents", "skills"), filepath.Join(r.Top, ".claude", "skills"), userSkillsDir(), userClaudeSkillsDir()} {
+		m, _ := filepath.Glob(filepath.Join(d, "yass-*", "SKILL.md"))
+		paths = append(paths, m...)
+	}
+	if hp := filepath.Join(r.Top, filepath.FromSlash(HookPath), "pre-commit"); exists(hp) {
+		paths = append(paths, hp)
+	}
+	newest, older := "", false
+	for _, p := range paths {
+		stamp := readStamp(p)
+		switch upgradeAction(stamp, binVersion) {
+		case actNewer:
+			if newest == "" || semver.Compare(semverOf(stamp), semverOf(newest)) > 0 {
+				newest = stamp
+			}
+		case actWrite:
+			if !strings.HasSuffix(binVersion, "+dirty") || semver.Compare(semverOf(stamp), semverOf(binVersion)) != 0 {
+				older = true
+			}
+		}
+	}
+	switch {
+	case newest != "":
+		return fmt.Sprintf("YASS's files here were written by yass %s, newer than this one (%s); upgrade your yass binary", newest, binVersion)
+	case older:
+		return fmt.Sprintf("YASS's files here are older than this yass (%s); `yass upgrade` would upgrade them", binVersion)
+	}
+	return ""
+}

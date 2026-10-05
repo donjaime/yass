@@ -342,6 +342,9 @@ func cmdStatus(a *args) (int, error) {
 	if len(r.Roots) == 0 {
 		fmt.Println(r.noRoot("no yass/ folder yet; run `yass init`"))
 	}
+	if n := versionNote(r); n != "" {
+		r.note("%s", n)
+	}
 	for _, w := range r.Warnings {
 		fmt.Printf("warning: %s\n", w)
 	}

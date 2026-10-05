@@ -137,7 +137,7 @@ What it does with each file depends on the version stamped in it:
 Your changes, `yass.yaml` and anything outside the `yass:begin`/`yass:end` markers in `AGENTS.md` are left alone. Hand edits to YASS's own files are replaced; since they're committed, the diff shows them. Files outside version control (user-folder playbooks) are labeled as such in the list of what it wrote.
 
 - **Read the [release notes](https://github.com/donjaime/yass/releases)** for what changed. Before 1.0, a minor version can change the file format or the CLI; the notes say how to migrate.
-- **The binary is per machine; the files are per repo.** Upgrading the binary affects every repo on your machine, so upgrade each repo you use YASS in, and teammates should upgrade their binary when the repo moves ahead.
+- **The binary is per machine; the files are per repo.** Upgrading the binary affects every repo on your machine, so upgrade each repo you use YASS in, and teammates should upgrade their binary when the repo moves ahead. `yass status` notes when your binary and a repo's YASS files are out of step, and which to upgrade.
 
 ## Removing it
 
