@@ -2,7 +2,7 @@
 platforms: [all]
 source: plan.md
 follows: 
-blocked: 2026-10-04-the-binary-carries-the-playbooks/2026-10-04-init-upgrades-by-version
+blocked: 2026-10-04-the-binary-carries-the-playbooks/2026-10-05-yass-upgrade
 ---
 # Status knows the versions
 

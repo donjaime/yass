@@ -2,7 +2,7 @@
 platforms: [all]
 source: plan.md
 follows: 
-blocked: 2026-10-04-the-binary-carries-the-playbooks/2026-10-04-init-upgrades-by-version
+blocked: 2026-10-04-the-binary-carries-the-playbooks/2026-10-05-yass-upgrade
 ---
 # install.sh installs the binary
 
@@ -17,7 +17,7 @@ install.sh only installs the yass binary, and says where, whether it's on PATH, 
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
-- [ ] `install.sh`: binary install and PATH report only; refuse old-style repo arguments with the two commands
+- [ ] `install.sh`: binary install and PATH report only; refuse old-style repo arguments, printing the commands to use (`yass upgrade` for `--upgrade`)
 - [ ] `.goreleaser.yaml`: archives without `kit/`
 - [ ] e2e: rework the `install.sh` sections; unpacked release without `kit/`
 - [ ] README, `docs/install.md`, landing page: the new model and joining
