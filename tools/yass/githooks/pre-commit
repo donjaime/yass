@@ -1,5 +1,5 @@
 #!/bin/sh
-# yass-version: 0.3.0-rc.1
+# yass-version: 0.3.0
 # YASS pre-commit hook (optional): progress travels with code; intent changes get their own commit.
 # It runs `yass hook`, so it needs the yass CLI on your PATH. It only warns, unless YASS_STRICT=1.
 #

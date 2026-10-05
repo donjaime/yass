@@ -2,7 +2,7 @@
 name: yass-work
 description: Work on a YASS change you've been pointed at. Create it if it's new and small, resume from its Log, build against its acceptance criteria, keep progress (boxes marked in progress or done, Log, Decisions) up to date alongside the code, put needed plan changes on their own branch underneath the code instead of giving up, verify, and archive it when every box is checked. Use for "work on X", "keep going" on the change at hand, "fix this bug", and unattended runs that name a change.
 metadata:
-  yass-version: "0.3.0-rc.1"
+  yass-version: "0.3.0"
 ---
 
 # yass-work
