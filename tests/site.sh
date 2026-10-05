@@ -51,7 +51,8 @@ done
 
 echo "Category line and easter egg"
 CAT="Lightweight project management for people and coding agents"
-if perl -0777 -ne 'exit !(/<section id="idea"[^>]*>\s*<p class="eyebrow">\Q'"$CAT"'\E\.<\/p>/s)' "$PAGE"; then ok "#idea opens with the category line"; else bad "#idea doesn't open with <p class=\"eyebrow\">$CAT.</p>"; fi
+CLOSE="<strong><em>It's lightweight project management for people and coding agents.</em></strong></p>"
+if grep -qF "$CLOSE" <<<"$(section idea)"; then ok "#idea's paragraph closes with the category line"; else bad "#idea's paragraph doesn't close with $CLOSE"; fi
 if perl -0777 -ne 'exit !(/<footer.*\Q'"$CAT"'\E.*<\/footer>/s)' "$PAGE"; then ok "the footer has the category line"; else bad "the footer doesn't say $CAT"; fi
 for m in 'name="description"' 'property="og:description"'; do
   if grep -qF "<meta $m content=\"$CAT" "$PAGE"; then ok "$m starts with the category line"; else bad "$m doesn't start with $CAT"; fi
