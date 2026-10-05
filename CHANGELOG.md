@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.0 (unreleased)
+Installing and upgrading are now two plain steps. To install: get the `yass` binary, then run `yass init` in your repo. To upgrade: get the newer binary, then run `yass upgrade` in each repo.
+- **The binary carries the playbooks and the hook.** `yass init` sets up a whole repo from the binary alone: the playbooks, the hook script, the `AGENTS.md` section and the yass folder, with `--claude`, `--global`, `--hooks` and `--path`. Nothing is downloaded after the binary. Running it again writes only what's missing, and it ends with the next steps (commit it, then ask your agent).
+- **`yass upgrade`:** run anywhere in a repo, it finds every YASS file from the repo root down (playbooks in any `.agents/skills/` or `.claude/skills/`, each `AGENTS.md` section, the hook) and your user folder's playbooks, and brings them to the binary's version. It lists what it wrote, says when everything is already up to date, skips folders `yass.yaml` ignores, and never downgrades: if the repo is newer than your binary, it says to upgrade the binary.
+- **Version stamps:** every file YASS installs records the version that wrote it: `metadata.yass-version` in a playbook's frontmatter, `version=` in the `AGENTS.md` marker, `# yass-version:` in the hook. `yass status` notes when your binary and a repo are out of step, and which to upgrade.
+- **Monorepo folders with their own agent files:** `yass init <folder> --agents` puts the `AGENTS.md` section and the playbooks in that folder, and `yass upgrade` finds them there. The hook stays at the repo root.
+- **`install.sh` only installs the binary,** into `--bin-dir` (now required), and says whether that folder is on your PATH, with the line to add it if not (for zsh, in `~/.zshenv`, which agents and git hooks read too). The one-line install runs `yass init` itself. Release archives no longer include `kit/`.
+- **Worktrees find separate plans:** a relative `path:` in `yass.yaml` resolves from the clone's other checkouts, so linked worktrees, where agents usually run, find plans kept outside the repo. Paths accept `${VAR:-default}`, and with plans outside the repo, every `yass` command keeps an ignored `yass/` link to them.
+- **Private team folders:** `yass init <folder> --path <plans> --private` sets up a folder git never sees, found through the clone's git config, from every worktree.
+- **`yass paths`:** prints the repo paths that are YASS's; `--only <range>` exits 0 when a commit range touches nothing else, so CI can skip plan-only commits. [docs/monorepo.md](docs/monorepo.md) has recipes.
+- Fixes: change names end on a whole word; paths that don't exist yet compare correctly through symlinks (macOS).
+- Building from source needs Go 1.24 or later, so a build from a clone carries a version.
+
+Migrating:
+- **`install.sh` no longer sets up or upgrades repos.** An old-style call (a repo path, `--claude`, `--global`, `--hooks`, `--path` or `--upgrade`) installs nothing and prints the commands to use instead. Update scripts that call it: `install.sh --bin-dir <folder>`, then `yass init` or `yass upgrade`.
+- **To upgrade a repo,** install the new binary, run `yass upgrade` in the repo, and commit the diff (`chore: upgrade YASS`). Files from 0.2 or earlier carry no version stamp; `yass upgrade` counts them as older and stamps them. As before, hand edits to YASS's own files are replaced, and the diff shows them.
+- **`yass init <folder>`** (a team folder) now sets up only that folder's planning. It no longer adds the YASS section to the root `AGENTS.md`; pass `--agents` to give the folder its own agent files. And `yass init` no longer rewrites an existing `AGENTS.md` section; `yass upgrade` does.
+
 ## 0.2.0 (2026-10-03)
 - **`queue.md`:** an optional file in a yass folder that ranks its changes, top first. `yass status` follows it (unlisted changes come after, oldest first) and warns about entries that aren't active changes there; `yass archive` takes the change off the list; the hook treats reordering alongside code as intent.
 - **Dependencies through `blocked:`:** naming one or more changes (a folder name, a path ending in one, or `<change>/<piece>`, comma-separated) means waiting on them. `yass status` shows `waiting on:` until they're done or archived, then nothing; `yass archive` refuses only while it's still waiting. Warnings for names that look like a change but aren't, and for changes that wait on each other.
