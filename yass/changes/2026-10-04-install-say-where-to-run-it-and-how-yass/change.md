@@ -24,7 +24,7 @@ Someone installing YASS knows two things before they start: the install runs fro
 - [x] Given `docs/install.md`, then it shows how to join a repo that already uses YASS: only the binary, from a release archive or `go install`, and no `install.sh` — verify: manual: review; run the release steps once by hand
 - [x] Given the README, then its install section states the two parts in a sentence or two and links to `docs/install.md` for another repo and for joining one — verify: manual: review
 - [x] Given the README, then it has an Upgrading section: upgrade the binary once per machine, run `install.sh --upgrade` in each repo and commit it, teammates upgrade their binary when the repo's playbooks move ahead, with a link to `docs/install.md#upgrading` — verify: manual: review; the link's heading exists
-- [/] Given the change, then the existing e2e suite, `tests/examples.sh` and `tests/site.sh` pass — verify: CI on the branch
+- [x] Given the change, then the existing e2e suite, `tests/examples.sh` and `tests/site.sh` pass — verify: CI on the branch
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -59,3 +59,7 @@ Someone installing YASS knows two things before they start: the install runs fro
 ### 2026-10-04 (claude)
 - Did: the folded-in scope (revision 1e5ba55, under the code). `docs/install.md` sharpens its two-part opening (`--bin-dir` is the binary half, the repo path the files half) and adds "Another repo" and "Joining a repo that already uses YASS"; its Upgrading section names the two parts and covers other repos. The README states the two parts, links to both new sections, and gets an Upgrading section. The page's install intro and Terminal tab say what happens where, with links to another repo and joining. Ran each flow in throwaway repos: the piped one-liner without `--bin-dir` sets up a repo from the `yass` on PATH, with no warning; `./install.sh` from a clone without `--bin-dir` uses the clone's binary and warns, hence the wording; joining (download the latest release, verify the checksum, copy the binary) works, and `yass status` runs. `tests/site.sh`: 53 passed.
 - Next: Jaime reviews the branch `install-path-hazards`; CI runs once it's pushed. After it merges, archive this change.
+
+### 2026-10-04 (claude)
+- Did: merged to main and pushed (e5fe20a..8da5f0a); CI and `pages` passed on 8da5f0a, and the live page shows the new install copy.
+- Next: done; archive it.
