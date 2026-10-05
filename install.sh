@@ -161,7 +161,8 @@ if [ -n "$ON_PATH" ] && [ -z "$BIN_DIR" ] && [ "$(cd "$(dirname "$ON_PATH")" && 
 elif [ -z "$ON_PATH" ] || [ "$(cd "$(dirname "$ON_PATH")" && pwd)" != "$BIN_DIR_ABS" ]; then
   d="$(home "$BIN_DIR_ABS")"
   case "$(basename "${SHELL:-}")" in
-    zsh)  fix="echo 'export PATH=\"$d:\$PATH\"' >> ~/.zshrc" ;;
+    # ~/.zshenv, not ~/.zshrc: agents and git hooks run non-interactive shells, which skip ~/.zshrc.
+    zsh)  fix="echo 'export PATH=\"$d:\$PATH\"' >> ~/.zshenv" ;;
     bash) if [ "$(uname -s)" = Darwin ]; then rc="~/.bash_profile"; else rc="~/.bashrc"; fi
           fix="echo 'export PATH=\"$d:\$PATH\"' >> $rc" ;;
     fish) fix="fish_add_path $d" ;;

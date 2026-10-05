@@ -56,7 +56,9 @@ go build -o bin/yass ./cmd/yass
 
 **With your agent.** Paste [the install prompt](docs/install.md#with-your-agent) into your coding agent. It downloads a release (or builds from source), verifies it, reads `install.sh` and tells you what it will change, and asks before running it.
 
-**In one line,** if you've read the script and trust it: `curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .` downloads the latest release for your machine and checks its checksum, but runs a script you haven't looked at.
+**In one line,** from inside your repo, if you've read the script and trust it: `curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .` downloads the latest release for your machine and checks its checksum, but runs a script you haven't looked at.
+
+Each way copies the binary to `~/.local/bin`, which has to be on your PATH so you, your agents and the hook can run `yass` (macOS doesn't put it there by default). If it isn't, `install.sh` ends with the line that adds it. Pass a different folder to `--bin-dir` if you'd rather use one that's already on your PATH.
 
 Then commit what it added: `git add -A && git commit -m "chore: adopt YASS"`. Add `--claude` for Claude Code, `--hooks` to turn on the hook, `--path <folder>` to keep the yass folder out of the repo, and `--global` to put the playbooks in your user folder instead of the repo. Re-run a newer release with `--upgrade` to update the binary, the playbooks and the hook, wherever they were installed; your changes are never touched ([upgrading](docs/install.md#upgrading)).
 

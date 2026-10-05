@@ -7,6 +7,10 @@ YASS has two parts:
 
 `install.sh` does both. It's about a hundred lines of bash; read it before you run it. It never touches your changes, and it only installs the binary when you pass `--bin-dir`.
 
+Two things to know before you start:
+- **Run it for the repo you want to set up:** from inside it (that's the `.` in the one-line install), or with that repo's path last.
+- **The folder you pass to `--bin-dir` has to be on your PATH,** so you, your agents and the hook can run `yass`. The examples use `~/.local/bin`, which macOS doesn't put on PATH by default. If it isn't on yours, `install.sh` ends with the line that adds it. For zsh, that line goes in `~/.zshenv`, which every zsh reads, including the non-interactive shells agents and git hooks run; `~/.zshrc` is only read by interactive ones.
+
 ## From a release
 
 Each release has an archive per platform (`yass_<os>_<arch>`, with `os` one of `darwin`, `linux`, `windows`, and `arch` one of `amd64`, `arm64`), a `checksums.txt`, and signed build provenance.
@@ -58,13 +62,16 @@ what you find, and don't run anything that changes files until I say so.
 5. Ask me which options I want: copy the binary to ~/.local/bin (--bin-dir), Claude Code
    files (--claude), playbooks in my user folder rather than this repo (--global), the optional
    pre-commit hook (--hooks), or keeping the yass folder outside this repo (--path <folder>).
-6. Once I say go, run install.sh with those options, then `yass status` to check it works, and
-   show me `git status`. Don't commit; I'll review it and commit it myself.
+6. Once I say go, run install.sh with those options. If the folder the binary went to isn't on
+   my PATH, show me the line that adds it (install.sh prints one); don't edit my shell files.
+   Then run `yass status` to check it works, and show me `git status`. Don't commit; I'll
+   review it and commit it myself.
 ```
 
 ## In one line
 
 ```bash
+cd path/to/your-repo
 curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .
 ```
 

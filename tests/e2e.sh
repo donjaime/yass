@@ -281,7 +281,7 @@ has "--bin-dir copies the binary" "write  .*/bindir/yass" bash "$ROOT/install.sh
 has   "…and warns that another yass on PATH comes first" "is .*, not the one just installed" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"
 has   "…or that --bin-dir isn't on PATH" "yass isn't on your PATH" \
       env PATH=/usr/bin:/bin SHELL=/bin/zsh bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir2"
-has   "…with the fix for the shell" "Fix it with:  echo 'export PATH=\".*/bindir2:\\\$PATH\"' >> ~/.zshrc" \
+has   "…with the fix for the shell" "Fix it with:  echo 'export PATH=\".*/bindir2:\\\$PATH\"' >> ~/.zshenv" \
       env PATH=/usr/bin:/bin SHELL=/bin/zsh bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir2"
 hasnt "no warning when the installed yass is the one on PATH" "WARNING" \
       env PATH="$W/e2e/bindir:/usr/bin:/bin" bash "$ROOT/install.sh" . --bin-dir "$W/e2e/bindir"

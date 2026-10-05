@@ -102,8 +102,10 @@
     </div>
     <div class="panel" id="install-terminal">
       <h3>Terminal</h3>
-      <p>Downloads the latest release for your machine, checks its checksum, and sets up the repo you're in. <a href="https://github.com/donjaime/yass/blob/main/install.sh">Read the script</a> first.</p>
-<pre class="copyable" data-source="README.md"><code>curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .</code></pre>
+      <p>From inside the repo you want to set up: downloads the latest release for your machine, checks its checksum, and sets the repo up. <a href="https://github.com/donjaime/yass/blob/main/install.sh">Read the script</a> first.</p>
+<pre class="copyable" data-source="docs/install.md"><code>cd path/to/your-repo
+curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin .</code></pre>
+      <p class="note"><code>~/.local/bin</code> has to be on your PATH, and macOS doesn't put it there by default. If it isn't, the script ends with the line that adds it.</p>
       <p class="note">Rather check each step? Install <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-a-release">from a release</a>, with checksums and signed build provenance.</p>
     </div>
     <div class="panel" id="install-source">
@@ -112,6 +114,7 @@
 <pre class="copyable" data-source="README.md"><code>git clone https://github.com/donjaime/yass &amp;&amp; cd yass
 go build -o bin/yass ./cmd/yass
 ./install.sh --bin-dir ~/.local/bin path/to/your-repo</code></pre>
+      <p class="note"><code>~/.local/bin</code> has to be on your PATH, or pass <code>--bin-dir</code> a folder that is. If it isn't, <code>install.sh</code> ends with the line that adds it.</p>
     </div>
     <div class="panel" id="install-agent">
       <h3>Agent Prompt</h3>
@@ -132,8 +135,10 @@ what you find, and don't run anything that changes files until I say so.
 5. Ask me which options I want: copy the binary to ~/.local/bin (--bin-dir), Claude Code
    files (--claude), playbooks in my user folder rather than this repo (--global), the optional
    pre-commit hook (--hooks), or keeping the yass folder outside this repo (--path &lt;folder&gt;).
-6. Once I say go, run install.sh with those options, then `yass status` to check it works, and
-   show me `git status`. Don't commit; I'll review it and commit it myself.</code></pre>
+6. Once I say go, run install.sh with those options. If the folder the binary went to isn't on
+   my PATH, show me the line that adds it (install.sh prints one); don't edit my shell files.
+   Then run `yass status` to check it works, and show me `git status`. Don't commit; I'll
+   review it and commit it myself.</code></pre>
     </div>
   </div>
   <p>Then commit what it added, and talk to your agent. The <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#options">options</a> cover Claude Code, the git hook, and keeping plans outside the repo.</p>
