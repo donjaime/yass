@@ -13,9 +13,10 @@ There's no separate log file. The record is the `## Decisions` sections in the y
    - Each line should read `- <decision> - <why> (<who>)`.
    - **Starting from code instead?** Find its commits in the code repo (`git log --format=%h -- <file>`, or `git log -S'<symbol>' --format=%h`), then search the plans for them: `yass root | xargs -I{} grep -rn "code:.*<sha>" {}`. A hit names the change and box; its Decisions and Log are the why. No hit means the record doesn't link that commit, so say so rather than guess from dates.
 3. **Date them and check who made them** with git, because the files say *what* and git says *when* and *who committed it*:
-   - `git log --format='%h %ad %an %s' --date=short -- <change folder>`
+   - `git log --format='%h %ad %an %s' --date=short -- <change folder>`; for an archived change, which was moved, follow its `change.md` across the move: `git log --follow --format='%h %ad %an %s' --date=short -- <archive folder>/change.md`
    - `git log -S'<distinctive words>' --format='%h %ad %an' -- <file>` finds the commit that added a decision line.
    - For intent edits (PRD, plan, design), `git log -p -- <file>` shows how the promise changed over time.
+   - **Squash-merged history:** a subject ending in `(#N)` is pull request N, squashed. Name it next to the commit (`#16`), since its description and review are where the decision was argued, and read them when the decision line leaves the why unclear (with a code host CLI, e.g. `gh pr view N`).
 4. **Follow the citations to the code.** For a change's boxes with `code:`, show each cited commit from the code repo: `git log -1 --format='%h %ad %an %s' --date=short <sha>`, and whether it's merged (`git merge-base --is-ancestor <sha> <branch>`; `branch:` in `yass.yaml`, else `origin/HEAD`, `main` or `master`).
 5. **Read the change's context** (Goal, PRD, Log) for the *why* behind anything the decision line leaves unclear.
 6. **Report** newest first, grouped by change, with the code that carried each decision out when it's cited:
