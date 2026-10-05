@@ -2,7 +2,7 @@
 name: yass-log
 description: Reconstruct the decision log from YASS change folders and git history. Who decided what, when and why, across active and archived changes, for a time range, a feature, or a person; and which code carried a decision out, or which decision is behind a piece of code. Use for "why did we…", "what did we decide about…", "why does this code look like this", release notes, retros, or reviewing decisions made without a human.
 metadata:
-  yass-version: "0.3.0-rc.1"
+  yass-version: "0.3.0"
 ---
 
 # yass-log

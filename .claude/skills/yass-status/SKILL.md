@@ -2,7 +2,7 @@
 name: yass-status
 description: Report where YASS work stands. Summarize progress across active changes, what's blocked and why, decisions made recently, stale changes, and changes ready to archive, then list what needs a human decision. Read-only. Use when someone asks where things stand, what's next, or what needs them.
 metadata:
-  yass-version: "0.3.0-rc.1"
+  yass-version: "0.3.0"
 ---
 
 # yass-status

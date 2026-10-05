@@ -2,7 +2,7 @@
 name: yass-shape
 description: Shape a large YASS change, in conversation with a human. Turn a problem or opportunity, or a plan already drafted in the harness's plan mode, into a prd.md (why, for whom, outcomes, non-goals, requirements, milestones) inside a new change folder, or revise the PRD of an active change after feedback. Use when someone wants to build a new feature, component or system, wants to save a plan as a YASS change, or when what a large change promises needs to change.
 metadata:
-  yass-version: "0.3.0-rc.1"
+  yass-version: "0.3.0"
 ---
 
 # yass-shape
