@@ -145,6 +145,51 @@ what you find, and don't run anything that changes files until I say so.
   <p>Then commit what it added, and talk to your agent. The <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#setting-up-a-repo">options</a> cover Claude Code, the git hook, monorepo folders and keeping plans outside the repo.</p>
 </section>
 
+<section id="compare" class="wrap">
+  <h2>How it compares.</h2>
+  <p>Most spec tools are built to specify one change well, or around a fixed, multi-phase process. YASS is a thin layer of project management in plain files: it records what's changing and why, and leaves the rest to your repo.</p>
+  <div class="cards">
+    <div class="card">
+      <h3>OpenSpec</h3>
+      <p>The closest neighbor. It keeps a living spec of current behavior and merges each change into it. YASS keeps no second description of your system: the code and its docs are the current state.</p>
+    </div>
+    <div class="card">
+      <h3>GitHub Spec Kit and Kiro</h3>
+      <p>A spec-first, phased process per feature: spec, plan, tasks; or requirements, design, tasks. YASS imposes no process: optional playbooks, and ceremony that scales from a one-file bug fix to a feature across many pull requests.</p>
+    </div>
+    <div class="card">
+      <h3>Progress lives with the work</h3>
+      <p>Ticked boxes, decisions with who made them, and a log ending in <b>Next</b> travel in the same commits as the code, so any agent on any harness picks up from the files alone. Finishing is separate from merging.</p>
+    </div>
+  </div>
+  <h3>When not to use YASS</h3>
+  <ul>
+    <li>A prototype you'll throw away. Use plan mode and tests.</li>
+    <li>You want a maintained description of current behavior, per capability. Use OpenSpec or similar.</li>
+    <li>You want the tool to enforce approvals, verification or merge rules. YASS records them; your CI and review enforce them.</li>
+  </ul>
+  <p class="note">As of October 2026. <a href="https://github.com/donjaime/yass/blob/main/docs/comparison.md">The full comparison</a>, with GSD and BMAD too; corrections welcome.</p>
+</section>
+
+<section id="teams" class="wrap">
+  <h2>Built for teams.</h2>
+  <p>Plain files in the repo mean nothing new to host, and everyone sees the same plans in the same pull requests.</p>
+  <div class="cards">
+    <div class="card">
+      <h3>Monorepos</h3>
+      <p>Each team opts in with its own planning folder (<code>yass init services/payments</code>), and a folder with its own agent setup gets its own <code>AGENTS.md</code> and playbooks (<code>--agents</code>). <code>yass status</code> shows them all, and one <code>yass upgrade</code> updates every copy. <a href="https://github.com/donjaime/yass/blob/main/README.md#monorepos">Monorepos</a></p>
+    </div>
+    <div class="card">
+      <h3>Plans outside the repo</h3>
+      <p>Point a <code>yass.yaml</code> at a plans folder elsewhere: a plans repo of its own, or a private folder only your team sees, found from every worktree your agents run in. <a href="https://github.com/donjaime/yass/blob/main/README.md#keeping-plans-out-of-the-repo">Keeping plans out of the repo</a></p>
+    </div>
+    <div class="card">
+      <h3>CI and the hook</h3>
+      <p>Commits that only touch plans can skip builds and tests (<code>yass paths --only</code>), with recipes for required checks, merge queues and Bazel. The optional hook keeps intent and code in separate commits. <a href="https://github.com/donjaime/yass/blob/main/docs/monorepo.md">CI recipes</a> · <a href="https://github.com/donjaime/yass/blob/main/README.md#the-optional-hook">The hook</a></p>
+    </div>
+  </div>
+</section>
+
 </main>
 
 <footer class="wrap">

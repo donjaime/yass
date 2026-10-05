@@ -63,6 +63,27 @@ for el in '<img class="emblem"' '<span class="wordmark"'; do
 done
 if [ "$(grep -oF "$EGG" "$PAGE" | wc -l | tr -d ' ')" = 2 ]; then ok "the easter egg shows only on hover"; else bad "the easter egg appears outside its two title attributes"; fi
 
+echo "Comparison and teams"
+compare="$(section compare)"
+for n in OpenSpec "Spec Kit" Kiro "When not to use YASS" "docs/comparison.md"; do
+  if grep -qF "$n" <<<"$compare"; then ok "#compare has $n"; else bad "#compare doesn't mention $n"; fi
+done
+teams="$(section teams)"
+for l in "docs/monorepo.md" "README.md#monorepos" "README.md#keeping-plans-out-of-the-repo" "README.md#the-optional-hook"; do
+  if grep -qF "blob/main/$l\"" <<<"$teams"; then ok "#teams links to $l"; else bad "#teams has no link to $l"; fi
+done
+
+echo "README lead-in"
+lead="$(perl -0777 -ne 'print $1 if /\A(.*?)^## The rules/ms' "$ROOT/README.md")"
+for l in "$URL/" "(#install)"; do
+  if grep -qF "$l" <<<"$lead"; then ok "the lead-in links $l"; else bad "the README has no $l above ## The rules"; fi
+done
+lede="$(perl -0777 -ne 'print $1 if /<p class="lede">(.*?)<\/p>/s' "$PAGE")"
+idea="$(perl -0777 -ne 'print $1 if /<section id="idea"[^>]*>\s*<h2>(.*?)<\/h2>/s' "$PAGE")"
+for c in "$lede" "$idea"; do
+  if [ -n "$c" ] && grep -qF "$c" <<<"$lead"; then ok "the lead-in says what the page does: ${c:0:50}…"; else bad "the README lead-in doesn't say: ${c:-?}"; fi
+done
+
 echo "Install text matches its source"
 n=0
 while IFS= read -r -d '' rec; do

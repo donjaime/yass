@@ -102,6 +102,9 @@ h2::before {
 }
 h3 { font-size: 1.1rem; margin: 0 0 8px; }
 section > p { max-width: 42em; }
+section > h3 { margin-top: 36px; }
+section > ul { max-width: 42em; padding-left: 1.2em; }
+section > ul li { margin: 6px 0; }
 .big { font-size: 1.2rem; }
 .note { color: var(--muted); font-size: 0.95rem; }
 

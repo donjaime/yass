@@ -2,7 +2,13 @@
 
 **A sassy "yes" to building with coding agents, without losing the plot.**
 
-YASS is a lightweight way to plan and track work with coding agents, in plain files next to your code. Each piece of work is a **change**: a folder that carries as much ceremony as its scope needs, from a one-file bug fix to a feature with a PRD, a plan and a dozen pull requests. Progress, decisions and notes live in the folder, so any person or agent, on any harness, can pick up where the last one stopped.
+YASS keeps the plan, progress and decisions for every change in plain files next to your code, so people and agents can plan and build together.
+
+**Describe the change, not the whole system.** Your code, docs and READMEs are the source of truth for what exists. YASS doesn't write it down a second time: it specs only what needs to change, keeps that next to the code, in plain markdown that agents and humans both read. It's lightweight project management for people and coding agents.
+
+**[Install it](#install)** in two steps, or see [the YASS page](https://donjaime.github.io/yass/) for the tour.
+
+Each piece of work is a **change**: a folder that carries as much ceremony as its scope needs, from a one-file bug fix to a feature with a PRD, a plan and a dozen pull requests. Progress, decisions and notes live in the folder, so any person or agent, on any harness, can pick up where the last one stopped.
 
 ```
 yass/
