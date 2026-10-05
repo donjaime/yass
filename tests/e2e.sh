@@ -777,5 +777,17 @@ sub "$PA/change.md" '^created: .*$' "created: yesterday"
 has   "a created: that isn't a time warns" "apple: created 'yesterday' isn't a time" y status
 has   "…and sorts as unstamped (by date, then name)" "apple .*mango .*zebra " bash -c 'yass status | tr "\n" " "'
 
+echo "30. AGENTS.md says intent and archives land apart from code"
+Y5="$(vbin 0.5.0)"
+newrepo "$W/e2e/apart"; "$Y5" init >/dev/null
+has   "the section says intent stays out of a squashed pull request with code" "never changes in the same commit as code \(with squash merges, the same pull request\)" cat AGENTS.md
+has   "…that archives land apart from code" "in its own commit, apart from code" cat AGENTS.md
+has   "…and that pushing and pull requests need latitude" "rebase, push or open a pull request unless" cat AGENTS.md
+git add -A; git commit -q -m "chore: adopt YASS"
+sub AGENTS.md 'yass:begin version=0\.5\.0' 'yass:begin version=0.4.0'
+sub AGENTS.md ', apart from code \(with squash merges, a pull request without code\)' ''
+"$Y5" upgrade >/dev/null
+has   "yass upgrade brings an older section up to it" "in its own commit, apart from code" cat AGENTS.md
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]
