@@ -728,5 +728,36 @@ hasnt "the same version says nothing about versions" "YASS's files" "$Y5" status
 newrepo "$W/e2e/st-none"; "$Y5" init --no-agents >/dev/null
 hasnt "…nor does a repo with no YASS files" "YASS's files" "$Y6" status
 
+echo "28. --hooks leaves existing hooks alone"
+newrepo "$W/e2e/hk-none"
+HO="$(yass init --hooks)"
+has   "no hooks setup yet: --hooks turns the hook on" "^tools/yass/githooks$" git config core.hooksPath
+has   "…and says so" "hook  core.hooksPath = tools/yass/githooks" echo "$HO"
+has   "running it again: already on" "hook  already on" yass init --hooks
+newrepo "$W/e2e/hk-husky"; mkdir -p .husky; git config core.hooksPath .husky
+run_ok "a local core.hooksPath elsewhere: init still succeeds" yass init --hooks
+has   "…and leaves core.hooksPath as it was" "^\.husky$" git config core.hooksPath
+has   "…naming the setup" "already has a hooks setup \(core.hooksPath = \.husky\)" yass init --hooks
+has   "…and how to run yass hook from husky" "add this line to \.husky/pre-commit:" yass init --hooks
+[ -x tools/yass/githooks/pre-commit ] && [ -f .agents/skills/yass-work/SKILL.md ] && ok "…while writing everything else" || bad "init skipped files because of the hooks setup"
+newrepo "$W/e2e/hk-custom"; git config core.hooksPath ci/hooks
+has   "a custom hooks folder gets the line for its pre-commit" "add this line to ci/hooks/pre-commit .*tools/yass/githooks/pre-commit \"\\\$@\"" bash -c 'yass init --hooks | tr "\n" " "'
+newrepo "$W/e2e/hk-global"; GC="$W/e2e/hk-gitconfig"; printf '[core]\n\thooksPath = %s\n' "$W/e2e/hk-global-hooks" > "$GC"
+GO="$(GIT_CONFIG_GLOBAL="$GC" yass init --hooks)"
+hasnt "a global core.hooksPath: no local one is added" "." git config --local --get core.hooksPath
+has   "…and it says why, and how to switch anyway" "global core.hooksPath .*override it for this repo.*git config core.hooksPath tools/yass/githooks" bash -c 'tr "\n" " " <<<"$1"' _ "$GO"
+newrepo "$W/e2e/hk-githooks"; printf '#!/bin/sh\nexit 0\n' > .git/hooks/pre-commit; cp .git/hooks/pre-commit .git/hooks/commit-msg; chmod +x .git/hooks/pre-commit .git/hooks/commit-msg
+LO="$(yass init --hooks)"
+hasnt "hooks in .git/hooks: core.hooksPath stays unset" "." git config --get core.hooksPath
+has   "…naming them (not the samples)" "runs hooks from \.git/hooks \(commit-msg, pre-commit\)" echo "$LO"
+has   "…with the line to add to .git/hooks/pre-commit" "^        tools/yass/githooks/pre-commit \"\\\$@\"$" echo "$LO"
+newrepo "$W/e2e/hk-lefthook"; printf 'pre-push:\n  commands: {}\n' > lefthook.yml; printf '#!/bin/sh\n' > .git/hooks/pre-commit; chmod +x .git/hooks/pre-commit
+has   "lefthook gets a lefthook.yml snippet" "run: yass hook" yass init --hooks
+newrepo "$W/e2e/hk-precommit"; printf 'repos: []\n' > .pre-commit-config.yaml; printf '#!/bin/sh\n' > .git/hooks/pre-commit; chmod +x .git/hooks/pre-commit
+has   "the pre-commit framework gets a local-hook snippet" "entry: yass hook" yass init --hooks
+cd "$W/e2e/hk-husky"; git add -A; git commit -q -m "chore: adopt YASS" --no-verify
+"$(vbin 0.5.0)" upgrade >/dev/null
+has   "yass upgrade leaves core.hooksPath alone" "^\.husky$" git config core.hooksPath
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

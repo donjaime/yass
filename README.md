@@ -224,11 +224,36 @@ Checkboxes: `[ ]` not started, `[/]` in progress, `[x]` done, `[-]` dropped (say
 
 `tools/yass/githooks/pre-commit` runs `yass hook`, which warns when a commit mixes code with edits to existing intent: `prd.md`, `design.md`, `plan.md` beyond ticking boxes, or a change's title, Goal or Acceptance. Dropping an acceptance criterion (`[-]`) counts as an intent edit. It also warns on any edit or addition to an already-archived change. Ticked or in-progress boxes, Log and Decisions next to code are expected and never flagged.
 
-- **Turn it on for a clone:** `git config core.hooksPath tools/yass/githooks`. This replaces your `.git/hooks`; if you already use a hook manager (husky, lefthook, pre-commit), call `yass hook` from it instead. Without `yass` on the PATH, the hook skips itself with a note.
+- **Turn it on for a clone:** `yass init --hooks`, which sets `git config core.hooksPath tools/yass/githooks`. That setting makes git run hooks from that folder only, so `--hooks` only uses it when the repo has no hooks setup of its own. If it has one (a `core.hooksPath` of its own, local or global, or hooks in `.git/hooks/`), `--hooks` leaves it alone and prints how to wire YASS in; see [Already have hooks?](#already-have-hooks). Without `yass` on the PATH, the hook skips itself with a note.
 - **It only warns.** `YASS_STRICT=1` makes it refuse the commit; `YASS_HOOK=off` skips it.
 - **In CI**, install `yass` (a release, or `go install github.com/donjaime/yass/cmd/yass@<version>`) and check a whole branch: `yass hook --range origin/main..HEAD --strict`. CI needs the history for that range (with GitHub Actions, `actions/checkout` with `fetch-depth: 0`); the hook fails loudly if it can't read it.
 
 It's a heuristic over markdown diffs. It catches the common way goalposts move (reworded acceptance criteria next to the code that "meets" them). Review and CI do the rest.
+
+### Already have hooks?
+
+Run YASS's check from the setup you have instead of switching to its folder:
+
+- **Plain git hooks** (`.git/hooks/`, or a folder `core.hooksPath` points to): add `tools/yass/githooks/pre-commit "$@"` as a line in that folder's `pre-commit` (create it, executable, if there isn't one).
+- **husky:** add `yass hook` to `.husky/pre-commit`.
+- **lefthook:** in `lefthook.yml`,
+  ```yaml
+  pre-commit:
+    commands:
+      yass:
+        run: yass hook
+  ```
+- **The pre-commit framework:** in `.pre-commit-config.yaml`, under `repos:`,
+  ```yaml
+  - repo: local
+    hooks:
+      - id: yass
+        name: yass hook
+        entry: yass hook
+        language: system
+        pass_filenames: false
+        always_run: true
+  ```
 
 ## Keeping plans out of the repo
 

@@ -115,10 +115,9 @@ func cmdInit(a *args) error {
 		fmt.Printf("wrote %s%s\n", r.disp(canon(p)), outsideNote(!within(canon(p), canon(top))))
 	}
 	if a.b["hooks"] {
-		if _, ok := git(top, "config", "core.hooksPath", HookPath); !ok {
-			return fmt.Errorf("couldn't set git config core.hooksPath (is this a git repo?)")
+		if err := turnOnHook(top); err != nil {
+			return err
 		}
-		fmt.Printf("hook  core.hooksPath = %s (undo: git config --unset core.hooksPath)\n", HookPath)
 	}
 	if configured && !within(canon(y), top) {
 		lr := findRepo()

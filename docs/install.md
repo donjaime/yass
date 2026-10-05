@@ -55,7 +55,7 @@ It writes the playbooks, the `AGENTS.md` section, the yass folder and the hook s
 |---|---|
 | `--claude` | also copies the playbooks to `.claude/skills/` and imports `AGENTS.md` from `CLAUDE.md` |
 | `--global` | puts the playbooks in your user folder (`~/.agents/skills/`, or `$YASS_SKILLS_DIR`; `~/.claude/skills/` with `--claude`) for every repo, instead of in this one. The default is project scope: the playbooks live in the repo, so everyone working on it gets the same version. Check that your harness reads the user folder you pick |
-| `--hooks` | turns on the optional hook for this clone (`git config core.hooksPath tools/yass/githooks`) |
+| `--hooks` | turns on the optional hook for this clone (`git config core.hooksPath tools/yass/githooks`), unless the repo already has a hooks setup (its own `core.hooksPath`, local or global, or hooks in `.git/hooks/`): then it leaves that alone and prints how to run YASS's check from it ([README](../README.md#already-have-hooks)) |
 | `--path P` | keeps the yass folder outside the repo: writes a `yass.yaml` pointing to `P`, creates it, and links `yass/` to it (ignored through `.git/info/exclude`; see [the README](../README.md#keeping-plans-out-of-the-repo)) |
 | `<folder> [--agents]` | sets up a folder of a monorepo instead: its own yass folder, and with `--agents` its own `AGENTS.md` section and playbooks, for a part of the codebase that keeps its own agent files. The hook stays at the repo root |
 
