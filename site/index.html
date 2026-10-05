@@ -38,8 +38,8 @@
 <main>
 
 <section id="idea" class="wrap">
-  <h2>Describe the change, not the system.</h2>
-  <p class="big">Your code, docs and READMEs already say what exists. YASS doesn't write it down a second time. It specs only what needs to change, keeps that next to the code, in plain markdown that agents and humans both read.</p>
+  <h2>Describe the change, not the whole system.</h2>
+  <p class="big">Your code, docs and READMEs are the source of truth for what exists. YASS doesn't write it down a second time. It specs only what needs to change, keeps that next to the code, in plain markdown that agents and humans both read.</p>
   <div class="cards">
     <div class="card">
       <h3>Nothing to keep in sync</h3>
@@ -70,7 +70,7 @@
 │       ├── design.md              <span class="dim">…the hard-to-undo calls (optional)</span>
 │       └── 2026-09-16-offline-queue/  <span class="dim">…and PR-sized pieces</span>
 └── <b>archive/</b>                       <span class="dim">finished changes, as they were</span></pre>
-  <p>That's the whole system: no database, no server, no config unless you want one. One small CLI, five playbooks your agent follows, and an optional git hook. YASS never commits for you.</p>
+  <p>That's the whole system: no database, no server, no integrations to set up. One small CLI, five playbooks your agent follows, and an optional git hook. It fits the workflow you already have: plans and progress travel in the same commits and pull requests as the code, and YASS never commits for you.</p>
 </section>
 
 <section id="you-say" class="wrap">
