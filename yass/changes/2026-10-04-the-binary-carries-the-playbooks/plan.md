@@ -49,9 +49,9 @@
 - [ ] AC26 (R6) Given a repo that already uses YASS, when a teammate runs `install.sh` (or `go install`) without `yass init`, then the binary is installed and no file in the repo changes — verify: e2e (`git status` clean); manual: docs review
 - [ ] AC27 (R9) Given the README, `docs/install.md` and the landing page, then they describe the model: get the binary, run `yass init` in each repo, and joining needs only the binary; the README's CLI reference lists `yass init`'s options and `yass upgrade` — verify: manual: review; `tests/site.sh` (the page's commands match the docs)
 
-- [ ] AC31 (R15) Given a monorepo set up at the root and `yass init apps/web --agents`, then `apps/web/` gets its yass folder, an `AGENTS.md` with the YASS section and the playbooks under `apps/web/.agents/skills/`, and no second hook; with `--claude`, Claude's copies and the `CLAUDE.md` import go in `apps/web/` too — verify: e2e
-- [ ] AC32 (R15) Given `yass init apps/web` without `--agents`, then it writes only `apps/web/yass/` (or `apps/web/yass.yaml` with `--path`), and no `AGENTS.md`, here or at the root — verify: e2e
-- [ ] AC33 (R16) Given a repo already set up, with files stamped older than the binary, when you run `yass init`, then it writes only what's missing, keeps the rest, and says `yass upgrade` would update them — verify: e2e
+- [x] AC31 (R15) Given a monorepo set up at the root and `yass init apps/web --agents`, then `apps/web/` gets its yass folder, an `AGENTS.md` with the YASS section and the playbooks under `apps/web/.agents/skills/`, and no second hook; with `--claude`, Claude's copies and the `CLAUDE.md` import go in `apps/web/` too — verify: e2e
+- [x] AC32 (R15) Given `yass init apps/web` without `--agents`, then it writes only `apps/web/yass/` (or `apps/web/yass.yaml` with `--path`), and no `AGENTS.md`, here or at the root — verify: e2e
+- [x] AC33 (R16) Given a repo already set up, with files stamped older than the binary, when you run `yass init`, then it writes only what's missing, keeps the rest, and says `yass upgrade` would update them — verify: e2e
 - [ ] AC34 (R3) Given a monorepo with agent files at the root and in `apps/web/` and `services/api/`, all stamped older, when you run `yass upgrade` from `services/api/`, then every copy in the repo is upgraded where it is — verify: e2e
 - [ ] AC35 (R9) Given the README and `docs/install.md`, then each says how to upgrade: reinstall the binary, then run `yass upgrade` in each repo and commit what changed; the landing page doesn't mention upgrading — verify: manual: review
 

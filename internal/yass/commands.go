@@ -68,34 +68,45 @@ func cmdInit(a *args) error {
 			made = append(made, f.path)
 		}
 	}
-	if !a.b["no-agents"] {
-		ap := filepath.Join(top, "AGENTS.md")
-		cur, block := read(ap), stampAgents(strings.TrimSpace(render("agents.md", nil)), stampVersion())
-		var next string
+	// Where the agent files go: the repo root when init sets up the repo itself, or the folder with
+	// --agents (a monorepo part with its own AGENTS.md and skills). A folder without --agents gets
+	// only its planning. The hook belongs to the repo root alone.
+	agentDir := ""
+	if len(a.pos) == 0 {
+		agentDir = top
+	} else if a.b["agents"] {
+		agentDir = base
+	}
+	if a.b["no-agents"] {
+		agentDir = ""
+	}
+	kw := &kitWriter{}
+	if agentDir != "" {
+		ap := filepath.Join(agentDir, "AGENTS.md")
+		cur := read(ap)
 		if strings.Contains(cur, "<!-- yass:begin") {
-			next = agentsRE.ReplaceAllLiteralString(cur, block)
+			kw.kept = append(kw.kept, ap) // init keeps the section; yass upgrade updates it
 		} else {
+			next := ""
 			if strings.TrimSpace(cur) != "" {
 				next = strings.TrimRight(cur, " \t\r\n") + "\n\n"
 			}
-			next += block + "\n"
-		}
-		if next != cur {
+			next += stampAgents(strings.TrimSpace(render("agents.md", nil)), stampVersion()) + "\n"
 			if err := write(ap, next); err != nil {
 				return err
 			}
 			made = append(made, ap)
 		}
-	}
-	// The playbooks, the hook and Claude's files belong to the repo as a whole: written when init sets
-	// up the repo itself, not a team folder in it, and not with --no-agents.
-	if len(a.pos) == 0 && !a.b["no-agents"] {
-		kitMade, err := writeKit(top, a.b["claude"], a.b["global"])
-		made = append(made, kitMade...)
-		if err != nil {
+		if err := kw.agentFiles(agentDir, a.b["claude"], a.b["global"]); err != nil {
 			return err
 		}
 	}
+	if len(a.pos) == 0 && !a.b["no-agents"] {
+		if err := kw.hook(top); err != nil {
+			return err
+		}
+	}
+	made = append(made, kw.made...)
 	r := &Repo{Top: top}
 	for _, p := range made {
 		fmt.Printf("wrote %s\n", r.disp(canon(p)))
@@ -126,6 +137,12 @@ func cmdInit(a *args) error {
 	}
 	if len(made) == 0 {
 		fmt.Println("already set up")
+	}
+	for _, p := range kw.kept {
+		if olderThanBinary(readStamp(p)) {
+			fmt.Printf("note: YASS's files here are older than this yass (%s); `yass upgrade` updates them\n", binVersion)
+			break
+		}
 	}
 	return nil
 }
