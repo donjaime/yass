@@ -20,6 +20,7 @@ CI stays as safe for outside contributors as it is today (fork PRs get a read-on
 - [ ] Given `release.yml`, then every third-party action is pinned to a full commit hash (with the version in a comment), and the GoReleaser version is pinned exactly — verify: manual: review; `grep -E 'uses: .*@' .github/workflows/release.yml` shows only 40-character hashes
 - [ ] Given `ci.yml` and `pages.yml`, then their actions are pinned the same way — verify: manual: review
 - [ ] Given a PR into `main` whose `ci-ok` hasn't passed, then GitHub won't merge it — verify: manual: a ruleset on `main` requiring `ci-ok`; try merging a PR while CI runs
+- [ ] Given a new PR branch that changes only plans (for example, an archive move), when it's pushed and its PR opens, then no run tests or builds anything: only the `changes` gate and `ci-ok` run — verify: manual: open a plans-only PR from a new branch and list the jobs of every run for its commit
 - [ ] Given the change, then no workflow uses `pull_request_target` or `workflow_run`, workflow tokens default to read, and fork PRs from first-time contributors still need approval — verify: manual: `gh api repos/donjaime/yass/actions/permissions/workflow` and `…/fork-pr-contributor-approval`; review
 
 ## Steps
@@ -29,11 +30,13 @@ CI stays as safe for outside contributors as it is today (fork PRs get a read-on
 - [ ] Pin actions to commit hashes in `release.yml`, `ci.yml` and `pages.yml`; GoReleaser version exact
 - [ ] Repo settings (Jaime): a ruleset on `main` requiring `ci-ok`; optionally a `v*` tag ruleset, and approval for all outside contributors rather than first-timers only
 - [ ] Note the required check in `docs/monorepo.md`'s CI recipe if it changes
+- [ ] Look at the gate's own cost (a runner, `setup-go`, building `yass` for `yass paths --only`, about 10 s plus queueing) and whether a cache or a prebuilt binary is worth it; it's also this repo's dogfood of the `docs/monorepo.md` recipe, so keep that working
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
 - A separate small change, after the binary-carries-the-playbooks stack lands - found during a CI sanity check while reviewing that stack; nothing in it is a security hole today, so it doesn't block the stack (Jaime)
 - Findings it starts from (claude, 2026-10-05): no `pull_request_target` or `workflow_run`; `ci.yml` has `contents: read` and the repo default is read; fork-PR approval is `first_time_contributors`; `release.yml` runs only on `v*` tags and `pages.yml` only on `main`, whose environment allows only `main`; the one event value used in a script goes through `env:`. Costs and gaps: `ci` runs on both `push` (every branch) and `pull_request`, so each PR commit runs twice; no `concurrency`; the six-target snapshot build runs on every PR; actions are pinned by movable tags, which matters most in `release.yml` (`contents: write`, `id-token: write`, `attestations: write`); `main` has no branch protection or ruleset, so `ci-ok` isn't required
+- Seen on donjaime/yass#10, an archive-only PR (Jaime, 2026-10-05): its `pull_request` run did the right thing (gate about 10 s, tests and build skipped, `ci-ok` 3 s), but the `push` run for the new branch ran the full tests and the release build, because a branch's first push has no `before` commit to compare with, so the gate falls back to running everything. `push` on `main` only fixes it; the new criterion checks it (claude)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
