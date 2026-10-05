@@ -8,7 +8,7 @@ blocked:
 
 ## Goal
 <!-- Intent. What is true when this change is finished, in a paragraph. Edit it only in a commit without code. -->
-Every yass binary carries the kit (the playbooks and the hook script) for its version, and yass init writes all of a repo's YASS files from it, stamped with that version, with the --claude, --global and --hooks options install.sh has today. Files that already exist are kept, as install.sh does without --upgrade; install.sh itself is unchanged.
+Every yass binary carries the kit (the playbooks and the hook script) for its version, and yass init writes all of a repo's YASS files from it, stamped with that version, with the --claude, --global and --hooks options install.sh has today. Files that already exist are kept, as install.sh does without --upgrade. install.sh is unchanged except that it passes --global on to yass init, so yass init doesn't add repo copies of playbooks that went to the user folder.
 
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
@@ -25,6 +25,7 @@ Every yass binary carries the kit (the playbooks and the hook script) for its ve
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
+- `install.sh` passes `--global` on to `yass init` - `yass init` now writes playbooks, and without it, an `install.sh --global` would get repo copies too; revised before building (claude)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
