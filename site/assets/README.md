@@ -1,10 +1,10 @@
 # Landing page assets
 
-Every image the page uses lives here, at a fixed path, so new graphics replace files without touching `index.html`. The files here now are placeholders: each one carries the marker `yass-placeholder` (an SVG comment, a PNG `tEXt` chunk, or WebP XMP metadata), and `tests/site.sh --deploy`, which the Pages workflow runs before it publishes, fails while any file still has it. Real graphics shouldn't contain the marker.
+Every image the page uses lives here, at a fixed path, so new graphics replace files without touching `index.html`. The emblem, icons and social card are cut from the YASS brand graphic; `favicon.svg` is a simplified vector of its hex. A placeholder carries the marker `yass-placeholder` (an SVG comment, a PNG `tEXt` chunk, or WebP XMP metadata), and `tests/site.sh --deploy`, which the Pages workflow runs before it publishes, fails while any file still has it. Real graphics shouldn't contain the marker.
 
 | File | Required | Spec | Where it shows |
 |---|---|---|---|
-| `emblem.webp` | yes | square, at least 460×460 (the page draws it at up to 230 px); the hex emblem on its navy background. The page feathers its edges into the hero with a CSS radial mask, so a little background around the hex is fine | top of the hero, above the YASS! wordmark (which is HTML text, not an image) |
+| `emblem.webp` | yes | square, at least 460×460, ideally 600×600 (the page draws it at up to 300 px); the hex emblem on its navy background. The page fades it into the hero with a CSS mask tuned to this crop (a circle on the hex, 56.5% down); with a transparent background, drop the mask | top of the hero, above the YASS! wordmark (which is HTML text, not an image) |
 | `favicon.svg` | yes | square; reads at 16 px (the hex emblem alone, without the robot's detail, reads best) | browser tab |
 | `favicon-32.png` | yes | 32×32 | browser tab, for browsers without SVG favicons |
 | `apple-touch-icon.png` | yes | 180×180, opaque (no transparency) | home-screen icon on iOS |

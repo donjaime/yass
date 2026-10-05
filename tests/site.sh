@@ -84,11 +84,12 @@ for l in $(perl -ne 'print "$1\n" while m{href="https://github\.com/donjaime/yas
 done
 
 echo "Assets"
-# dims FILE: WxH of a PNG, or of a WebP with a VP8X header (what cwebp writes with metadata or alpha)
+# dims FILE: WxH of a PNG, or of a lossy WebP (VP8, or VP8X as cwebp writes with metadata or alpha)
 dims() { perl -0777 -ne '
   if (substr($_, 1, 3) eq "PNG") { my ($w, $h) = unpack("NN", substr($_, 16, 8)); print "${w}x$h" }
   elsif (substr($_, 8, 8) eq "WEBPVP8X") { my @b = unpack("C6", substr($_, 24, 6));
-    printf "%dx%d", 1 + $b[0] + ($b[1] << 8) + ($b[2] << 16), 1 + $b[3] + ($b[4] << 8) + ($b[5] << 16) }' "$1"; }
+    printf "%dx%d", 1 + $b[0] + ($b[1] << 8) + ($b[2] << 16), 1 + $b[3] + ($b[4] << 8) + ($b[5] << 16) }
+  elsif (substr($_, 8, 8) eq "WEBPVP8 ") { my ($w, $h) = unpack("vv", substr($_, 26, 4)); printf "%dx%d", $w & 0x3fff, $h & 0x3fff }' "$1"; }
 for spec in emblem.webp:square favicon.svg: favicon-32.png:32x32 apple-touch-icon.png:180x180 og.png:1200x630; do
   f="${spec%%:*}"; want="${spec#*:}"
   if [ ! -f "$SITE/assets/$f" ]; then bad "assets/$f is missing"; continue; fi
