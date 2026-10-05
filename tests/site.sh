@@ -63,13 +63,9 @@ for el in '<img class="emblem"' '<span class="wordmark"'; do
 done
 if [ "$(grep -oF "$EGG" "$PAGE" | wc -l | tr -d ' ')" = 2 ]; then ok "the easter egg shows only on hover"; else bad "the easter egg appears outside its two title attributes"; fi
 
-echo "Comparison and teams"
-compare="$(section compare)"
-for n in OpenSpec "Spec Kit" Kiro "When not to use YASS" "docs/comparison.md"; do
-  if grep -qF "$n" <<<"$compare"; then ok "#compare has $n"; else bad "#compare doesn't mention $n"; fi
-done
+echo "Teams"
 teams="$(section teams)"
-for l in "docs/monorepo.md" "README.md#monorepos" "README.md#keeping-plans-out-of-the-repo" "README.md#the-optional-hook"; do
+for l in "docs/comparison.md" "docs/monorepo.md" "README.md#monorepos" "README.md#keeping-plans-out-of-the-repo" "README.md#the-optional-hook"; do
   if grep -qF "blob/main/$l\"" <<<"$teams"; then ok "#teams links to $l"; else bad "#teams has no link to $l"; fi
 done
 
