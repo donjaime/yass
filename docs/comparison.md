@@ -2,7 +2,7 @@
 
 *As of October 2026. Corrections welcome.*
 
-**Short version:** most spec tools are built around specifying one change well, or around a fixed multi-phase process. YASS is a thin, file-based project-management layer: change folders whose ceremony scales with scope, progress and decisions recorded next to the code, and an archive that tells the story of how the system evolved. It deliberately leaves guardrails, approvals and verification to your repo.
+**Short version:** YASS is a thin, file-based project-management layer: change folders whose ceremony scales with scope, progress and decisions recorded next to the code, and an archive that tells the story of how the system evolved. It deliberately leaves guardrails, approvals and verification to your repo. Most spec tools are built around a fixed multi-phase process. Others overlap with the code and documentation and create opportunity for drift.
 
 | | Unit of work | Large work | Current-state spec | Process | Footprint |
 |---|---|---|---|---|---|
