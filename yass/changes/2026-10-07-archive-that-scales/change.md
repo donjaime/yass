@@ -30,6 +30,7 @@ The archive stays manageable however big a team gets. Archived changes are dated
 - Replaces the call to evict inside `yass archive`: `keep` is a soft limit, `status` and `archive` say when it's passed, and eviction is its own command, `yass evict`, in its own commit, still by whole months - archive commits stay single-purpose, and eviction becomes a deliberate act by one person rather than something any archive on any branch can trigger; whole months keep each manifest written once (Jaime, whole months kept by claude)
 - PRD approved for planning, with a scheduled CI recipe for `yass evict` added to R20 (Jaime, 2026-10-07)
 - Plan: six pieces, the month layout first; formats and hook rules pinned in design.md (archive date and nesting, `archived:` stamp, `.evicted` manifest, soft `keep` with `yass evict`, migration steps, dated entries as `(<who>, <YYYY-MM-DD>)`) (claude, 2026-10-07)
+- Rule 5's eviction wording moves from AC14 (piece 1) to a new AC48 (piece 5) - piece 1 would otherwise tell users about `yass evict` releases before it exists; same bar, later piece (claude, 2026-10-07)
 - One large change with five milestones - each milestone helps on its own, so eviction can wait if nobody needs it yet (Jaime)
 
 ## Log

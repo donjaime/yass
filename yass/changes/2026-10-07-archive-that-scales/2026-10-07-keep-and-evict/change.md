@@ -14,7 +14,7 @@ A soft keep limit per yass folder, notes when it's passed, and yass evict removi
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC31–AC42 in [plan.md](../plan.md)
+- [ ] Delivers AC31–AC42, AC48 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->

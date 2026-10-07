@@ -34,7 +34,7 @@
 - [ ] AC11 (R21) Given the migration steps in the source, then each is one entry in a list with its own needed-check, and removing the archive step leaves the other steps and `yass upgrade` working — verify: go test (a step list without it runs clean)
 - [ ] AC12 (R4, R1) Given a migration commit or an archive into a month, when it's committed with the hook on, then the hook passes it; and given an edit, deletion or other move under `archive/`, then the hook still flags it — verify: e2e
 - [ ] AC13 (R5) Given this repo's flat archive and Jaime's private plans folder, when the released `yass upgrade` runs on them, then every archived change is in its month with `archived:` set, `yass status --strict` passes, and each migration is committed on its own — verify: manual: run it on both, check `yass status --archived` and the commits
-- [ ] AC14 (R19) Given a new `yass init`, then the yass folder README describes `archive/<YYYY>/<MM>/`, and rule 5 says the archive is append-only except for eviction by `yass evict`; `yass upgrade` brings the AGENTS.md section in line — verify: e2e (the text); manual: review
+- [ ] AC14 (R19) Given a new `yass init`, then the yass folder README describes `archive/<YYYY>/<MM>/` — verify: e2e (the text); manual: review
 - [ ] AC15 (R19, R24) Given `README.md` and `docs/monorepo.md`, then they show the monthly layout and the `archived:` field, and recommend that a yass folder archiving more than about 1,000 changes a month split into team folders — verify: manual: review
 
 ### M2
@@ -68,6 +68,7 @@
 - [ ] AC39 (R15) Given an active change with `follows:` or `blocked:` naming an evicted change, then `yass status` resolves it without warnings, and reads no git history — verify: e2e (works with the evicted commit missing)
 - [ ] AC40 (R16) Given evicted months, when you run `yass status --archived`, then it lists what's in the working tree and ends with one line per yass folder giving the evicted count and months — verify: e2e
 - [ ] AC41 (R12, R13) Given an eviction commit with the hook on, then the hook passes it; and given a deletion under `archive/` without a matching `.evicted` file, then it still flags it — verify: e2e
+- [ ] AC48 (R19) Given a new `yass init`, then the yass folder README's rule 5 says the archive is append-only except for eviction by `yass evict`, and the AGENTS.md section says the same; `yass upgrade` brings existing ones in line — verify: e2e (the text)
 - [ ] AC42 (R20) Given `docs/monorepo.md`, then it explains `keep`, `yass evict`, that eviction bounds the working tree but not `.git` (partial clones or a plans repo for that), and gives a scheduled CI recipe that runs `yass evict` and opens a PR — verify: manual: review
 
 ### M5
@@ -84,7 +85,7 @@
 2. **`2026-10-07-migrations-in-upgrade`** (AC7–AC11, AC12's migrating half, AC13). Needs piece 1's layout. AC13 runs after it's released.
 3. **`2026-10-07-archive-names-only`** (AC16–AC18). Needs piece 1's loader; can go alongside piece 2.
 4. **`2026-10-07-yass-decisions`** (AC19–AC30). Needs piece 1's `archived:` dates; can go alongside pieces 2 and 3.
-5. **`2026-10-07-keep-and-evict`** (AC31–AC42). Needs piece 3's names-only loader, which it extends with manifests.
+5. **`2026-10-07-keep-and-evict`** (AC31–AC42, AC48). Needs piece 3's names-only loader, which it extends with manifests.
 6. **`2026-10-07-decisions-from-history`** (AC43–AC47). Needs pieces 4 and 5.
 
 `monorepos-at-scale-and-plans-repos` (R13, citation checks in `yass archive`) and `stacked-prs-and-squash-merges` (M2, marking delivered criteria on archive) also change `cmdArchive`. They don't depend on each other; whichever lands second rebases.
