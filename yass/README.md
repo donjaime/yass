@@ -3,7 +3,7 @@
 Planned work for this part of the repo, managed with YASS (Yet Another Spec System). Code and its docs describe what exists today; this folder describes what's changing.
 
 - `changes/`: active work, one dated folder per change. A small change is a `change.md`. A large one adds `prd.md` (why and what), `plan.md` (how and acceptance), an optional `design.md`, and PR-sized pieces as folders inside it.
-- `archive/`: finished changes, moved here as they were. Never edited; follow-up work is a new change with `follows: <folder>`.
+- `archive/`: finished changes, moved here as they were, in `<YYYY>/<MM>/` folders by the month they were archived (older archives may sit directly in `archive/`). Never edited; follow-up work is a new change with `follows: <folder>`.
 - `queue.md` (optional): the order to tackle changes in, top first, one folder name per list item. `yass status` follows it; changes it doesn't list come after, oldest first.
 
 Rules:

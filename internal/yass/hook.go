@@ -74,17 +74,13 @@ func (h *hook) where(p string) place {
 			return place{kind: "queue", fname: QueueName}
 		}
 		if len(rest) >= 2 && (rest[0] == "changes" || rest[0] == "archive") {
-			return place{rest[0], parts[len(parts)-1], pre + "/" + rest[0] + "/" + rest[1]}
+			return place{rest[0], parts[len(parts)-1], pre + "/" + changeFolder(rest)}
 		}
 		return place{kind: "meta"}
 	}
 	for i := 0; i < len(parts)-1; i++ {
 		if parts[i] == "yass" && (parts[i+1] == "changes" || parts[i+1] == "archive") {
-			folder := strings.Join(parts[:i+2], "/")
-			if i+2 < len(parts) {
-				folder += "/" + parts[i+2]
-			}
-			return place{parts[i+1], parts[len(parts)-1], folder}
+			return place{parts[i+1], parts[len(parts)-1], strings.Join(parts[:i+1], "/") + "/" + changeFolder(parts[i+1:])}
 		}
 	}
 	if len(parts) >= 2 && parts[len(parts)-2] == "yass" && parts[len(parts)-1] == QueueName {
@@ -94,6 +90,19 @@ func (h *hook) where(p string) place {
 		return place{kind: "meta"}
 	}
 	return place{}
+}
+
+// changeFolder is the change's folder in a path that starts at changes/ or archive/: the folder
+// right under it, or, in the archive, the one under <YYYY>/<MM>/.
+func changeFolder(rest []string) string {
+	n := 2
+	if rest[0] == "archive" && len(rest) >= 4 && yearRE.MatchString(rest[1]) && monthRE.MatchString(rest[2]) {
+		n = 4
+	}
+	if n > len(rest) {
+		n = len(rest)
+	}
+	return strings.Join(rest[:n], "/")
 }
 
 func norm(text string) []string {

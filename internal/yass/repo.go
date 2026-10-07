@@ -536,11 +536,44 @@ func subdirs(dir string) []string {
 	return out
 }
 
+var (
+	yearRE  = regexp.MustCompile(`^\d{4}$`)
+	monthRE = regexp.MustCompile(`^\d{2}$`)
+)
+
+// changeDirs lists the change folders in changes/ or archive/. The archive keeps them in
+// <YYYY>/<MM>/ folders by the month they were archived, and older archives keep them flat;
+// both count, so a half-migrated archive still works.
+func changeDirs(base string, archive bool) []string {
+	var out []string
+	for _, name := range subdirs(base) {
+		if !archive || !yearRE.MatchString(name) {
+			out = append(out, filepath.Join(base, name))
+			continue
+		}
+		for _, month := range subdirs(filepath.Join(base, name)) {
+			if !monthRE.MatchString(month) {
+				continue
+			}
+			for _, c := range subdirs(filepath.Join(base, name, month)) {
+				out = append(out, filepath.Join(base, name, month, c))
+			}
+		}
+	}
+	return out
+}
+
+// archiveDir is where a change archived at t goes: archive/<YYYY>/<MM>/<name>, by UTC month.
+func archiveDir(root *Root, name string, t time.Time) string {
+	t = t.UTC()
+	return filepath.Join(root.Dir, "archive", t.Format("2006"), t.Format("01"), name)
+}
+
 func (r *Repo) load(root *Root, kind string, warn bool) []*Change {
 	base := filepath.Join(root.Dir, kind)
 	var out []*Change
-	for _, name := range subdirs(base) {
-		p := filepath.Join(base, name)
+	for _, p := range changeDirs(base, kind == "archive") {
+		name := filepath.Base(p)
 		c := newChange(p, root, nil)
 		c.Archived = kind == "archive"
 		out = append(out, c)
@@ -589,6 +622,13 @@ func (r *Repo) check() {
 		if t := c.Meta["created"]; t != "" {
 			if _, err := time.Parse(time.RFC3339, t); err != nil {
 				r.warn("%s: created '%s' isn't a time like 2026-10-05T14:32:07Z", r.disp(c.Path), t)
+			}
+		}
+	}
+	for _, c := range r.Archived {
+		if t := c.Meta["archived"]; t != "" {
+			if _, err := time.Parse(time.RFC3339, t); err != nil {
+				r.warn("%s: archived '%s' isn't a time like 2026-10-05T14:32:07Z", r.disp(c.Path), t)
 			}
 		}
 	}

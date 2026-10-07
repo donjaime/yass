@@ -25,7 +25,7 @@ sub() { P="$2" R="$3" N="${4:-0}" perl -0777 -i -pe '
   if ($n) { my $c = 0; s/$p/$c++ < $n ? $r : $&/gme } else { s/$p/$r/gm }' "$1"; }
 newrepo() { rm -rf "$1"; mkdir -p "$1"; cd "$1"; git init -q -b main; git config user.email t@t; git config user.name Sam
   echo app > app.txt; git add -A; git commit -q -m "existing app"; }
-TODAY=$(date +%F)
+TODAY=$(date +%F); MONTH=$(date -u +%Y/%m)   # archives go in archive/<YYYY>/<MM>/, by UTC month
 
 newrepo "$W/e2e/solo"
 INSTALL_OUT="$(y init)"
@@ -37,6 +37,7 @@ for f in tools/yass/githooks/pre-commit yass/README.md yass/changes/.gitkeep \
          .agents/skills/yass-plan/SKILL.md .agents/skills/yass-status/SKILL.md .agents/skills/yass-log/SKILL.md; do
   [ -e "$f" ] && ok "has $f" || bad "missing $f"
 done
+has "the yass folder README describes the monthly archive" "archive/.*<YYYY>/<MM>/" cat yass/README.md
 [ ! -e .claude ] && ok "no Claude files without --claude" || bad ".claude written without --claude"
 [ ! -e yass/config.yml ] && ok "no config file" || bad "a config file appeared"
 has   "AGENTS.md has the YASS section" "yass:begin" cat AGENTS.md
@@ -83,13 +84,26 @@ has      "every box done or dropped: done" "fix-double-tap-save +2/2 +done" y st
 has      "…in the detail view too" "progress: 2/2  \(done\)" y status double-tap
 git commit -qam "progress"
 run_ok   "archive once every box is done or dropped" y archive double-tap
-[ -d "yass/archive/$TODAY-fix-double-tap-save" ] && ok "moved to the archive" || bad "not in the archive"
+[ -d "yass/archive/$MONTH/$TODAY-fix-double-tap-save" ] && ok "moved to the archive" || bad "not in the archive"
 [ ! -e "$P" ] && ok "gone from changes" || bad "still in changes"
 has      "the move is staged" "R.*fix-double-tap-save/change.md" git status --porcelain
+has      "archive stamps archived: in UTC" "^archived: [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z$" cat "yass/archive/$MONTH/$TODAY-fix-double-tap-save/change.md"
+has      "…and changes nothing else" "^\+archived: [^ ]+Z\|$" bash -c 'git diff --cached -M | grep -E "^[-+][^-+]" | paste -sd"|" - | sed "s/$/|/"'
+hasnt    "…and leaves nothing unstaged" "." git diff --name-only
 has      "archived listing" "$TODAY-fix-double-tap-save" y status --archived
 has      "an archived change in detail" "progress: 2/2  \(done\)" y status --archived double-tap
 run_fail "…but not without --archived" y status double-tap
 git commit -qm "yass: archive fix-double-tap-save"
+OLD=yass/changes/2025-01-05-old-thing; mkdir -p "$OLD"; printf '# Old thing\n\n## Steps\n- [x] Done\n' > "$OLD/change.md"
+git add -A; git commit -qm "yass: old thing"
+run_ok   "a change from an earlier month…" y archive old-thing
+[ -d "yass/archive/$MONTH/2025-01-05-old-thing" ] && ok "…goes in the month it was archived" || bad "not in this month's folder"
+has      "a change without frontmatter gets some" "^---$" head -1 "yass/archive/$MONTH/2025-01-05-old-thing/change.md"
+git commit -qm "yass: archive old-thing"
+DUP="yass/changes/$TODAY-fix-double-tap-save"; mkdir -p "$DUP"; printf '# Again\n\n## Steps\n- [x] Done\n' > "$DUP/change.md"
+run_fail "archive refuses a name that's already archived" y archive "$DUP"
+has      "…and says where the other one is" "already archived, at yass/archive/$MONTH/$TODAY-fix-double-tap-save" y archive "$DUP"
+rm -rf "$DUP"
 
 echo "3. a large change with pieces"
 L=$(y new "Offline sync" --large --design --goal "Never lose an entry.")
@@ -120,7 +134,7 @@ run_fail "archive refuses open boxes in pieces" y archive offline-sync
 has      "…and names the piece" "Worker  \($TODAY-offline-queue/change.md\)" y archive offline-sync
 git add -A; git commit -q -m "yass: offline sync"
 run_ok   "--force archives anyway" y archive offline-sync --force
-[ -f "yass/archive/$TODAY-offline-sync/$TODAY-sync-badge/change.md" ] && ok "pieces moved along" || bad "pieces left behind"
+[ -f "yass/archive/$MONTH/$TODAY-offline-sync/$TODAY-sync-badge/change.md" ] && ok "pieces moved along" || bad "pieces left behind"
 git commit -qm "yass: archive offline-sync"
 
 echo "4. blocked, follows, warnings"
@@ -201,9 +215,9 @@ y archive hook-demo --force >/dev/null; echo "code8" >> app.txt; git add -A
 has   "archiving + code: warns" "archive a change in its own commit" git commit -q -m "feat: archive and code"
 y archive brand-new --force >/dev/null; git add -A
 hasnt "archiving alone: silent" "heads-up" git commit -q -m "yass: archive brand-new"
-echo "x" > "yass/archive/$TODAY-fix-double-tap-save/notes.md"; git add -A
+echo "x" > "yass/archive/$MONTH/$TODAY-fix-double-tap-save/notes.md"; git add -A
 has   "adding a file to an archived change warns" "the archive is append-only" git commit -q -m "yass: add notes"
-echo "edit" >> "yass/archive/$TODAY-fix-double-tap-save/change.md"; git add -A
+echo "edit" >> "yass/archive/$MONTH/$TODAY-fix-double-tap-save/change.md"; git add -A
 has   "editing the archive warns, even alone" "the archive is append-only" git commit -q -m "yass: fix typo"
 BASE=$(git rev-list --max-parents=0 HEAD)
 has      "CI range mode finds the mixed commits" "feat: sneaky: .*prd.md is intent" yass hook --range "$BASE..HEAD"
@@ -241,11 +255,11 @@ mkdir -p "$N/notes" && printf -- '- [ ] an idea for later\n' > "$N/notes/ideas.m
 has      "a # inside a value isn't a comment" "source: gh issue #41" y status with-notes
 has      "boxes in a subfolder that isn't a piece don't count" "with-notes .*1/1  done" y status
 run_ok   "…for archive either" y archive with-notes
-rm -rf "yass/archive/$TODAY-with-notes"; git add -A >/dev/null
+rm -rf "yass/archive/$MONTH/$TODAY-with-notes"; git add -A >/dev/null
 A=$(y new "All dropped"); sub "$A/change.md" '^- \[ \] $' '- [-] Not needed after all'
 has      "every box dropped: done" "all-dropped .*done" y status
 run_ok   "…and it can be archived" y archive all-dropped
-rm -rf "yass/archive/$TODAY-all-dropped"; git add -A >/dev/null
+rm -rf "yass/archive/$MONTH/$TODAY-all-dropped"; git add -A >/dev/null
 mkdir -p "apps/café"; y init "apps/café" --no-agents >/dev/null
 has   "non-ASCII folder names: new goes to the nearest yass/" "^apps/café/yass/changes/$TODAY-accented$" bash -c 'cd "apps/café" && yass new "Accented" --large'
 has   "…and status lists it" "^apps/café/yass/$" y status
@@ -316,7 +330,7 @@ has   "status reads them" "private-thing +1/1 +done" y status
 git add -A; git commit -q -m "chore: adopt YASS"
 hasnt "none of it lands in the repo" "private-thing" git log --stat --format=
 run_ok "archive works outside git" y archive private-thing
-[ -d "$W/e2e/ext-yass/archive/$TODAY-private-thing" ] && ok "…and moves the folder" || bad "not archived"
+[ -d "$W/e2e/ext-yass/archive/$MONTH/$TODAY-private-thing" ] && ok "…and moves the folder" || bad "not archived"
 MAIN_SHA=$(git rev-parse --short HEAD)
 git switch -q -c feature; echo wip >> app.txt; git commit -qam "feat: wip"; FEAT_SHA=$(git rev-parse --short HEAD); git switch -q main
 C=$(y new "Cited")
@@ -449,6 +463,18 @@ run_ok "archive works once it's met" y archive bravo
 git commit -q -m "yass: archive bravo"
 y archive alpha >/dev/null; git commit -q -m "yass: archive alpha"
 hasnt "an archived dependency is met" "multi .*alpha" y status
+mkb yass/archive/2025-12-01-old x   # an archive from before months: flat
+[ -d "yass/archive/$MONTH/2026-01-01-alpha" ] && [ -d yass/archive/2025-12-01-old ] && ok "flat and monthly archives side by side" || bad "layouts not mixed"
+mkb yass/changes/2026-05-02-mixed / "2025-12-01-old, 2026-01-01-alpha"
+sub yass/changes/2026-05-02-mixed/change.md '^blocked:' 'follows: 2025-12-01-old\nblocked:'
+mkb yass/changes/2026-05-03-mixed2 / ; sub yass/changes/2026-05-03-mixed2/change.md '^blocked:' 'follows: 2026-01-01-alpha\nblocked:'
+hasnt "follows: and blocked: resolve in either layout" "warning" y status
+hasnt "…and both count as met" "mixed .*waiting" y status
+has   "status --archived lists both" "2025-12-01-old.*2026-01-01-alpha" bash -c 'yass status --archived | tr "\n" " "'
+has   "status finds an archived change in a month" "progress: 1/1  \(done\)" y status --archived 2026-01-01-alpha
+printf -- '- 2026-01-01-alpha\n' >> yass/queue.md
+has   "queue.md knows a monthly archive is archived" "'2026-01-01-alpha' is archived" y status
+rm -rf yass/queue.md yass/changes/2026-05-02-mixed yass/changes/2026-05-03-mixed2 yass/archive/2025-12-01-old
 mkb yass/changes/2026-05-01-free x "waiting on 2026-03-01-big and legal sign-off"
 has   "free text, even mentioning a change, is a reason" "2026-05-01-free .*BLOCKED: waiting on 2026-03-01-big and legal" y status
 run_fail "…and archive refuses" y archive free
