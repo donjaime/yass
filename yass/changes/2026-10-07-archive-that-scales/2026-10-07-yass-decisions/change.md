@@ -24,7 +24,7 @@ yass decisions lists dated decisions across active and archived changes, filtere
 - [x] `yass-log` and `yass-shape` (and `docs/skills.md`) look decisions up with `yass decisions`
 - [x] go test (`TestParseEntry`), e2e section 32 (two yass folders, a piece, an archived change, a follows chain, JSON, templates)
 - [/] AC29: `yass-log`'s "starting from code" step still greps every yass folder, archive included, for a commit sha in `code:` citations; Jaime to decide (see Log)
-- [/] AC30: `yass decisions --about hooks` finds the decision; a real `yass-log` run needs this repo's installed playbooks refreshed, which happens at release
+- [x] AC30: in a scratch copy upgraded with a local 0.4.0 build, following the refreshed `yass-log`: `yass decisions --about "existing hooks"` finds the decisions, and `git log --follow` across the migration names #16
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -41,3 +41,6 @@ yass decisions lists dated decisions across active and archived changes, filtere
 - Did: built and tested `yass decisions`, dated entries in the templates and playbooks, and switched `yass-log` and `yass-shape` to it. `go test`, `tests/e2e.sh` (450 ok), `tests/examples.sh` pass.
 - Open (AC29): `yass-log` still finds a commit's decision by grepping every yass folder for `code:.*<sha>`, archive included. It's a needle search, so its output stays small, but it does walk `archive/`. Options: accept it and narrow AC29 to decision lookups (a plan revision), or add a citation search to the CLI (e.g. `yass decisions --cites <sha>`, searching boxes too). Jaime to choose.
 - Next: Jaime's call on AC29; AC30 once the installed playbooks are refreshed (release, or `yass upgrade` with a local build).
+### 2026-10-07 (claude)
+- Did: a release dry run with local builds. A repo set up and archived with v0.3.0, upgraded with 0.4.0: files restamped, its flat archive migrated, both committed without hook warnings, a new archive filed by month, `yass decisions` reads it. A teammate still on 0.3.0 gets the "upgrade your binary" note and archives flat, which the next `yass upgrade` moves. A scratch copy of this repo upgraded cleanly too (12 files, nothing left to migrate), which gave AC30.
+- Next: AC29, which Jaime is deciding (a `--cites` search in `decisions-from-history`, or narrowing AC29).
