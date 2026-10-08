@@ -1,0 +1,30 @@
+---
+platforms: [all]
+source: 
+follows: 
+blocked: 2026-10-07-archive-names-only
+created: 2026-10-07T17:34:55Z
+---
+# Keep and evict
+
+## Goal
+<!-- Intent. What is true when this change is finished, in a paragraph. Edit it only in a commit without code. -->
+A soft keep limit per yass folder, notes when it's passed, and yass evict removing oldest whole months with a write-once manifest each, so evicted names still resolve.
+
+## Acceptance
+<!-- Intent. Observable checks, one behavior each, e.g.
+- [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
+- [ ] Delivers AC31–AC42, AC48 in [plan.md](../plan.md)
+
+## Steps
+<!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
+- [ ] 
+
+## Decisions
+<!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
+
+## Log
+<!-- Progress. Append before you stop, so anyone can resume:
+### YYYY-MM-DD (<who>)
+- Did: …
+- Next: … -->
