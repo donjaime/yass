@@ -18,6 +18,9 @@ import (
 // binVersion is this binary's version, as Main receives it; the stamps written into a repo use it.
 var binVersion = "dev"
 
+// binChannel is "release" for binaries built by the release workflow, which yass update may replace.
+var binChannel = ""
+
 // HookPath is where the hook script lives in a repo, and what --hooks points core.hooksPath at.
 const HookPath = "tools/yass/githooks"
 

@@ -59,6 +59,7 @@ var specs = map[string]spec{
 	"archive": {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
 	"decisions": {[]string{"json"}, []string{"since", "until", "about", "change", "limit", "cites"}, 0, 0,
 		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]"},
+	"update":   {[]string{"check", "latest"}, []string{"version"}, 0, 0, "yass update [--check] [--latest] [--version vX.Y.Z]"},
 	"evict":    {nil, nil, 0, 0, "yass evict"},
 	"root":     {nil, nil, 0, 0, "yass root"},
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
@@ -122,6 +123,16 @@ func parse(sp spec, argv []string) (*args, error) {
 // Main runs the CLI and returns its exit code.
 func Main(argv []string, version string) int {
 	binVersion = version
+	return run(argv)
+}
+
+// MainChannel is Main for a binary that also knows how it was built: "release" for release builds.
+func MainChannel(argv []string, version, channel string) int {
+	binVersion, binChannel = version, channel
+	return run(argv)
+}
+
+func run(argv []string) int {
 	cmd, explicit := "status", false
 	if len(argv) > 0 && !strings.HasPrefix(argv[0], "-") {
 		cmd, argv, explicit = argv[0], argv[1:], true
@@ -136,8 +147,10 @@ func Main(argv []string, version string) int {
 			}
 			return 0
 		case "--version":
-			fmt.Println("yass " + version)
-			return 0
+			if !explicit || !contains(specs[cmd].values, "version") { // yass update --version vX.Y.Z is its own
+				fmt.Println("yass " + binVersion)
+				return 0
+			}
 		}
 	}
 	sp, ok := specs[cmd]
@@ -160,6 +173,8 @@ func Main(argv []string, version string) int {
 		code, err = cmdStatus(a)
 	case "archive":
 		err = cmdArchive(a)
+	case "update":
+		code, err = cmdUpdate(a)
 	case "evict":
 		err = cmdEvict(a)
 	case "decisions":
@@ -175,7 +190,7 @@ func Main(argv []string, version string) int {
 	case "upgrade":
 		code, err = cmdUpgrade(a)
 	case "version":
-		fmt.Println("yass " + version)
+		fmt.Println("yass " + binVersion)
 	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "yass: %v\n", err)
