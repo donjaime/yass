@@ -92,6 +92,54 @@ func (h *hook) where(p string) place {
 	return place{}
 }
 
+var archivedLineRE = regexp.MustCompile(`(?m)^archived:.*\n`)
+
+// intoMonths is the migration of a flat archived change into archive/<YYYY>/<MM>/: the same
+// change, moved from archive/<name>/ to a month folder, with at most an archived: stamp added.
+// Git sees the move as a rename, or, when the stamp changes a small file too much, as a deletion
+// here and an addition there; both count.
+func (h *hook) intoMonths(e entry, pl place, entries []entry, oldRef, newRef string) bool {
+	oldPath, newPath := e.oldPath, e.path
+	switch {
+	case strings.HasPrefix(e.status, "R"):
+	case e.status == "D":
+		oldPath, newPath = e.path, ""
+		for _, a := range entries {
+			if a.status == "A" && h.monthOf(h.where(e.path), h.where(a.path)) && path.Base(a.path) == path.Base(e.path) &&
+				strings.TrimPrefix(a.path, h.where(a.path).folder) == strings.TrimPrefix(e.path, pl.folder) {
+				newPath = a.path
+			}
+		}
+		if newPath == "" {
+			return false
+		}
+	case e.status == "A":
+		return false // the addition side is new to the archive, which is fine on its own
+	default:
+		return false
+	}
+	if !h.monthOf(h.where(oldPath), h.where(newPath)) {
+		return false
+	}
+	if e.status == "R100" {
+		return true
+	}
+	if oldRef == "" {
+		return false
+	}
+	old, cur := show(oldRef, oldPath), archivedLineRE.ReplaceAllString(show(newRef, newPath), "")
+	// The stamp may have come with frontmatter of its own, when the change had none.
+	return old == cur || old == strings.TrimPrefix(cur, "---\n---\n")
+}
+
+// monthOf says whether to is from's flat archived change, under archive/<YYYY>/<MM>/.
+func (h *hook) monthOf(from, to place) bool {
+	month := path.Dir(to.folder) // <archive>/<YYYY>/<MM>
+	return from.kind == "archive" && to.kind == "archive" && path.Base(to.folder) == path.Base(from.folder) &&
+		path.Dir(from.folder) == path.Dir(path.Dir(month)) && monthRE.MatchString(path.Base(month)) &&
+		yearRE.MatchString(path.Base(path.Dir(month)))
+}
+
 // changeFolder is the change's folder in a path that starts at changes/ or archive/: the folder
 // right under it, or, in the archive, the one under <YYYY>/<MM>/.
 func changeFolder(rest []string) string {
@@ -156,6 +204,12 @@ func (h *hook) check(entries []entry, oldRef, newRef string) []string {
 			continue
 		}
 		if pl.kind == "archive" {
+			if h.intoMonths(e, pl, entries, oldRef, newRef) {
+				if hasCode {
+					out = append(out, e.path+": move the archive into months in its own commit, not alongside code")
+				}
+				continue
+			}
 			addedToOld := false
 			if e.status[0] == 'A' && oldRef != "" {
 				_, addedToOld = git("", "cat-file", "-e", oldRef+":"+pl.folder)

@@ -110,7 +110,18 @@ func newText(t upgradeTarget) string {
 	return stampSkill(text[filepath.Base(filepath.Dir(t.path))], v)
 }
 
+// cmdUpgrade writes YASS's files at this binary's version, then brings each yass folder's
+// layout up to date (migrate.go).
 func cmdUpgrade(a *args) (int, error) {
+	code, err := upgradeFiles()
+	if err != nil || code != 0 {
+		return code, err
+	}
+	r := findRepo()
+	return 0, migrate(r, migrations)
+}
+
+func upgradeFiles() (int, error) {
 	if semverOf(binVersion) == "" {
 		return 0, noVersion()
 	}

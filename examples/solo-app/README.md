@@ -11,7 +11,7 @@ yass/
 │   │   └── 2026-09-24-sync-badge/        piece, blocked on a question for Sam
 │   └── 2026-10-02-fix-double-tap-save/   small, from a bug report
 ├── queue.md                              what to tackle first: the crash, then sync
-└── archive/
+└── archive/2026/09/                      finished in September 2026
     ├── 2026-08-03-mood-logging/          the first feature, finished
     └── 2026-09-08-fix-history-sort/      a finished bug fix
 ```

@@ -815,5 +815,46 @@ sub AGENTS.md ', apart from code \(with squash merges, a pull request without co
 "$Y5" upgrade >/dev/null
 has   "yass upgrade brings an older section up to it" "in its own commit, apart from code" cat AGENTS.md
 
+echo "31. yass upgrade moves a flat archive into months"
+Y6="$(vbin 0.6.0)"
+newrepo "$W/e2e/migrate"; "$Y6" init --hooks >/dev/null
+flat() { mkdir -p "$1"; printf '# %s\n\n- [x] Done\n' "$(basename "$1")" > "$1/change.md"; }
+flat yass/archive/2026-01-10-one; flat yass/archive/2026-02-20-two/2026-02-21-piece
+git add -A; GIT_COMMITTER_DATE=2026-04-15T12:00:00Z git commit -q -m "yass: archive one and two"
+flat yass/archive/2026-03-01-untracked
+OUT="$("$Y6" upgrade)"
+has   "upgrade names the step" "migrated yass \(archive-into-months\): moved 3 archived" echo "$OUT"
+has   "…and says to commit it on its own" 'commit it on its own: git commit -m "yass: archive-into-months" -- yass$' echo "$OUT"
+[ -f yass/archive/2026/04/2026-01-10-one/change.md ] && ok "a change goes in the month of the commit that archived it" || bad "not in 2026/04"
+has   "…stamped with that commit's date" "^archived: 2026-04-15T12:00:00Z$" cat yass/archive/2026/04/2026-01-10-one/change.md
+[ -f yass/archive/2026/04/2026-02-20-two/2026-02-21-piece/change.md ] && ok "…with its pieces" || bad "piece left behind"
+[ -f yass/archive/2026/03/2026-03-01-untracked/change.md ] && ok "one git never saw goes by the date in its name" || bad "untracked not by name"
+[ ! -e yass/archive/2026-01-10-one ] && ok "nothing left flat" || bad "flat folder left"
+hasnt "status is clean after it" "warning" y status --strict
+hasnt "the hook passes the move" "heads-up|append-only" git commit -q -m "yass: archive-into-months" -- yass
+hasnt "…which committed" "." git status --porcelain yass
+hasnt "a second upgrade does nothing" "migrated" "$Y6" upgrade
+git mv yass/archive/2026/04/2026-01-10-one yass/archive/2026/05/2026-01-10-one 2>/dev/null || { mkdir -p yass/archive/2026/05; git mv yass/archive/2026/04/2026-01-10-one yass/archive/2026/05/; }
+has   "moving between months is still flagged" "append-only" git commit -q -m "yass: shuffle"
+git reset -q --hard HEAD~1
+flat yass/archive/2026-06-01-late; git add -A; git commit -q -m "yass: archive late"
+"$Y6" upgrade >/dev/null; echo "- [x] Sneaked in" >> yass/archive/2026/*/2026-06-01-late/change.md; git add -A
+has   "a move that also edits the change is flagged" "append-only" git commit -q -m "yass: migrate and edit"
+git reset -q --hard HEAD~1
+
+newrepo "$W/e2e/migrate-plain"; P6="$W/e2e/plain-plans"; rm -rf "$P6"; flat "$P6/archive/2026-02-03-elsewhere"
+printf 'path: %s\n' "$P6" > yass.yaml
+OUT="$("$Y6" upgrade)"
+has   "a yass folder outside git migrates too" "migrated .*plain-plans \(archive-into-months\)" echo "$OUT"
+hasnt "…with nothing to commit" "commit it on its own" echo "$OUT"
+has   "…dated by its name, at midnight UTC" "^archived: 2026-02-03T00:00:00Z$" cat "$P6/archive/2026/02/2026-02-03-elsewhere/change.md"
+
+PR6="$W/e2e/plans-repo"; newrepo "$PR6"; flat archive/2026-01-05-planned; git add -A
+GIT_COMMITTER_DATE=2026-03-09T08:30:00Z git commit -q -m "yass: archive planned"
+newrepo "$W/e2e/migrate-code"; printf 'path: %s\n' "$PR6" > yass.yaml
+OUT="$("$Y6" upgrade)"
+has   "a plans repo's dates come from its own history" "^archived: 2026-03-09T08:30:00Z$" cat "$PR6/archive/2026/03/2026-01-05-planned/change.md"
+has   "…and the commit runs there" "git -C .*plans-repo commit -m \"yass: archive-into-months\" -- .*plans-repo" echo "$OUT"
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

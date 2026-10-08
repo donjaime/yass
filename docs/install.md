@@ -129,6 +129,9 @@ Upgrading has the same two parts as installing: the binary, once per machine, an
    It finds every YASS file from the repo root down, with `git ls-files`: playbooks in any folder's `.agents/skills/` or `.claude/skills/` (so monorepo folders set up with `yass init <folder> --agents` are included), every `AGENTS.md` with the YASS section, and the hook. It adds your user folder's playbooks, if you installed them with `--global`. It skips folders `yass.yaml` lists under `ignore:`.
 3. **Review the diff and commit it** (`chore: upgrade YASS`).
 
+Then it brings each yass folder's layout up to date, including folders `yass.yaml` points to outside the repo and private team folders. Each step does only what's needed, says what it did, and prints how to commit that on its own, apart from the upgrade commit and from code:
+- **archive-into-months:** moves changes sitting directly in `archive/` into `archive/<YYYY>/<MM>/`, by when they were archived (the commit that added them there, else the date in their name), and stamps `archived:` on each. Upgrade everyone's `yass` binary before committing it on a shared repo: older binaries don't know the month folders.
+
 What it does with each file depends on the version stamped in it:
 - **Older, or no stamp** (files written by v0.2 or earlier): replaced with this binary's version. A skills folder also gets any playbook it's missing.
 - **The same version:** left alone. When nothing needs doing, it says everything is already up to date.
