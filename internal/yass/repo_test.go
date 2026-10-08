@@ -2,6 +2,7 @@ package yass
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -25,5 +26,18 @@ func TestByCreated(t *testing.T) {
 	want := []string{"no-date", "2026-10-04-zebra", "2026-10-05-bad-stamp", "2026-10-05-mango", "2026-10-05-zebra", "2026-10-05-apple"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("byCreated = %q, want %q", got, want)
+	}
+}
+
+func TestChangeFolder(t *testing.T) {
+	for _, tc := range []struct{ path, want string }{
+		{"archive/2026-10-01-a/change.md", "archive/2026-10-01-a"},
+		{"archive/2026/10/2026-10-01-a/change.md", "archive/2026/10/2026-10-01-a"},
+		{"archive/2026/10/2026-10-01-a/2026-10-02-p/change.md", "archive/2026/10/2026-10-01-a"},
+		{"changes/2026/10/x/change.md", "changes/2026"},
+	} {
+		if got := changeFolder(strings.Split(tc.path, "/")); got != tc.want {
+			t.Errorf("changeFolder(%q) = %q, want %q", tc.path, got, tc.want)
+		}
 	}
 }

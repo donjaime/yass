@@ -122,6 +122,38 @@ func frontmatter(text string) (map[string]string, string) {
 	return meta, text[loc[1]:]
 }
 
+// setMeta sets one frontmatter key, replacing its line if it has one, adding it at the end of the
+// frontmatter if not, and adding frontmatter if there's none. The rest of the text is untouched.
+func setMeta(text, key, value string) string {
+	eol := "\n"
+	if strings.Contains(text, "\r\n") {
+		eol = "\r\n"
+		text = strings.ReplaceAll(text, "\r\n", "\n")
+	}
+	line := key + ": " + value
+	loc := fmRE.FindStringSubmatchIndex(text)
+	switch {
+	case loc == nil && strings.HasPrefix(text, "---\n---"): // empty frontmatter
+		text = "---\n" + line + "\n" + text[len("---\n"):]
+	case loc == nil:
+		text = "---\n" + line + "\n---\n" + text
+	default:
+		fm := strings.Split(text[loc[2]:loc[3]], "\n")
+		found := false
+		for i, l := range fm {
+			if k, _, ok := strings.Cut(l, ":"); ok && strings.TrimSpace(k) == key {
+				fm[i], found = line, true
+				break
+			}
+		}
+		if !found {
+			fm = append(fm, line)
+		}
+		text = text[:loc[2]] + strings.Join(fm, "\n") + text[loc[3]:]
+	}
+	return strings.ReplaceAll(text, "\n", eol)
+}
+
 // section returns the body of `## name`, up to the next `## ` heading.
 func section(text, name string) string {
 	re := regexp.MustCompile(`(?m)^## ` + regexp.QuoteMeta(name) + `[ \t]*\n`)

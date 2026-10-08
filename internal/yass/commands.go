@@ -437,7 +437,13 @@ func cmdArchive(a *args) error {
 	if len(problems) > 0 && !a.b["force"] {
 		return fmt.Errorf("%s isn't finished: %s\n  (--force archives it anyway)", c.Name, strings.Join(problems, "\n  "))
 	}
-	dest := filepath.Join(c.Root.Dir, "archive", c.Name)
+	for _, o := range r.Archived {
+		if o.Root == c.Root && o.Name == c.Name {
+			return fmt.Errorf("%s is already archived, at %s; rename one of them", c.Name, r.disp(o.Path))
+		}
+	}
+	now := time.Now().UTC()
+	dest := archiveDir(c.Root, c.Name, now)
 	if exists(dest) {
 		return fmt.Errorf("%s already exists", r.disp(dest))
 	}
@@ -448,8 +454,15 @@ func cmdArchive(a *args) error {
 		if err := os.Rename(c.Path, dest); err != nil {
 			return err
 		}
-		git(c.Root.Dir, "add", "-A", "--", c.Path, dest)
+		git(c.Root.Dir, "add", "-A", "--", c.Path)
 	}
+	// The stamp is part of the move: an archived change is never edited after it lands.
+	if head := filepath.Join(dest, "change.md"); isFile(head) {
+		if err := write(head, setMeta(read(head), "archived", now.Format(time.RFC3339))); err != nil {
+			return err
+		}
+	}
+	git(c.Root.Dir, "add", "-A", "--", dest)
 	fmt.Printf("archived %s\n", r.disp(dest))
 	if q := filepath.Join(c.Root.Dir, QueueName); isFile(q) {
 		cur := read(q)

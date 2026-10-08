@@ -108,3 +108,17 @@ func TestCodeRefs(t *testing.T) {
 		}
 	}
 }
+
+func TestSetMeta(t *testing.T) {
+	for _, tc := range []struct{ in, want string }{
+		{"---\nsource: x\narchived: old\nblocked:\n---\n# T\n", "---\nsource: x\narchived: NOW\nblocked:\n---\n# T\n"},
+		{"---\nsource: x\n---\n# T\n- [x] archived: no\n", "---\nsource: x\narchived: NOW\n---\n# T\n- [x] archived: no\n"},
+		{"---\r\nsource: x\r\n---\r\n# T\r\n", "---\r\nsource: x\r\narchived: NOW\r\n---\r\n# T\r\n"},
+		{"---\n---\n# T\n", "---\narchived: NOW\n---\n# T\n"},
+		{"# T\n", "---\narchived: NOW\n---\n# T\n"},
+	} {
+		if got := setMeta(tc.in, "archived", "NOW"); got != tc.want {
+			t.Errorf("setMeta(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}

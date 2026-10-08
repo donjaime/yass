@@ -22,7 +22,7 @@ yass/
 │       ├── design.md                       …the hard-to-undo calls (optional)
 │       ├── 2026-09-16-offline-queue/       …and PR-sized pieces, one level deep
 │       └── 2026-09-24-sync-badge/
-└── archive/                                finished changes, moved here as they were
+└── archive/2026/10/                        finished changes, moved here as they were, by the month they were archived
 ```
 
 That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`), five playbooks your agent follows, and an optional git hook.
@@ -35,7 +35,7 @@ YASS doesn't commit for you. The CLI never commits (archiving only stages the mo
 2. **A change is a folder, and ceremony scales with scope.** A bug fix is one `change.md`. A new feature, component or system adds `prd.md` and `plan.md`, maybe `design.md`, and splits into PR-sized pieces inside it.
 3. **Progress travels with the code.** Marking boxes in progress or done and appending to `## Log` and `## Decisions` go in the same commits as the code they describe.
 4. **Intent changes get their own commit.** The PRD, the design, the plan's text, and a change's title, Goal and Acceptance, including dropping an acceptance criterion. If the plan turns out wrong, change it on purpose, in a commit someone can review, not quietly next to the code. Mid-build, that means a stacked branch: the intent change underneath, the code rebased on top, so work keeps moving and decisions can still be reviewed apart from execution.
-5. **Done means every box is checked.** Then `yass archive` moves the folder to `archive/`. Finishing is separate from merging: a large change spans many branches and pull requests, and feedback can reopen the plan before it's done.
+5. **Done means every box is checked.** Then `yass archive` moves the folder to `archive/<YYYY>/<MM>/`. Finishing is separate from merging: a large change spans many branches and pull requests, and feedback can reopen the plan before it's done.
 6. **The archive is append-only.** Follow-up work is a new change with `follows: <archived folder>`.
 
 ## Install
@@ -124,7 +124,7 @@ yass new "<title>"              a small change
          [--source gh#41] [--follows <archived>] [--platforms "ios, android"] [--goal "…"]
 yass status [<change>]          what's in flight, progress, next steps, what's blocked, not started or done
             [--archived] [--strict]
-yass archive <change>           move a finished change to archive/ (refuses while boxes are open)
+yass archive <change>           move a finished change to archive/<YYYY>/<MM>/ (refuses while boxes are open)
 yass root                       print the yass folder(s) this repo uses
 yass paths [--only A...B]       the repo paths that are YASS's, as globs; --only exits 0 for a
                                 plans-only commit range, so CI can skip builds and tests
@@ -178,7 +178,7 @@ Tapping Save twice quickly saves one entry and never crashes.
 - Next: disable Save while saving, then the unit test.
 ```
 
-- **Frontmatter:** `platforms` is what "done" has to cover. `source` is the issue, alert or request it came from. `follows` names the archived change it follows up. `blocked` says why work can't continue: a reason for a human, or the [changes it waits on](#waiting-on-another-change). `created` is when `yass new` made it (UTC), so changes from the same day list in the order they were made; without it, a change sorts by its folder's date. All optional.
+- **Frontmatter:** `platforms` is what "done" has to cover. `source` is the issue, alert or request it came from. `follows` names the archived change it follows up. `blocked` says why work can't continue: a reason for a human, or the [changes it waits on](#waiting-on-another-change). `created` is when `yass new` made it (UTC), so changes from the same day list in the order they were made; without it, a change sorts by its folder's date. `archived` is when `yass archive` moved it (UTC), and the month folder it's in. All optional.
 - **Intent:** the title, `## Goal` and `## Acceptance`. They change only in commits without code.
 - **Progress:** `## Steps` (your working checklist), `## Decisions` (`- <decision> - <why> (<who>)`) and `## Log` (ending in `- Next:`, which `yass status` shows). These change with the code.
 
@@ -283,7 +283,7 @@ path: ../my-project-plans        # relative to this file
 
 ## Monorepos
 
-Any folder named `yass/` with `changes/` or `archive/` inside counts, and so does any `yass.yaml`, so teams opt in by running `yass init services/payments`. `yass status` shows every `yass/` folder in the repo, and `yass new` puts a change in the nearest one to where you're standing. Cross-team work is links, not copies: a root change's plan names the team changes that deliver each criterion, each team change names the criterion it delivers, and a team change that needs another team's work first names it in `blocked:`. Ownership and review rules belong in your CODEOWNERS. See [examples/monorepo](examples/monorepo).
+Any folder named `yass/` with `changes/` or `archive/` inside counts, and so does any `yass.yaml`, so teams opt in by running `yass init services/payments`. `yass status` shows every `yass/` folder in the repo, and `yass new` puts a change in the nearest one to where you're standing. Cross-team work is links, not copies: a root change's plan names the team changes that deliver each criterion, each team change names the criterion it delivers, and a team change that needs another team's work first names it in `blocked:`. Ownership and review rules belong in your CODEOWNERS. Team folders also keep each archive a manageable size: a yass folder archiving more than about 1,000 changes a month is a sign to split it. See [examples/monorepo](examples/monorepo).
 
 Rolling it out across a large monorepo, with expensive CI and many teams? [docs/monorepo.md](docs/monorepo.md) shows how to keep plan-only commits from running builds and tests, including GitHub required checks, merge queues and Bazel.
 

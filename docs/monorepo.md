@@ -131,3 +131,7 @@ A squash merge folds a pull request into one commit on main. YASS's rules are ab
 - **Progress goes in the pull request of the code it describes,** as it would in a single commit.
 
 The hook checks commit by commit, so it can't see a pull request that will squash an intent commit and a code commit together; keeping them apart is up to whoever opens it. How you get there (separate branches, a stack of pull requests, a stacking tool) is your team's call.
+
+## Big archives
+
+Each yass folder's `archive/` keeps finished changes in `<YYYY>/<MM>/` folders, by the month `yass archive` moved them, so no one folder grows without bound and GitHub can still list them all (it shows up to 1,000 entries in a folder). A team archiving more than about 1,000 changes a month in one yass folder should split it into team folders (`yass init <team folder>`): each team's archive then stays small on its own, and the repo's scales with them. A month that occasionally passes 1,000 is fine.
