@@ -14,7 +14,7 @@
 
 **M4 adds `keep` and `yass evict`.** [`config.go`](../../../internal/yass/config.go) learns `archive: { keep: N }`. `yass status` and `yass archive` add a note (not a warning, so `--strict` still passes) when a folder is past `keep`. A new `yass evict` removes whole months and writes their manifests ([design §3–4](design.md)); the loader reads `.evicted` files so evicted names still resolve; `status --archived` summarizes them. The hook accepts evictions. The docs cover `keep`, eviction, clone size, and a scheduled CI recipe that runs `yass evict` and opens a PR.
 
-**M5 reads evicted months from git.** `yass decisions` reads only the manifests until a query's date range or `--change` reaches an evicted month; then it reads those months' `change.md` files from the manifest's commit with one `git cat-file --batch`. A missing commit (shallow clone) is reported with the months it covers and `git fetch --unshallow`; the other results still print.
+**M5 reads evicted months from git, and finds citations.** `yass decisions --cites <sha>` searches boxes for `code:` citations of that commit, in the tree and, through the manifests, in evicted months; `yass-log`'s "starting from code" step uses it instead of grepping the yass folders. `yass decisions` reads only the manifests until a query's date range or `--change` reaches an evicted month; then it reads those months' `change.md` files from the manifest's commit with one `git cat-file --batch`. A missing commit (shallow clone) is reported with the months it covers and `git fetch --unshallow`; the other results still print.
 
 ## Acceptance
 <!-- Per milestone, one observable behavior each:
@@ -53,7 +53,7 @@
 - [x] AC26 (R9) Given no yass folder, or no decisions matching, then `yass decisions` says so and exits 0 — verify: e2e
 - [x] AC27 (R23) Given `--json`, then the output is one JSON array whose objects have `change`, `title`, `who`, `decision`, `date`, `created` and `archived` (null when unknown), and the same filters apply — verify: e2e (parsed with `python3 -m json.tool`)
 - [x] AC28 (R22) Given the change templates, `yass-work` and the `AGENTS.md` section, then they ask for `(<who>, <YYYY-MM-DD>)` on new entries — verify: e2e (template text); manual: review
-- [/] AC29 (R10) Given `yass-log` and `yass-shape`, then they look up past decisions and earlier work with `yass decisions` and `yass status --archived`, and nothing in the kit greps or walks `archive/` — verify: manual: review; `grep -rn "archive" kit/` shows no direct reads
+- [ ] AC29 (R10, R25) Given `yass-log` and `yass-shape`, then they look up past decisions and earlier work with `yass decisions` and `yass status --archived`, and nothing in the kit greps or walks `archive/` — verify: manual: review; `grep -rn "archive" kit/` shows no direct reads
 - [x] AC30 (R10) Given `yass-log` asked why this repo's hook leaves existing hooks alone, then it finds the decision through `yass decisions` — verify: manual: ask it
 
 ### M4
@@ -76,6 +76,8 @@
 - [ ] AC44 (R17) Given `--change` naming an evicted change, or one following it, then its decisions print — verify: e2e
 - [ ] AC45 (R17) Given a query whose dates don't reach any evicted month, then it reads no git history: it succeeds with the same results in a clone where the evicted commits are missing — verify: e2e (shallow clone)
 - [ ] AC46 (R18) Given a shallow clone missing an evicted month's commit and a query that reaches it, then the other results print, a line names the months it couldn't read and `git fetch --unshallow`, and it exits 0 — verify: e2e
+- [ ] AC49 (R25) Given boxes citing a commit (`code: a1b2c3d`) in an active change, an archived one and a piece, when you run `yass decisions --cites a1b2c3d` (or a longer prefix of the same commit), then each box prints with its change, and nothing else does — verify: e2e
+- [ ] AC50 (R25) Given a box citing a commit in an evicted change, then `--cites` finds it from git, the way decisions from evicted months are read; and with that month's commit missing, it says so as AC46 does — verify: e2e
 - [ ] AC47 (R17) Given 1,000 evicted changes in range, then `yass decisions` reads them with a constant number of git processes, not one per change — verify: go test (counts git invocations)
 
 ## Pieces
@@ -84,9 +86,9 @@
 1. **`2026-10-07-archive-into-months`** (AC1–AC6, AC12's archiving half, AC14, AC15). The layout everything else builds on, so it goes first.
 2. **`2026-10-07-migrations-in-upgrade`** (AC7–AC11, AC12's migrating half, AC13). Needs piece 1's layout. AC13 runs on a local build, before release, so the migration lands on main with the code.
 3. **`2026-10-07-archive-names-only`** (AC16–AC18). Needs piece 1's loader; can go alongside piece 2.
-4. **`2026-10-07-yass-decisions`** (AC19–AC30). Needs piece 1's `archived:` dates; can go alongside pieces 2 and 3.
+4. **`2026-10-07-yass-decisions`** (AC19–AC28, AC30). Needs piece 1's `archived:` dates; can go alongside pieces 2 and 3.
 5. **`2026-10-07-keep-and-evict`** (AC31–AC42, AC48). Needs piece 3's names-only loader, which it extends with manifests.
-6. **`2026-10-07-decisions-from-history`** (AC43–AC47). Needs pieces 4 and 5.
+6. **`2026-10-07-decisions-from-history`** (AC43–AC47, AC49, AC50, and AC29 once `yass-log` uses `--cites`). Needs pieces 4 and 5.
 
 `monorepos-at-scale-and-plans-repos` (R13, citation checks in `yass archive`) and `stacked-prs-and-squash-merges` (M2, marking delivered criteria on archive) also change `cmdArchive`. They don't depend on each other; whichever lands second rebases.
 

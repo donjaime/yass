@@ -14,7 +14,7 @@ yass decisions lists dated decisions across active and archived changes, filtere
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC19–AC30 in [plan.md](../plan.md)
+- [/] Delivers AC19–AC28, AC30 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
