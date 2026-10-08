@@ -3,6 +3,7 @@ platforms: [all]
 source: 
 follows: 
 blocked:
+archived: 2026-10-05T19:13:17Z
 ---
 # Same-day changes list in creation order
 

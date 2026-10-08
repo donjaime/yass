@@ -3,6 +3,7 @@ platforms: [all]
 source: Jaime, 2026-10-05: sanity check of CI while reviewing the binary-carries-the-playbooks stack; fix after the stack lands
 follows: 
 blocked:
+archived: 2026-10-05T19:11:56Z
 ---
 # Tighten CI: fewer duplicate runs, pinned release actions, required checks
 

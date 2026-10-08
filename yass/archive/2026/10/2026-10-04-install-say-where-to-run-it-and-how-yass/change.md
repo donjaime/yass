@@ -3,6 +3,7 @@ platforms: [all]
 source: Jaime, 2026-10-04: the curl install assumes ~/.local/bin is on PATH (it wasn't on Jaime's Mac) and doesn't say it must run inside your repo
 follows: 
 blocked:
+archived: 2026-10-05T02:41:00Z
 ---
 # Install: say where to run it and how yass gets on your PATH
 

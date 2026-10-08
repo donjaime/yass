@@ -3,6 +3,7 @@ platforms: [all]
 source: 
 follows: 
 blocked:
+archived: 2026-10-04T02:32:20Z
 ---
 # Upgrade message says upgrade
 

@@ -3,6 +3,7 @@ platforms: [all]
 source: CI run 37235844602 (macos-latest)
 follows: 
 blocked:
+archived: 2026-10-04T21:29:48Z
 ---
 # Paths that don't exist yet compare through symlinks
 

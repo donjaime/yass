@@ -3,6 +3,7 @@ platforms: [all]
 source: 
 follows: 
 blocked:
+archived: 2026-10-04T02:10:24Z
 ---
 # Ignore folders from yass.yaml
 
