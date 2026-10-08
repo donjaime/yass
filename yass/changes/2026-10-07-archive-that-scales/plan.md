@@ -33,7 +33,7 @@
 - [ ] AC10 (R21) Given a yass folder already migrated, when you run `yass upgrade` again, then the migration step does nothing and says nothing — verify: e2e
 - [ ] AC11 (R21) Given the migration steps in the source, then each is one entry in a list with its own needed-check, and removing the archive step leaves the other steps and `yass upgrade` working — verify: go test (a step list without it runs clean)
 - [/] AC12 (R4, R1) Given a migration commit or an archive into a month, when it's committed with the hook on, then the hook passes it; and given an edit, deletion or other move under `archive/`, then the hook still flags it — verify: e2e
-- [ ] AC13 (R5) Given this repo's flat archive and Jaime's private plans folder, when the released `yass upgrade` runs on them, then every archived change is in its month with `archived:` set, `yass status --strict` passes, and each migration is committed on its own — verify: manual: run it on both, check `yass status --archived` and the commits
+- [ ] AC13 (R5) Given this repo's flat archive and Jaime's private plans folder, when `yass upgrade` built from this piece runs on them (at the version their files are stamped with, so it writes no files and only migrates), then every archived change is in its month with `archived:` set, `yass status --strict` passes, and each migration is committed on its own — verify: manual: run it on both, check `yass status --archived` and the commits
 - [/] AC14 (R19) Given a new `yass init`, then the yass folder README describes `archive/<YYYY>/<MM>/` — verify: e2e (the text); manual: review
 - [/] AC15 (R19, R24) Given `README.md` and `docs/monorepo.md`, then they show the monthly layout and the `archived:` field, and recommend that a yass folder archiving more than about 1,000 changes a month split into team folders — verify: manual: review
 
@@ -82,7 +82,7 @@
 <!-- PR-sized pieces, each its own folder in here: `yass new "<title>" --in <this change>`.
      `yass status` lists them; say here what order they go in and why. -->
 1. **`2026-10-07-archive-into-months`** (AC1–AC6, AC12's archiving half, AC14, AC15). The layout everything else builds on, so it goes first.
-2. **`2026-10-07-migrations-in-upgrade`** (AC7–AC11, AC12's migrating half, AC13). Needs piece 1's layout. AC13 runs after it's released.
+2. **`2026-10-07-migrations-in-upgrade`** (AC7–AC11, AC12's migrating half, AC13). Needs piece 1's layout. AC13 runs on a local build, before release, so the migration lands on main with the code.
 3. **`2026-10-07-archive-names-only`** (AC16–AC18). Needs piece 1's loader; can go alongside piece 2.
 4. **`2026-10-07-yass-decisions`** (AC19–AC30). Needs piece 1's `archived:` dates; can go alongside pieces 2 and 3.
 5. **`2026-10-07-keep-and-evict`** (AC31–AC42, AC48). Needs piece 3's names-only loader, which it extends with manifests.
@@ -93,6 +93,6 @@
 ## Validation
 <!-- How the whole thing is verified before it's called done: suites, platforms, manual passes. -->
 - `go test ./...`, `tests/e2e.sh`, `tests/examples.sh` and `tests/bench.sh` pass, on macOS and Linux in CI.
-- This repo and Jaime's private plans folder are migrated by the released `yass upgrade` (AC13), and `yass status --strict` passes on both.
+- This repo and Jaime's private plans folder are migrated by `yass upgrade` built from source (AC13), and `yass status --strict` passes on both.
 - A dry run of eviction on a generated folder with `keep: 100`: evict, commit, then ask `yass decisions` about an evicted month in a full clone and in a shallow one.
 - `yass-log` answers a "why did we…" question in this repo through `yass decisions` (AC30).
