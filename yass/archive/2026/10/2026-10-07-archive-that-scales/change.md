@@ -4,6 +4,7 @@ source: Jaime, 2026-10-07: conversation about the archive growing without bound 
 follows: 
 blocked:
 created: 2026-10-07T16:51:19Z
+archived: 2026-10-08T22:15:40Z
 ---
 # Archive that scales
 
