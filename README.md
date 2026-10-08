@@ -25,7 +25,7 @@ yass/
 └── archive/2026/10/                        finished changes, moved here as they were, by the month they were archived
 ```
 
-That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`), five playbooks your agent follows, and an optional git hook.
+That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`), five playbooks your agent follows, and an optional git hook.
 
 YASS doesn't commit for you. The CLI never commits (archiving only stages the move), and the playbooks only commit, branch or rebase when you or your harness have given the agent that latitude; otherwise they hand you the commands. The rules below are about what lands on your main branch, and the hook checks them.
 
@@ -125,6 +125,8 @@ yass new "<title>"              a small change
 yass status [<change>]          what's in flight, progress, next steps, what's blocked, not started or done
             [--archived] [--strict]
 yass archive <change>           move a finished change to archive/<YYYY>/<MM>/ (refuses while boxes are open)
+yass decisions                  past decisions, active and archived, newest first, 50 at a time
+               [--since D] [--until D] [--about "words"] [--change <c>] [--limit N] [--json]
 yass root                       print the yass folder(s) this repo uses
 yass paths [--only A...B]       the repo paths that are YASS's, as globs; --only exits 0 for a
                                 plans-only commit range, so CI can skip builds and tests
@@ -180,7 +182,7 @@ Tapping Save twice quickly saves one entry and never crashes.
 
 - **Frontmatter:** `platforms` is what "done" has to cover. `source` is the issue, alert or request it came from. `follows` names the archived change it follows up. `blocked` says why work can't continue: a reason for a human, or the [changes it waits on](#waiting-on-another-change). `created` is when `yass new` made it (UTC), so changes from the same day list in the order they were made; without it, a change sorts by its folder's date. `archived` is when `yass archive` moved it (UTC), and the month folder it's in. All optional.
 - **Intent:** the title, `## Goal` and `## Acceptance`. They change only in commits without code.
-- **Progress:** `## Steps` (your working checklist), `## Decisions` (`- <decision> - <why> (<who>)`) and `## Log` (ending in `- Next:`, which `yass status` shows). These change with the code.
+- **Progress:** `## Steps` (your working checklist), `## Decisions` (`- <decision> - <why> (<who>, <YYYY-MM-DD>)`; `yass decisions` lists them across every change) and `## Log` (ending in `- Next:`, which `yass status` shows). These change with the code.
 
 A large change has a slimmer `change.md` (goal, decisions, log) and adds:
 - **`prd.md`:** why, for whom, measurable outcomes, requirements (`R1`), non-goals, milestones, open questions.

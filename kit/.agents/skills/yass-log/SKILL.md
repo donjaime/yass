@@ -9,8 +9,8 @@ There's no separate log file. The record is the `## Decisions` sections in the y
 
 1. **Scope the question:** a time range, a feature or area, a person or agent, a single "why", or a piece of code (a file, a function, a commit).
 2. **Find the decisions:**
-   - Search the `## Decisions` sections: `yass root | xargs -I{} grep -rn -A50 "^## Decisions" {}/changes {}/archive`, stopping at the next `##`.
-   - Each line should read `- <decision> - <why> (<who>)`.
+   - Ask `yass decisions`: it lists the `## Decisions` entries of active and archived changes in every yass folder, newest first, with each change's created and archived dates. Narrow it with `--since`/`--until YYYY-MM-DD`, `--about "<words>"`, and `--change <name>` (which takes in the changes it follows and that follow it); it shows 50 at a time (`--limit N`) and says how many it left out. `--json` gives the same as data. Don't read `archive/` directly: it can hold thousands of changes.
+   - Each entry reads `- <decision> - <why> (<who>, <YYYY-MM-DD>)`; older ones have no date of their own, so `yass decisions` shows the change's dates instead.
    - **Starting from code instead?** Find its commits in the code repo (`git log --format=%h -- <file>`, or `git log -S'<symbol>' --format=%h`), then search the plans for them: `yass root | xargs -I{} grep -rn "code:.*<sha>" {}`. A hit names the change and box; its Decisions and Log are the why. No hit means the record doesn't link that commit, so say so rather than guess from dates.
 3. **Date them and check who made them** with git, because the files say *what* and git says *when* and *who committed it*:
    - `git log --format='%h %ad %an %s' --date=short -- <change folder>`; for an archived change, which was moved, follow its `change.md` across the move: `git log --follow --format='%h %ad %an %s' --date=short -- <archive folder>/change.md`

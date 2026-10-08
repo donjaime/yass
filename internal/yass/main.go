@@ -32,6 +32,8 @@ usage: yass <command> [options]
   status [<change>] [--archived] [--strict]
                                         what's in flight, or one change in detail
   archive <change> [--force]            move a finished change to the archive
+  decisions [--since D] [--until D] [--about TEXT] [--change C] [--limit N] [--json]
+                                        past decisions, active and archived, newest first
   root                                  print the yass folder(s) this repo uses
   paths [--only RANGE]                  the repo paths that are YASS's, as globs (for CI filters);
                                         --only exits 0 if a commit range touches nothing else
@@ -49,10 +51,12 @@ type spec struct {
 }
 
 var specs = map[string]spec{
-	"init":     {[]string{"no-agents", "private", "claude", "global", "hooks", "agents"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--agents] [--claude] [--global] [--hooks] [--no-agents] [--private]"},
-	"new":      {[]string{"large", "design"}, []string{"in", "goal", "platforms", "source", "follows"}, 1, 1, `yass new "<title>" [--large] [--design] [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]`},
-	"status":   {[]string{"archived", "strict"}, nil, 0, 1, "yass status [<change>] [--archived] [--strict]"},
-	"archive":  {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
+	"init":    {[]string{"no-agents", "private", "claude", "global", "hooks", "agents"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--agents] [--claude] [--global] [--hooks] [--no-agents] [--private]"},
+	"new":     {[]string{"large", "design"}, []string{"in", "goal", "platforms", "source", "follows"}, 1, 1, `yass new "<title>" [--large] [--design] [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]`},
+	"status":  {[]string{"archived", "strict"}, nil, 0, 1, "yass status [<change>] [--archived] [--strict]"},
+	"archive": {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
+	"decisions": {[]string{"json"}, []string{"since", "until", "about", "change", "limit"}, 0, 0,
+		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--limit N] [--json]"},
 	"root":     {nil, nil, 0, 0, "yass root"},
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
 	"template": {nil, nil, 1, 1, "yass template <change|change-large|prd|plan|design|readme|agents>"},
@@ -153,6 +157,8 @@ func Main(argv []string, version string) int {
 		code, err = cmdStatus(a)
 	case "archive":
 		err = cmdArchive(a)
+	case "decisions":
+		code, err = cmdDecisions(a)
 	case "root":
 		err = cmdRoot(a)
 	case "paths":

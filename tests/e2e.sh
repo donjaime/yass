@@ -862,5 +862,42 @@ OUT="$("$Y6" upgrade)"
 has   "a plans repo's dates come from its own history" "^archived: 2026-03-09T08:30:00Z$" cat "$PR6/archive/2026/03/2026-01-05-planned/change.md"
 has   "…and the commit runs there" "git -C .*plans-repo commit -m \"yass: archive-into-months\" -- .*plans-repo" echo "$OUT"
 
+echo "32. yass decisions"
+newrepo "$W/e2e/decisions"; y init >/dev/null; y init teams/a --no-agents >/dev/null
+# mkd <dir> <frontmatter lines> <entries…>
+mkd() { local d="$1" fm="$2"; shift 2; mkdir -p "$d"
+  { printf -- '---\n%b---\n# %s\n\n## Steps\n- [x] Done\n\n## Decisions\n<!-- - not an entry (x, 2026-01-01) -->\n' "$fm" "$(basename "$d")"
+    for e in "$@"; do printf -- '- %s\n' "$e"; done; printf '\n## Log\n- Did: a thing (not a decision)\n'; } > "$d/change.md"; }
+mkd yass/archive/2026/02/2026-01-01-origin 'archived: 2026-02-15T09:00:00Z\n' "Origin call - old (ann)"
+mkd yass/changes/2026-03-01-bee 'follows: 2026-01-01-origin\n' "Bee call (bo, 2026-03-05)"
+mkd yass/changes/2026-03-01-bee/2026-03-02-bee-piece '' "Bee piece call (bp, 2026-03-03)"
+mkd teams/a/yass/changes/2026-04-01-cee 'follows: 2026-03-01-bee\n' "Cee call about Squash Merge - why (cy, 2026-04-02)"
+mkd teams/a/yass/changes/2026-04-10-dee 'created: 2026-04-10T08:00:00Z\n' "Dee call (dy, 2026-04-11)"
+has   "an archived entry, with the change's dates and no date of its own" "^ {10}  2026-01-01-origin  Origin call - old \(ann\)  \[created 2026-01-01, archived 2026-02-15\]$" y decisions
+has   "an active entry in another yass folder, with its own date" "^2026-04-02  2026-04-01-cee  Cee call about Squash Merge - why \(cy\)  \[created 2026-04-01\]$" y decisions
+has   "a piece's entries, under the piece" "^2026-03-03  2026-03-01-bee/2026-03-02-bee-piece  Bee piece call \(bp\)" y decisions
+has   "each entry once, newest first, comments and Log left out" "^dee,cee,bee,piece,origin$" bash -c 'yass decisions | sed -E "s/^.{12}[^ ]*-([a-z-]+)  .*/\1/" | paste -sd, -'
+has   "--since and --until, by each entry's date (else archived, else created)" "^cee,bee$" bash -c 'yass decisions --since 2026-03-04 --until 2026-04-05 | sed -E "s/^.{12}[^ ]*-([a-z-]+)  .*/\1/" | paste -sd, -'
+has   "…an undated entry goes by its change's archived date" "origin" y decisions --since 2026-02-15 --until 2026-02-15
+has   "--about matches all its words, any case" "^2026-04-02  2026-04-01-cee" y decisions --about "squash MERGE"
+hasnt "…and nothing else" "bee|dee|origin" y decisions --about "squash merge"
+has   "--about also matches the change's title" "dee call" bash -c 'yass decisions --about "10-dee" | tr A-Z a-z'
+has   "--change takes in what it follows and what follows it, with pieces" "^cee,bee,piece,origin$" bash -c 'yass decisions --change 2026-03-01-bee | sed -E "s/^.{12}[^ ]*-([a-z-]+)  .*/\1/" | paste -sd, -'
+has   "--limit keeps the newest and says how many it left out" "^dee,cee,… 3 more not shown" bash -c 'yass decisions --limit 2 | sed -E "s/^.{12}[^ ]*-([a-z-]+)  .*/\1/" | paste -sd, -'
+hasnt "…and under the limit, says nothing more" "more not shown" y decisions
+has   "no match says so" "^no decisions match$" y decisions --about zzz
+run_ok "…and exits 0" y decisions --about zzz
+run_fail "a bad date is refused" y decisions --since yesterday
+has   "--json is one array with every field" '"change": "2026-04-01-cee",' y decisions --json
+has   "…and parses" "Bee piece call" bash -c 'yass decisions --json | python3 -c "import json,sys; d=json.load(sys.stdin); print([x[\"decision\"] for x in d]); assert set(d[0]) == {\"change\",\"title\",\"who\",\"decision\",\"date\",\"created\",\"archived\"}"'
+has   "…with null for what's unknown" "^None None 2026-02-15$" bash -c 'yass decisions --json --change origin | python3 -c "import json,sys; o=[x for x in json.load(sys.stdin) if x[\"change\"].endswith(\"origin\")][0]; print(o[\"date\"], None if o[\"date\"] else None, o[\"archived\"])"'
+has   "…the same filters apply" '^\[\]$' y decisions --json --about zzz
+has   "new changes ask for dated entries" "\(<who>, <YYYY-MM-DD>\)" y template change
+has   "…large ones too" "\(<who>, <YYYY-MM-DD>\)" y template change-large
+has   "…and so does the AGENTS.md section" "\(<who>, <YYYY-MM-DD>\)" cat AGENTS.md
+newrepo "$W/e2e/decisions-none"
+has   "no yass folder says so" "no yass folder" y decisions
+run_ok "…and exits 0" y decisions
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

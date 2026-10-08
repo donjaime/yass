@@ -18,7 +18,7 @@ description: Work on a YASS change you've been pointed at. Create it if it's new
 2. **Load.** `yass status <change>` lists its files and open boxes. Read `change.md` and resume from the last **Next:** in its Log. For a piece, also read the parent's `prd.md` and `plan.md`. Read the code and docs you'll touch.
 3. **Build.** Alongside the code:
    - mark a box `[/]` when you start on it, and `[x]` once it's finished (Steps, Acceptance, and plan criteria the work delivers). If you stop partway, leave it `[/]` so the next session sees where you were.
-   - append real choices to `## Decisions`: `- <decision> - <why> (<who>)`
+   - append real choices to `## Decisions`: `- <decision> - <why> (<who>, <YYYY-MM-DD>)`
    - keep `## Steps` current; it's your checklist
    - if `yass root` is outside this repo, cite the code commits; see **Plans in another folder** below
 4. **Don't move the goalposts.** `prd.md`, `design.md`, plan text, a Goal and acceptance criteria (including dropping one) never change alongside code. If they're wrong, see **Intent changes mid-build** below.

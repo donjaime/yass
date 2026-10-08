@@ -43,18 +43,18 @@
 - [x] AC18 (R7) Given `tests/bench.sh`'s repo with 200 yass folders, 2,000 active changes and 10,000 archived changes across months, then `yass status` stays under 1s — verify: `tests/bench.sh`
 
 ### M3
-- [ ] AC19 (R8) Given active and archived changes in two yass folders with `## Decisions` entries, when you run `yass decisions`, then each entry prints once on its own line with its change, who, the decision, its own date if it has one, and the change's `created:` and `archived:` dates — verify: e2e
-- [ ] AC20 (R8) Given a piece's `## Decisions`, then its entries are listed under the piece's name — verify: e2e
-- [ ] AC21 (R22) Given an entry `- X - Y (Jaime, 2026-10-07)`, then who is `Jaime` and its date is 2026-10-07; given `- X - Y (claude, agreed by Jaime)`, then who is the whole credit and it has no date of its own — verify: go test
-- [ ] AC22 (R9) Given entries across several months, when you pass `--since` and `--until`, then only entries whose date (their own, else the change's `archived:`, else `created:`) falls in the range print — verify: e2e
-- [ ] AC23 (R9) Given `--about "squash merge"`, then only entries containing those words, case-insensitively, in the decision or the change's title print — verify: e2e
-- [ ] AC24 (R9) Given `--change B` where B follows A and C follows B, then entries from A, B and C print, and none from unrelated changes — verify: e2e
-- [ ] AC25 (R9) Given more matching entries than `--limit` (50 by default), then the newest print and a last line says how many were left out; with fewer, no such line — verify: e2e
-- [ ] AC26 (R9) Given no yass folder, or no decisions matching, then `yass decisions` says so and exits 0 — verify: e2e
-- [ ] AC27 (R23) Given `--json`, then the output is one JSON array whose objects have `change`, `title`, `who`, `decision`, `date`, `created` and `archived` (null when unknown), and the same filters apply — verify: e2e (parsed with `python3 -m json.tool`)
-- [ ] AC28 (R22) Given the change templates, `yass-work` and the `AGENTS.md` section, then they ask for `(<who>, <YYYY-MM-DD>)` on new entries — verify: e2e (template text); manual: review
-- [ ] AC29 (R10) Given `yass-log` and `yass-shape`, then they look up past decisions and earlier work with `yass decisions` and `yass status --archived`, and nothing in the kit greps or walks `archive/` — verify: manual: review; `grep -rn "archive" kit/` shows no direct reads
-- [ ] AC30 (R10) Given `yass-log` asked why this repo's hook leaves existing hooks alone, then it finds the decision through `yass decisions` — verify: manual: ask it
+- [x] AC19 (R8) Given active and archived changes in two yass folders with `## Decisions` entries, when you run `yass decisions`, then each entry prints once on its own line with its change, who, the decision, its own date if it has one, and the change's `created:` and `archived:` dates — verify: e2e
+- [x] AC20 (R8) Given a piece's `## Decisions`, then its entries are listed under the piece's name — verify: e2e
+- [x] AC21 (R22) Given an entry `- X - Y (Jaime, 2026-10-07)`, then who is `Jaime` and its date is 2026-10-07; given `- X - Y (claude, agreed by Jaime)`, then who is the whole credit and it has no date of its own — verify: go test
+- [x] AC22 (R9) Given entries across several months, when you pass `--since` and `--until`, then only entries whose date (their own, else the change's `archived:`, else `created:`) falls in the range print — verify: e2e
+- [x] AC23 (R9) Given `--about "squash merge"`, then only entries containing those words, case-insensitively, in the decision or the change's title print — verify: e2e
+- [x] AC24 (R9) Given `--change B` where B follows A and C follows B, then entries from A, B and C print, and none from unrelated changes — verify: e2e
+- [x] AC25 (R9) Given more matching entries than `--limit` (50 by default), then the newest print and a last line says how many were left out; with fewer, no such line — verify: e2e
+- [x] AC26 (R9) Given no yass folder, or no decisions matching, then `yass decisions` says so and exits 0 — verify: e2e
+- [x] AC27 (R23) Given `--json`, then the output is one JSON array whose objects have `change`, `title`, `who`, `decision`, `date`, `created` and `archived` (null when unknown), and the same filters apply — verify: e2e (parsed with `python3 -m json.tool`)
+- [x] AC28 (R22) Given the change templates, `yass-work` and the `AGENTS.md` section, then they ask for `(<who>, <YYYY-MM-DD>)` on new entries — verify: e2e (template text); manual: review
+- [/] AC29 (R10) Given `yass-log` and `yass-shape`, then they look up past decisions and earlier work with `yass decisions` and `yass status --archived`, and nothing in the kit greps or walks `archive/` — verify: manual: review; `grep -rn "archive" kit/` shows no direct reads
+- [/] AC30 (R10) Given `yass-log` asked why this repo's hook leaves existing hooks alone, then it finds the decision through `yass decisions` — verify: manual: ask it
 
 ### M4
 - [ ] AC31 (R11) Given `archive: { keep: 3 }` in a yass folder's `yass.yaml`, then that folder's limit is 3 and other folders keep 10,000; an unknown key under `archive:` warns like other unknown settings — verify: go test (config); e2e

@@ -24,7 +24,7 @@ The usual flow is (plan mode →) shape → plan → work, with `yass-status` al
 
 A conversation where a human decides what to build and why. Turns a problem, or an approved harness plan, into a large change with a PRD, and stops there. Also revises the PRD of an active change.
 
-- **Reads:** a harness plan if there is one; the relevant code and docs; the archive (`yass status --archived`) for earlier work; `yass status` for overlapping work.
+- **Reads:** a harness plan if there is one; the relevant code and docs; the archive (`yass status --archived`, `yass decisions --about …`) for earlier work; `yass status` for overlapping work.
 - **Runs:** `yass new "<title>" --large [--source …] [--follows …]`.
 - **Writes:** `prd.md` (why, users and outcomes, requirements `R1…`, non-goals, milestones, open questions); the Goal and `## Decisions` in `change.md`, crediting the human for choices made in their plan. A revision also records its reason in Decisions.
 - **Human gates:** picks among 2–3 scoping options for non-trivial problems, unless the plan already picked; shows the PRD and waits for a go-ahead before planning, *unless your team has told it otherwise*, or a fully autonomous run has put it in charge of approvals (it records that in Decisions). From an approved plan, it points out only what it added. Tells a human about revisions.
@@ -65,7 +65,7 @@ A one-screen report, then a list of what needs a human. Read-only.
 
 Reconstructs decisions from the files and git, and links them to code through `code:` citations. Read-only.
 
-- **Reads:** `## Decisions` in every yass folder `yass root` prints (in the repo, team folders, or wherever `yass.yaml` points) via `grep`; `git log` for when and who, `git log -S` for the commit that added a line, `git log -p` for how a PRD or plan changed; the commits boxes cite, from the code repo (date, author, subject, merged or not); Goal, PRD and Log for context. Can start from code instead: a file's or symbol's commits, searched for in the plans' `code:` citations.
+- **Reads:** `## Decisions` in every yass folder `yass root` prints (in the repo, team folders, or wherever `yass.yaml` points) via `yass decisions`, never by reading `archive/` directly; `git log` for when and who, `git log -S` for the commit that added a line, `git log -p` for how a PRD or plan changed; the commits boxes cite, from the code repo (date, author, subject, merged or not); Goal, PRD and Log for context. Can start from code instead: a file's or symbol's commits, searched for in the plans' `code:` citations.
 - **Reports:** newest first, grouped by change, with the cited code under each decision, citing file paths and commit shas (and which repo each sha is from). Flags decisions with no author, and moved goalposts: intent edits in the same commit as code when the plans are in the repo; acceptance criteria reworded or dropped after their code's box was marked `[x]` when they're in another folder.
 - **Plans in another folder:** runs git for the plans with `git -C <folder> … -- .` (the folder may share a repo) and for the code here. With no git history, dates decisions only approximately, from the Log headings around them, and says so.
 - **Never:** infers a decision that isn't written down; it says when the record is silent.

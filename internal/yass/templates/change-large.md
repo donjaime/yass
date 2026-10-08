@@ -12,7 +12,7 @@ created: {{created}}
 {{goal}}
 
 ## Decisions
-<!-- Progress. "- <decision> - <why> (<who>)" for calls that span the whole change. -->
+<!-- Progress. "- <decision> - <why> (<who>, <YYYY-MM-DD>)" for calls that span the whole change. -->
 
 ## Log
 <!-- Progress. Change-level notes; each piece keeps its own Log.
