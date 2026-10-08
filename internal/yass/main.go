@@ -34,7 +34,7 @@ usage: yass <command> [options]
   archive <change> [--force]            move a finished change to the archive
   evict                                 move the oldest archived months out of the working tree, into
                                         git history, where a yass folder is past its keep: setting
-  decisions [--since D] [--until D] [--about TEXT] [--change C] [--limit N] [--json]
+  decisions [--since D] [--until D] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]
                                         past decisions, active and archived, newest first
   root                                  print the yass folder(s) this repo uses
   paths [--only RANGE]                  the repo paths that are YASS's, as globs (for CI filters);
@@ -57,8 +57,8 @@ var specs = map[string]spec{
 	"new":     {[]string{"large", "design"}, []string{"in", "goal", "platforms", "source", "follows"}, 1, 1, `yass new "<title>" [--large] [--design] [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]`},
 	"status":  {[]string{"archived", "strict"}, nil, 0, 1, "yass status [<change>] [--archived] [--strict]"},
 	"archive": {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
-	"decisions": {[]string{"json"}, []string{"since", "until", "about", "change", "limit"}, 0, 0,
-		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--limit N] [--json]"},
+	"decisions": {[]string{"json"}, []string{"since", "until", "about", "change", "limit", "cites"}, 0, 0,
+		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]"},
 	"evict":    {nil, nil, 0, 0, "yass evict"},
 	"root":     {nil, nil, 0, 0, "yass root"},
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},

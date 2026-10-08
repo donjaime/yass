@@ -127,7 +127,7 @@ yass status [<change>]          what's in flight, progress, next steps, what's b
 yass archive <change>           move a finished change to archive/<YYYY>/<MM>/ (refuses while boxes are open)
 yass evict                      move the oldest archived months into git history, when past keep:
 yass decisions                  past decisions, active and archived, newest first, 50 at a time
-               [--since D] [--until D] [--about "words"] [--change <c>] [--limit N] [--json]
+               [--since D] [--until D] [--about "words"] [--change <c>] [--cites <sha>] [--limit N] [--json]
 yass root                       print the yass folder(s) this repo uses
 yass paths [--only A...B]       the repo paths that are YASS's, as globs; --only exits 0 for a
                                 plans-only commit range, so CI can skip builds and tests

@@ -14,7 +14,7 @@ A soft keep limit per yass folder, notes when it's passed, and yass evict removi
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC31–AC42, AC48 in [plan.md](../plan.md)
+- [x] Delivers AC31–AC42, AC48 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -26,7 +26,7 @@ A soft keep limit per yass folder, notes when it's passed, and yass evict removi
 - [x] Docs: `docs/monorepo.md` "Keeping the working tree small" (keep, evict, `.git` and partial clones, scheduled CI recipe); rule 5 in the templates, this repo's `yass/README.md`, `README.md`, `AGENTS.md` section
 - [x] go test (`TestArchiveKeep`); e2e section 33 (482 ok): notes, eviction, manifest, hook both ways, shallow clone, refusals, two branches merging, a squash merge
 - [x] `tests/bench.sh`: main 834ms, this branch 840ms on the same repo; the noise between runs is larger
-- [/] Jaime reviews the docs (AC42)
+- [x] Jaime reviews the docs (AC42)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -48,3 +48,6 @@ A soft keep limit per yass folder, notes when it's passed, and yass evict removi
 ### 2026-10-08 (claude)
 - Did: Jaime lowered the default `keep` to 2,000 after measuring (revision underneath this PR); constant and docs follow.
 - Next: Jaime reviews the docs (AC42).
+### 2026-10-08 (claude)
+- Did: Jaime reviewed the docs and merged it (#44, #45). The piece is done.
+- Next: none here.
