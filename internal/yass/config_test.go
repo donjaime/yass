@@ -59,3 +59,19 @@ func TestCanonResolvesMissingPathsThroughSymlinks(t *testing.T) {
 		t.Errorf("canon = %q, want %q", got, want)
 	}
 }
+
+func TestArchiveKeep(t *testing.T) {
+	dir := t.TempDir()
+	f := filepath.Join(dir, ConfigName)
+	os.WriteFile(f, []byte("archive:\n  keep: 3\n  kepp: 4\n"), 0o644)
+	c, unknown, err := loadConfig(f)
+	if err != nil || c.Archive.Keep != 3 || len(unknown) != 1 || unknown[0] != "archive.kepp" {
+		t.Fatalf("loadConfig = %+v, %v, %v", c, unknown, err)
+	}
+	if k := (&Root{Config: f}).keep(); k != 3 {
+		t.Fatalf("keep = %d, want 3", k)
+	}
+	if k := (&Root{}).keep(); k != DefaultKeep {
+		t.Fatalf("keep without a yass.yaml = %d, want %d", k, DefaultKeep)
+	}
+}

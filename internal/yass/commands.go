@@ -270,6 +270,7 @@ func cmdStatus(a *args) (int, error) {
 	if a.b["archived"] {
 		r.readArchived()
 	}
+	r.pastKeep()
 	if len(a.pos) > 0 {
 		c, err := r.resolve(a.pos[0], nil, a.b["archived"])
 		if err != nil {
@@ -290,8 +291,13 @@ func cmdStatus(a *args) (int, error) {
 			pool = r.Archived
 		}
 		var items []*Change
+		var evicted []*Change
 		for _, c := range pool {
-			if c.Root == root {
+			switch {
+			case c.Root != root:
+			case c.Evicted:
+				evicted = append(evicted, c)
+			default:
 				items = append(items, c)
 			}
 		}
@@ -339,6 +345,15 @@ func cmdStatus(a *args) (int, error) {
 		}
 		for _, row := range rows {
 			fmt.Println(strings.TrimRight(pad+padRight(row[0], w)+"  "+row[1], " "))
+		}
+		if len(evicted) > 0 {
+			seen := map[string]bool{}
+			for _, c := range evicted {
+				m := filepath.ToSlash(filepath.Dir(c.Path))
+				seen[m[len(m)-7:]] = true // <YYYY>/<MM>
+			}
+			months := sortedKeys(seen)
+			fmt.Printf("%s… and %d evicted, from %s (in git history; see their month's .evicted file)\n", pad, len(evicted), strings.Join(months, ", "))
 		}
 	}
 	if len(r.Roots) == 0 {
@@ -467,6 +482,10 @@ func cmdArchive(a *args) error {
 	}
 	git(c.Root.Dir, "add", "-A", "--", dest)
 	fmt.Printf("archived %s\n", r.disp(dest))
+	if n, k := r.kept(c.Root)+1, c.Root.keep(); n > k {
+		fmt.Printf("note: %s holds %d archived changes, %d past its keep of %d; `yass evict` moves its oldest months to git history\n",
+			r.disp(filepath.Join(c.Root.Dir, "archive")), n, n-k, k)
+	}
 	if q := filepath.Join(c.Root.Dir, QueueName); isFile(q) {
 		cur := read(q)
 		var keep []string

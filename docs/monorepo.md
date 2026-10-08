@@ -135,3 +135,48 @@ The hook checks commit by commit, so it can't see a pull request that will squas
 ## Big archives
 
 Each yass folder's `archive/` keeps finished changes in `<YYYY>/<MM>/` folders, by the month `yass archive` moved them, so no one folder grows without bound and GitHub can still list them all (it shows up to 1,000 entries in a folder). A team archiving more than about 1,000 changes a month in one yass folder should split it into team folders (`yass init <team folder>`): each team's archive then stays small on its own, and the repo's scales with them. A month that occasionally passes 1,000 is fine.
+
+### Keeping the working tree small
+
+A yass folder keeps up to 10,000 archived changes in its working tree. Past that, `yass status` and `yass archive` say so, and `yass evict` moves its oldest whole months out: it deletes each month's folder and leaves `archive/<YYYY>/<MM>.evicted`, a short file naming the month's changes and the commit that still has them. Commit that on its own. Nothing is lost: evicted changes still count for `follows:` and `blocked:`, `yass status --archived` lists how many were evicted and from which months, and `git show <commit>:<path>/<name>/change.md` reads one back. The limit is soft: going past it changes nothing until someone runs `yass evict`. Set it per yass folder in its `yass.yaml`:
+
+```yaml
+archive:
+  keep: 5000   # archived changes to keep in the working tree (default 10000)
+```
+
+Eviction keeps the working tree, GitHub's folder views and YASS's own commands small. It doesn't shrink `.git`: every evicted file is still in history, which is what lets you read it back. If clone size matters, use a partial clone (`git clone --filter=blob:none`), which fetches old files only when they're read, or keep the plans in a repo of their own ([`yass.yaml`'s `path:`](../README.md#keeping-plans-out-of-the-repo)).
+
+To never think about it, let CI evict on a schedule and open a pull request for someone to merge:
+
+```yaml
+name: yass evict
+on:
+  schedule: [{ cron: "0 6 * * 1" }]   # Mondays
+  workflow_dispatch:
+permissions: { contents: write, pull-requests: write }
+jobs:
+  evict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }   # eviction records the last commit that touched each month
+      - name: Install yass
+        run: |
+          v=vX.Y.Z   # pin a release that has `yass evict`
+          curl -fsSLO "https://github.com/donjaime/yass/releases/download/$v/yass_linux_amd64.tar.gz"
+          curl -fsSLO "https://github.com/donjaime/yass/releases/download/$v/checksums.txt"
+          grep yass_linux_amd64.tar.gz checksums.txt | sha256sum -c
+          tar -xzf yass_linux_amd64.tar.gz && echo "$PWD/yass_linux_amd64" >> "$GITHUB_PATH"
+      - name: Evict, and open a pull request if anything moved
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          yass evict
+          git diff --cached --quiet && exit 0
+          git switch -c "yass-evict-$(date +%Y-%m-%d)"
+          git -c user.name="yass evict" -c user.email="actions@users.noreply.github.com" commit -q -m "yass: evict archived months"
+          git push -u origin HEAD
+          gh pr create --fill
+```
+
+A pull request opened with `github.token` doesn't start other workflows; it needs only a plans-only check ([above](#plan-only-commits-run-no-ci)), or use a token of your own if your required checks must run on it.

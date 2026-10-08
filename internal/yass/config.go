@@ -25,9 +25,20 @@ type Config struct {
 	// Ignore lists folders, relative to the yass.yaml, whose yass folders and yass.yaml files belong
 	// to something else (examples, fixtures, vendored projects). From inside one, it's a project of its own.
 	Ignore []string `yaml:"ignore"`
+	// Archive holds the archive's settings.
+	Archive struct {
+		// Keep is how many archived changes (pieces count with their change) the yass folder's working
+		// tree should keep: a soft limit. Past it, yass status says to run yass evict. 0 means the default.
+		Keep int `yaml:"keep"`
+	} `yaml:"archive"`
 }
 
-var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true}
+// DefaultKeep is how many archived changes a yass folder keeps when its yass.yaml doesn't say.
+const DefaultKeep = 10000
+
+var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true, "archive": true}
+
+var knownArchiveSettings = map[string]bool{"keep": true}
 
 // loadConfig reads a yass.yaml. It also returns any settings this version doesn't know.
 func loadConfig(file string) (Config, []string, error) {
@@ -44,9 +55,16 @@ func loadConfig(file string) (Config, []string, error) {
 		return c, nil, fmt.Errorf("not valid YAML: %v", err)
 	}
 	var unknown []string
-	for k := range raw {
+	for k, v := range raw {
 		if !knownSettings[k] {
 			unknown = append(unknown, k)
+		}
+		if sub, ok := v.(map[string]any); ok && k == "archive" {
+			for sk := range sub {
+				if !knownArchiveSettings[sk] {
+					unknown = append(unknown, k+"."+sk)
+				}
+			}
 		}
 	}
 	sort.Strings(unknown)

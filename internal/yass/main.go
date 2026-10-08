@@ -32,6 +32,8 @@ usage: yass <command> [options]
   status [<change>] [--archived] [--strict]
                                         what's in flight, or one change in detail
   archive <change> [--force]            move a finished change to the archive
+  evict                                 move the oldest archived months out of the working tree, into
+                                        git history, where a yass folder is past its keep: setting
   decisions [--since D] [--until D] [--about TEXT] [--change C] [--limit N] [--json]
                                         past decisions, active and archived, newest first
   root                                  print the yass folder(s) this repo uses
@@ -57,6 +59,7 @@ var specs = map[string]spec{
 	"archive": {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
 	"decisions": {[]string{"json"}, []string{"since", "until", "about", "change", "limit"}, 0, 0,
 		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--limit N] [--json]"},
+	"evict":    {nil, nil, 0, 0, "yass evict"},
 	"root":     {nil, nil, 0, 0, "yass root"},
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
 	"template": {nil, nil, 1, 1, "yass template <change|change-large|prd|plan|design|readme|agents>"},
@@ -157,6 +160,8 @@ func Main(argv []string, version string) int {
 		code, err = cmdStatus(a)
 	case "archive":
 		err = cmdArchive(a)
+	case "evict":
+		err = cmdEvict(a)
 	case "decisions":
 		code, err = cmdDecisions(a)
 	case "root":

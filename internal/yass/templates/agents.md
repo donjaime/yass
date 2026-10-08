@@ -6,6 +6,6 @@ Planned work lives in the yass folder's `changes/`, one dated folder per change:
 - Intent (`prd.md`, `design.md`, plan text, a Goal, acceptance criteria, including dropping one with `[-]`) never changes in the same commit as code (with squash merges, the same pull request), so decisions can be reviewed apart from execution. If the plan is wrong mid-build, put the fix on its own branch underneath the code and rebase onto it (see `yass-work`), or stop and say so.
 - Don't commit, branch, rebase, push or open a pull request unless you've been given that latitude; otherwise show the human the git commands.
 - A plan from plan mode can become a change: `yass-shape` for large work, `yass-plan` or `yass-work` for small.
-- Never edit the archive (`archive/` in the yass folder). Follow-up work is a new change with `follows: <archived folder>`.
+- Never edit the archive (`archive/` in the yass folder); only `yass evict` removes from it. Follow-up work is a new change with `follows: <archived folder>`.
 - Finished means every box is checked; then `yass archive <change>`, in its own commit, apart from code (with squash merges, a pull request without code).
 <!-- yass:end -->
