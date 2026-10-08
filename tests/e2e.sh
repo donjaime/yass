@@ -475,6 +475,12 @@ has   "status finds an archived change in a month" "progress: 1/1  \(done\)" y s
 printf -- '- 2026-01-01-alpha\n' >> yass/queue.md
 has   "queue.md knows a monthly archive is archived" "'2026-01-01-alpha' is archived" y status
 rm -rf yass/queue.md yass/changes/2026-05-02-mixed yass/changes/2026-05-03-mixed2 yass/archive/2025-12-01-old
+chmod 000 "yass/archive/$MONTH/2026-01-01-alpha/change.md"
+mkb yass/changes/2026-05-04-after / "2026-01-01-alpha"; sub yass/changes/2026-05-04-after/change.md '^blocked:' 'follows: 2026-01-01-alpha\nblocked:'
+hasnt "status reads no archived files: unreadable ones don't matter" "warning|error|denied" y status
+hasnt "…and follows: and blocked: naming one still resolve" "after .*waiting" y status
+has   "status --archived says which it can't read" "2026-01-01-alpha/change.md: can't read it: permission denied" y status --archived
+chmod 644 "yass/archive/$MONTH/2026-01-01-alpha/change.md"; rm -rf yass/changes/2026-05-04-after
 mkb yass/changes/2026-05-01-free x "waiting on 2026-03-01-big and legal sign-off"
 has   "free text, even mentioning a change, is a reason" "2026-05-01-free .*BLOCKED: waiting on 2026-03-01-big and legal" y status
 run_fail "…and archive refuses" y archive free

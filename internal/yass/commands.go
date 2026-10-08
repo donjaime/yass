@@ -267,6 +267,9 @@ func statusLine(c *Change) string {
 
 func cmdStatus(a *args) (int, error) {
 	r := loadRepo()
+	if a.b["archived"] {
+		r.readArchived()
+	}
 	if len(a.pos) > 0 {
 		c, err := r.resolve(a.pos[0], nil, a.b["archived"])
 		if err != nil {
