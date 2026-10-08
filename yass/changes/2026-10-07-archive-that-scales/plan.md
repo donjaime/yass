@@ -34,8 +34,8 @@
 - [ ] AC11 (R21) Given the migration steps in the source, then each is one entry in a list with its own needed-check, and removing the archive step leaves the other steps and `yass upgrade` working — verify: go test (a step list without it runs clean)
 - [/] AC12 (R4, R1) Given a migration commit or an archive into a month, when it's committed with the hook on, then the hook passes it; and given an edit, deletion or other move under `archive/`, then the hook still flags it — verify: e2e
 - [ ] AC13 (R5) Given this repo's flat archive and Jaime's private plans folder, when `yass upgrade` built from this piece runs on them (at the version their files are stamped with, so it writes no files and only migrates), then every archived change is in its month with `archived:` set, `yass status --strict` passes, and each migration is committed on its own — verify: manual: run it on both, check `yass status --archived` and the commits
-- [/] AC14 (R19) Given a new `yass init`, then the yass folder README describes `archive/<YYYY>/<MM>/` — verify: e2e (the text); manual: review
-- [/] AC15 (R19, R24) Given `README.md` and `docs/monorepo.md`, then they show the monthly layout and the `archived:` field, and recommend that a yass folder archiving more than about 1,000 changes a month split into team folders — verify: manual: review
+- [x] AC14 (R19) Given a new `yass init`, then the yass folder README describes `archive/<YYYY>/<MM>/` — verify: e2e (the text); manual: review
+- [x] AC15 (R19, R24) Given `README.md` and `docs/monorepo.md`, then they show the monthly layout and the `archived:` field, and recommend that a yass folder archiving more than about 1,000 changes a month split into team folders — verify: manual: review
 
 ### M2
 - [ ] AC16 (R6) Given archived changes whose `change.md` is unreadable, when you run `yass status` (no `--archived`), then it succeeds without errors about them, and `follows:` and `blocked:` naming them still resolve — verify: e2e (`chmod 000` on archived `change.md` files)

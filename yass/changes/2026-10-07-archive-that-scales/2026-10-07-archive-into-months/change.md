@@ -14,7 +14,7 @@ yass archive stamps archived: and files changes under archive/<YYYY>/<MM>/; ever
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC1–AC6, AC14, AC15 in [plan.md](../plan.md)
+- [x] Delivers AC1–AC6, AC14, AC15 in [plan.md](../plan.md)
 - [x] The hook passes an archive into a month and still flags edits under `archive/` (AC12's archiving half)
 
 ## Steps
@@ -25,7 +25,7 @@ yass archive stamps archived: and files changes under archive/<YYYY>/<MM>/; ever
 - [x] Hook: an archived change's folder is under `<YYYY>/<MM>/` (`changeFolder`)
 - [x] e2e: archive paths by month; stamp, nothing else changed, earlier-month change, duplicate name, mixed layouts for `follows:`/`blocked:`/queue/status; unit tests for `setMeta`, `changeFolder`
 - [x] Yass folder README template, this repo's `yass/README.md`, `README.md`, `docs/monorepo.md` (Big archives)
-- [/] Jaime reviews the doc text (AC14, AC15)
+- [x] Jaime reviews the doc text (AC14, AC15)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -42,3 +42,6 @@ yass archive stamps archived: and files changes under archive/<YYYY>/<MM>/; ever
 ### 2026-10-07 (claude)
 - Did: built and tested the monthly layout: `yass archive` stamps and files by UTC month, every reader takes both layouts, the hook knows month folders; docs and templates describe it. `go test`, `tests/e2e.sh` (401 ok) and `tests/examples.sh` pass.
 - Next: Jaime reviews the doc text for AC14 and AC15; then this piece is done. AC12 completes with `migrations-in-upgrade`.
+### 2026-10-07 (claude)
+- Did: Jaime reviewed and merged it (#33, #34), doc text included; AC14 and AC15 done. The piece is done.
+- Next: none here; `migrations-in-upgrade`, `archive-names-only` and `yass-decisions` can start.
