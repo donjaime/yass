@@ -21,7 +21,7 @@ YASS should scale from a solo developer to teams of 100 or more, per yass folder
 Targets:
 - `yass status` stays under the existing 1s target (200 yass folders, 2,000 active changes) with 10,000 archived changes added, held there by `tests/bench.sh`.
 - No folder under `archive/` holds more than 1,000 entries at 10,000 archives a year. A month that occasionally passes 1,000 is acceptable; a yass folder that does so regularly should split into team folders.
-- With the default settings, a yass folder that evicts when YASS tells it to keeps about 10,000 archived changes in its working tree.
+- With the default settings, a yass folder that evicts when YASS tells it to keeps about 2,000 archived changes in its working tree.
 - A decisions query returns at most its limit (50 lines by default), whatever the archive's size, and says when it cut results off.
 - Two branches that each evict the same month merge without conflict.
 - A decisions query that doesn't reach an evicted month reads no git history.
@@ -41,7 +41,7 @@ Targets:
 - **R23** [M3] `yass decisions --json` gives the same results as JSON, with each date in its own field.
 - **R9** [M3] `yass decisions` filters by `--since` and `--until`, by text (`--about`), and by change (`--change`, which takes in the changes it follows and the changes that follow it), and stops at `--limit` (50 by default), saying how many it left out.
 - **R10** [M3] `yass-log` and `yass-shape` look up past decisions with `yass decisions` rather than reading `archive/` directly.
-- **R11** [M4] A yass folder's `yass.yaml` can set `archive: { keep: N }`, the number of top-level archived changes (pieces count with their change) its working tree should keep. It's a soft limit: going past it changes nothing until someone evicts. Unset, `keep` is 10,000.
+- **R11** [M4] A yass folder's `yass.yaml` can set `archive: { keep: N }`, the number of top-level archived changes (pieces count with their change) its working tree should keep. It's a soft limit: going past it changes nothing until someone evicts. Unset, `keep` is 2,000.
 - **R12** [M4] `yass evict` removes a yass folder's oldest whole months until it's at or under `keep`, says which months and how many changes it evicted, and prints how to commit that on its own. It never evicts the current month, and does nothing when the folder is under `keep`.
 - **R13** [M4] Each evicted month leaves `archive/<YYYY>/<MM>.evicted`, listing its changes and the commit that last touched that month's folder. Two branches that evict the same month from the same history write identical files.
 - **R14** [M4] When a yass folder is past `keep`, `yass status` and `yass archive` say so, by how much, and to run `yass evict`. Neither evicts anything itself.

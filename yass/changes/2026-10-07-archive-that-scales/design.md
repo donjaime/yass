@@ -48,7 +48,7 @@ changes:                       # top-level changes, by name, sorted
 - (b) `yass archive` evicts as needed, in the archive commit.
 - (c) A hard limit the hook enforces.
 
-**Decision: (a)** (Jaime, 2026-10-07; whole months from claude). Archive commits stay single-purpose, and eviction is a deliberate act by one person instead of a side effect any archive on any branch can trigger. (b) rewrites a manifest on nearly every archive at the limit, and (c) blocks commits over housekeeping. `yass evict` removes the oldest months until the count is at or under `keep`, never the current month, and only months with no uncommitted changes. It needs git in the yass folder: outside git, eviction would destroy data, so it refuses. `keep` counts top-level changes in the working tree, default 10,000 (claude, agreed by Jaime).
+**Decision: (a)** (Jaime, 2026-10-07; whole months from claude). Archive commits stay single-purpose, and eviction is a deliberate act by one person instead of a side effect any archive on any branch can trigger. (b) rewrites a manifest on nearly every archive at the limit, and (c) blocks commits over housekeeping. `yass evict` removes the oldest months until the count is at or under `keep`, never the current month, and only months with no uncommitted changes. It needs git in the yass folder: outside git, eviction would destroy data, so it refuses. `keep` counts top-level changes in the working tree, default 2,000 (Jaime, 2026-10-08, after measuring: see change.md Decisions).
 
 ## 5. How `yass upgrade` migrates
 **Options.**

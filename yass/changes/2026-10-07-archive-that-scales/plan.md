@@ -57,7 +57,7 @@
 - [x] AC30 (R10) Given `yass-log` asked why this repo's hook leaves existing hooks alone, then it finds the decision through `yass decisions` — verify: manual: ask it
 
 ### M4
-- [ ] AC31 (R11) Given `archive: { keep: 3 }` in a yass folder's `yass.yaml`, then that folder's limit is 3 and other folders keep 10,000; an unknown key under `archive:` warns like other unknown settings — verify: go test (config); e2e
+- [ ] AC31 (R11) Given `archive: { keep: 3 }` in a yass folder's `yass.yaml`, then that folder's limit is 3 and other folders keep 2,000; an unknown key under `archive:` warns like other unknown settings — verify: go test (config); e2e
 - [ ] AC32 (R14) Given a folder past `keep`, when you run `yass status` and `yass archive`, then each prints a note naming the folder, how far past it is, and `yass evict`; `yass status --strict` still exits 0; under `keep`, no note — verify: e2e
 - [ ] AC33 (R12) Given a folder 5 past `keep` whose oldest month holds 3 and next holds 4, when you run `yass evict`, then both months are deleted, the output names them with their counts, says to commit it on its own, and the current month is never touched — verify: e2e
 - [ ] AC34 (R12) Given a folder at or under `keep`, then `yass evict` changes nothing and says so — verify: e2e
