@@ -20,7 +20,7 @@ created: {{created}}
 - [ ] 
 
 ## Decisions
-<!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
+<!-- Progress. "- <decision> - <why> (<who>, <YYYY-MM-DD>)", appended as you go. -->
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:

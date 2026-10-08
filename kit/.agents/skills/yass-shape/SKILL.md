@@ -11,7 +11,7 @@ Shaping is a conversation. It's where a human decides what to build and why, so 
 
 ## A new large change
 1. **Start from what exists.** If this session already has a plan (from the harness's plan mode, or a plan file the human points you to), it's your first draft: carry over its problem, scope, decisions and open questions rather than asking again. Ask only about what the PRD needs and the plan doesn't say. Otherwise, understand the problem first: who it's for, what evidence says it matters, and what success looks like.
-   - Either way, read the relevant code and docs, check the archive (`yass status --archived`) for earlier work on the same thing, and `yass status` for anything in flight that overlaps.
+   - Either way, read the relevant code and docs, check the archive for earlier work on the same thing (`yass status --archived`, and `yass decisions --about "<words>"` for what was decided), and `yass status` for anything in flight that overlaps.
 2. **Frame options before requirements.** For a non-trivial problem, sketch 2–3 ways to scope it (appetite, rough solution, risks) and let a human pick. Skip this when the scope is already clear, or the human already picked one in their plan.
 3. **Create it:** `yass new "<title>" --large [--source <link>] [--follows <archived change>]`. Fill in `prd.md`:
    - **Why:** the problem, with evidence.
