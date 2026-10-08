@@ -3,6 +3,7 @@ platforms: [all]
 source: Jaime, 2026-10-04: installing the binary and setting up a repo are two steps that install.sh does as one, which confuses; noted while fixing the install docs (follows-up 2026-10-04-install-say-where-to-run-it-and-how-yass)
 follows: 
 blocked:
+archived: 2026-10-05T14:20:50Z
 ---
 # The binary carries the playbooks
 

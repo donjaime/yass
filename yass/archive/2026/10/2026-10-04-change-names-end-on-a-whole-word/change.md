@@ -3,6 +3,7 @@ platforms: [all]
 source: CI fixes on 2026-10-04: `yass new` cut "…compare through symlinks" to `…-compare-throu`, and a Log then quoted the wrong name
 follows: 
 blocked:
+archived: 2026-10-04T21:32:30Z
 ---
 # Change names end on a whole word
 

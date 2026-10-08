@@ -3,6 +3,7 @@ platforms: [all]
 source: Jaime, 2026-10-05: does the hook setup blow away existing git hooks? Make it safe and additive, or say how to wire it in
 follows: 
 blocked:
+archived: 2026-10-05T18:25:40Z
 ---
 # yass init --hooks leaves existing hooks alone
 

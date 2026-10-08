@@ -3,6 +3,7 @@ platforms: [all]
 source: 
 follows: 
 blocked:
+archived: 2026-10-04T02:42:02Z
 ---
 # Upgrades refresh what's installed
 

@@ -14,7 +14,7 @@ yass upgrade runs small, self-checking migration steps for every yass folder; th
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC7–AC11, AC13 in [plan.md](../plan.md)
+- [x] Delivers AC7–AC11, AC13 in [plan.md](../plan.md)
 - [x] The hook passes a migration move and still flags other moves under `archive/` (AC12's migrating half)
 
 ## Steps
@@ -25,7 +25,7 @@ yass upgrade runs small, self-checking migration steps for every yass folder; th
 - [x] go tests for the mechanism and an outside-git run; e2e for git dates, untracked changes, pieces, a plain outside folder, a separate plans repo, a second run, and the hook
 - [x] `examples/solo-app`'s archive moved into months, stamped with the story's dates; its README tree updated
 - [x] `README.md` and `docs/install.md` say what `yass upgrade` migrates and to upgrade binaries before committing it
-- [ ] AC13: run the released `yass upgrade` on this repo and on Jaime's private plans folder; commit each migration on its own
+- [x] AC13: `yass upgrade` built at 0.3.0 (the repo's stamp) wrote no files and migrated this repo (11 changes) and the private plans folder (2); each committed on its own, the hook passing; `yass status --strict` clean
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -43,3 +43,6 @@ yass upgrade runs small, self-checking migration steps for every yass folder; th
 - Did: built and tested migrations in `yass upgrade` and the archive-into-months step, with the hook accepting the move. `go test`, `tests/e2e.sh` (423 ok), `tests/examples.sh` pass.
 - Did: a test run from `examples/solo-app` with a dev build also migrated Jaime's private plans folder (it's included through the clone's `yass.include`). Nothing else was uncommitted there; I reset it to its last commit, so AC13 still runs with the release. Worth knowing: from inside an ignored example folder, a clone's private team folders still count as yass folders.
 - Next: after a release, AC13 (this repo and the private plans folder), then this piece is done.
+### 2026-10-07 (claude)
+- Did: AC13 with a local build, as Jaime revised it: this repo's archive in `yass: archive-into-months` (its own commit and PR), the private plans folder's in a local commit there (8e086e8, not pushed). Dates are the archive PRs' squash-merge times. The piece is done.
+- Next: none here. Anyone on an older `yass` should rebuild from main once this lands: older binaries don't read month folders.
