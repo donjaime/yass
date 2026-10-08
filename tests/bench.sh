@@ -12,7 +12,7 @@ if [ -z "${YASS_BIN:-}" ]; then
   mkdir -p "$W/bin"; (cd "$ROOT" && go build -o "$W/bin/yass" ./cmd/yass) || { echo "build failed"; exit 1; }
   YASS_BIN="$W/bin/yass"
 fi
-FOLDERS="${BENCH_FOLDERS:-200}" CHANGES="${BENCH_CHANGES:-2000}" FILES="${BENCH_FILES:-100000}" RUNS="${BENCH_RUNS:-5}"
+FOLDERS="${BENCH_FOLDERS:-200}" CHANGES="${BENCH_CHANGES:-2000}" ARCHIVED="${BENCH_ARCHIVED:-10000}" FILES="${BENCH_FILES:-100000}" RUNS="${BENCH_RUNS:-5}"
 fail=0
 
 # median wall time of RUNS runs of a command, in milliseconds, after one untimed warm-up run
@@ -31,7 +31,7 @@ check() { # name, measured ms, target ms
   if [ "$2" -lt "$3" ]; then echo "  ok   $1: ${2}ms (target < ${3}ms)"; else echo "  MISS $1: ${2}ms (target < ${3}ms)"; fail=1; fi; }
 newrepo() { mkdir -p "$1"; cd "$1"; git init -q -b main; git config user.email b@b; git config user.name Bench; }
 
-echo "status: $FOLDERS yass folders, $CHANGES changes"
+echo "status: $FOLDERS yass folders, $CHANGES changes, $ARCHIVED archived"
 newrepo "$W/bench/status"
 FOLDERS=$FOLDERS CHANGES=$CHANGES perl -e '
   my ($f, $c) = ($ENV{FOLDERS}, $ENV{CHANGES}); my $per = int($c / $f) || 1; my $n = 0;
@@ -45,6 +45,24 @@ FOLDERS=$FOLDERS CHANGES=$CHANGES perl -e '
       print $o "- [", ($_ % 3 ? " " : "x"), "] Given $_, when $_, then $_ - verify: test $_\n" for 1..8;
       print $o "\n## Steps\n", map("- [/] step $_\n", 1..4), "\n## Decisions\n- chose a - because b (bench)\n\n## Log\n### 2026-10-01 (bench)\n- Did: things\n- Next: more things\n";
     }
+  }'
+# Archived changes, spread over the folders and over months, as yass archive files them; some
+# active changes follow one, so names are resolved across the archive.
+FOLDERS=$FOLDERS ARCHIVED=$ARCHIVED perl -MFile::Path=make_path -e '
+  my ($f, $c) = ($ENV{FOLDERS}, $ENV{ARCHIVED}); my $per = int($c / $f) || 1; my $n = 0;
+  for my $i (1..$f) {
+    my $y = sprintf("teams/t%03d/yass", $i);
+    for my $j (1..$per) {
+      last if $n++ >= $c;
+      my $m = ($j % 12) + 1;
+      my $d = sprintf("%s/archive/2025/%02d/2025-%02d-%02d-done-%d", $y, $m, $m, ($j % 28) + 1, $j);
+      make_path($d); open my $o, ">", "$d/change.md" or die;
+      printf $o "---\nplatforms: [all]\nsource:\nfollows:\nblocked:\narchived: 2025-%02d-28T12:00:00Z\n---\n# Done %d.%d\n\n## Goal\nDid the thing.\n\n## Acceptance\n", $m, $i, $j;
+      print $o "- [x] Given $_, when $_, then $_ - verify: test $_\n" for 1..8;
+      print $o "\n## Decisions\n- chose a - because b (bench)\n\n## Log\n### 2025-01-01 (bench)\n- Did: things\n";
+    }
+    my $first = sprintf("%s/changes/2026-02-02-change-1/change.md", $y);
+    if (-f $first) { local @ARGV = ($first); local $^I = ""; while (<>) { s/^follows:\s*$/follows: 2025-02-02-done-1/; print } }
   }'
 mkdir -p yass/changes yass/archive; touch yass/changes/.gitkeep
 git add -A >/dev/null; git commit -q -m "bench: plans"

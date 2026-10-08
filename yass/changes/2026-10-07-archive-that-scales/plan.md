@@ -38,9 +38,9 @@
 - [x] AC15 (R19, R24) Given `README.md` and `docs/monorepo.md`, then they show the monthly layout and the `archived:` field, and recommend that a yass folder archiving more than about 1,000 changes a month split into team folders — verify: manual: review
 
 ### M2
-- [ ] AC16 (R6) Given archived changes whose `change.md` is unreadable, when you run `yass status` (no `--archived`), then it succeeds without errors about them, and `follows:` and `blocked:` naming them still resolve — verify: e2e (`chmod 000` on archived `change.md` files)
-- [ ] AC17 (R6) Given the same setup, when you run `yass status --archived`, then it reports the unreadable ones — verify: e2e
-- [ ] AC18 (R7) Given `tests/bench.sh`'s repo with 200 yass folders, 2,000 active changes and 10,000 archived changes across months, then `yass status` stays under 1s — verify: `tests/bench.sh`
+- [x] AC16 (R6) Given archived changes whose `change.md` is unreadable, when you run `yass status` (no `--archived`), then it succeeds without errors about them, and `follows:` and `blocked:` naming them still resolve — verify: e2e (`chmod 000` on archived `change.md` files)
+- [x] AC17 (R6) Given the same setup, when you run `yass status --archived`, then it reports the unreadable ones — verify: e2e
+- [x] AC18 (R7) Given `tests/bench.sh`'s repo with 200 yass folders, 2,000 active changes and 10,000 archived changes across months, then `yass status` stays under 1s — verify: `tests/bench.sh`
 
 ### M3
 - [ ] AC19 (R8) Given active and archived changes in two yass folders with `## Decisions` entries, when you run `yass decisions`, then each entry prints once on its own line with its change, who, the decision, its own date if it has one, and the change's `created:` and `archived:` dates — verify: e2e

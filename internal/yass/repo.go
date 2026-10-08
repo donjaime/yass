@@ -1,6 +1,7 @@
 package yass
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -127,7 +128,21 @@ type Change struct {
 }
 
 func newChange(p string, root *Root, parent *Change) *Change {
-	c := &Change{Path: p, Root: root, Parent: parent, Name: filepath.Base(p)}
+	c := nameOnly(p, root, parent)
+	c.read()
+	return c
+}
+
+// nameOnly is a change known by its folder alone, its files unread: how archived changes load, so
+// commands that only need their names (follows:, blocked:, the queue) stay fast however big the
+// archive gets. readArchived reads them when a command shows what's in them.
+func nameOnly(p string, root *Root, parent *Change) *Change {
+	name := filepath.Base(p)
+	return &Change{Path: p, Root: root, Parent: parent, Name: name, Title: name, Meta: map[string]string{}}
+}
+
+func (c *Change) read() {
+	p := c.Path
 	c.Head = readText(filepath.Join(p, "change.md"))
 	var body string
 	c.Meta, body = frontmatter(c.Head)
@@ -136,7 +151,28 @@ func newChange(p string, root *Root, parent *Change) *Change {
 		c.Title = strings.TrimSpace(m[1])
 	}
 	c.Large = exists(filepath.Join(p, "prd.md")) || exists(filepath.Join(p, "plan.md"))
-	return c
+}
+
+// readArchived reads the archived changes' files, for commands that show what's in them, and
+// warns about any it can't read.
+func (r *Repo) readArchived() {
+	r.archivedPieces()
+	for _, c := range flatten(r.Archived) {
+		head := filepath.Join(c.Path, "change.md")
+		if _, err := os.ReadFile(head); err != nil && !os.IsNotExist(err) {
+			r.warn("%s: can't read it: %v", r.disp(head), errors.Unwrap(err))
+		}
+		c.read()
+		if t := c.Meta["archived"]; t != "" && c.Parent == nil {
+			if _, err := time.Parse(time.RFC3339, t); err != nil {
+				r.warn("%s: archived '%s' isn't a time like 2026-10-05T14:32:07Z", r.disp(c.Path), t)
+			}
+		}
+	}
+	for _, c := range r.Archived {
+		byCreated(c.Pieces)
+	}
+	byCreated(r.Archived)
 }
 
 func mdFiles(dir string) []string {
@@ -294,6 +330,7 @@ type Repo struct {
 	Notes            []string // worth knowing, but not a problem: they don't fail --strict
 	Linked           bool     // a yass.yaml's folder wasn't found from this linked worktree
 	Active, Archived []*Change
+	piecesFound      bool // whether archivedPieces has run
 }
 
 // findRepo finds the repo and its yass folders, without reading any changes.
@@ -569,13 +606,20 @@ func archiveDir(root *Root, name string, t time.Time) string {
 	return filepath.Join(root.Dir, "archive", t.Format("2006"), t.Format("01"), name)
 }
 
+// load reads a yass folder's active changes and their pieces, or, for the archive, only the names
+// of its changes: their pieces are found when a name needs them (archivedPieces).
 func (r *Repo) load(root *Root, kind string, warn bool) []*Change {
 	base := filepath.Join(root.Dir, kind)
 	var out []*Change
 	for _, p := range changeDirs(base, kind == "archive") {
 		name := filepath.Base(p)
+		if kind == "archive" {
+			c := nameOnly(p, root, nil)
+			c.Archived = true
+			out = append(out, c)
+			continue
+		}
 		c := newChange(p, root, nil)
-		c.Archived = kind == "archive"
 		out = append(out, c)
 		if warn && c.Head == "" {
 			r.warn("%s: no change.md", r.disp(p))
@@ -588,9 +632,7 @@ func (r *Repo) load(root *Root, kind string, warn bool) []*Change {
 			if !isFile(filepath.Join(sp, "change.md")) {
 				continue
 			}
-			piece := newChange(sp, root, c)
-			piece.Archived = c.Archived
-			c.Pieces = append(c.Pieces, piece)
+			c.Pieces = append(c.Pieces, newChange(sp, root, c))
 			if !warn {
 				continue
 			}
@@ -607,28 +649,49 @@ func (r *Repo) load(root *Root, kind string, warn bool) []*Change {
 	return out
 }
 
-func (r *Repo) check() {
-	known := map[string]bool{}
-	for _, c := range append(append([]*Change{}, r.Active...), r.Archived...) {
-		known[c.Name] = true
-		for _, p := range c.Pieces {
-			known[p.Name] = true
+// archivedPieces finds the pieces of archived changes, by name, the first time a name isn't an
+// archived change itself: it opens every archived change's folder, which plain status never needs.
+func (r *Repo) archivedPieces() {
+	if r.piecesFound {
+		return
+	}
+	r.piecesFound = true
+	for _, c := range r.Archived {
+		for _, sub := range subdirs(c.Path) {
+			if sp := filepath.Join(c.Path, sub); isFile(filepath.Join(sp, "change.md")) {
+				piece := nameOnly(sp, c.Root, c)
+				piece.Archived = true
+				c.Pieces = append(c.Pieces, piece)
+			}
 		}
 	}
+}
+
+func (r *Repo) check() {
+	known := map[string]bool{}
+	addKnown := func() {
+		for _, c := range append(append([]*Change{}, r.Active...), r.Archived...) {
+			known[c.Name] = true
+			for _, p := range c.Pieces {
+				known[p.Name] = true
+			}
+		}
+	}
+	addKnown()
+	isKnown := func(name string) bool {
+		if !known[name] && !r.piecesFound {
+			r.archivedPieces()
+			addKnown()
+		}
+		return known[name]
+	}
 	for _, c := range r.everything() {
-		if f := c.Meta["follows"]; f != "" && !known[path.Base(strings.TrimRight(f, "/"))] {
+		if f := c.Meta["follows"]; f != "" && !isKnown(path.Base(strings.TrimRight(f, "/"))) {
 			r.warn("%s: follows '%s', which isn't in changes/ or archive/", r.disp(c.Path), f)
 		}
 		if t := c.Meta["created"]; t != "" {
 			if _, err := time.Parse(time.RFC3339, t); err != nil {
 				r.warn("%s: created '%s' isn't a time like 2026-10-05T14:32:07Z", r.disp(c.Path), t)
-			}
-		}
-	}
-	for _, c := range r.Archived {
-		if t := c.Meta["archived"]; t != "" {
-			if _, err := time.Parse(time.RFC3339, t); err != nil {
-				r.warn("%s: archived '%s' isn't a time like 2026-10-05T14:32:07Z", r.disp(c.Path), t)
 			}
 		}
 	}
@@ -643,6 +706,10 @@ func (r *Repo) check() {
 func (r *Repo) checkDeps() {
 	all := append(flatten(r.Active), flatten(r.Archived)...)
 	find := func(item string) *Change {
+		if !r.piecesFound && !r.hasName(all, path.Base(item)) {
+			r.archivedPieces()
+			all = append(flatten(r.Active), flatten(r.Archived)...)
+		}
 		// By folder name, so a path keeps working after its change is archived; the path only
 		// picks between changes that share a name.
 		var hits, exact []*Change
@@ -826,6 +893,15 @@ func (r *Repo) mergedBranch(root *Root) string {
 // everything is the active changes and their pieces.
 func (r *Repo) everything() []*Change { return flatten(r.Active) }
 
+func (r *Repo) hasName(cs []*Change, name string) bool {
+	for _, c := range cs {
+		if c.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
 func flatten(changes []*Change) []*Change {
 	var out []*Change
 	for _, c := range changes {
@@ -842,6 +918,7 @@ func (r *Repo) resolve(token string, pool []*Change, archived bool) (*Change, er
 	if pool == nil {
 		pool = r.everything()
 		if archived {
+			r.archivedPieces()
 			pool, kind, hint = flatten(r.Archived), "archived", "yass status --archived"
 		}
 	}
