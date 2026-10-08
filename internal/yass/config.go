@@ -34,7 +34,7 @@ type Config struct {
 }
 
 // DefaultKeep is how many archived changes a yass folder keeps when its yass.yaml doesn't say.
-const DefaultKeep = 10000
+const DefaultKeep = 2000
 
 var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true, "archive": true}
 

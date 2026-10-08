@@ -138,11 +138,11 @@ Each yass folder's `archive/` keeps finished changes in `<YYYY>/<MM>/` folders, 
 
 ### Keeping the working tree small
 
-A yass folder keeps up to 10,000 archived changes in its working tree. Past that, `yass status` and `yass archive` say so, and `yass evict` moves its oldest whole months out: it deletes each month's folder and leaves `archive/<YYYY>/<MM>.evicted`, a short file naming the month's changes and the commit that still has them. Commit that on its own. Nothing is lost: evicted changes still count for `follows:` and `blocked:`, `yass status --archived` lists how many were evicted and from which months, and `git show <commit>:<path>/<name>/change.md` reads one back. The limit is soft: going past it changes nothing until someone runs `yass evict`. Set it per yass folder in its `yass.yaml`:
+A yass folder keeps up to 2,000 archived changes in its working tree: each one adds a little to every `yass status` (git walks its folders, about +170ms at 2,000) and about 10KB to every checkout, and a monorepo's yass folders add up. That's about a year for a 10-person team. Past that, `yass status` and `yass archive` say so, and `yass evict` moves its oldest whole months out: it deletes each month's folder and leaves `archive/<YYYY>/<MM>.evicted`, a short file naming the month's changes and the commit that still has them. Commit that on its own. Nothing is lost: evicted changes still count for `follows:` and `blocked:`, `yass status --archived` lists how many were evicted and from which months, and `git show <commit>:<path>/<name>/change.md` reads one back. The limit is soft: going past it changes nothing until someone runs `yass evict`. Set it per yass folder in its `yass.yaml`:
 
 ```yaml
 archive:
-  keep: 5000   # archived changes to keep in the working tree (default 10000)
+  keep: 1000   # archived changes to keep in the working tree (default 2000)
 ```
 
 Eviction keeps the working tree, GitHub's folder views and YASS's own commands small. It doesn't shrink `.git`: every evicted file is still in history, which is what lets you read it back. If clone size matters, use a partial clone (`git clone --filter=blob:none`), which fetches old files only when they're read, or keep the plans in a repo of their own ([`yass.yaml`'s `path:`](../README.md#keeping-plans-out-of-the-repo)).

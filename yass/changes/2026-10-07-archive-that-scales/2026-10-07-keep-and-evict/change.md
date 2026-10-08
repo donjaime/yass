@@ -18,7 +18,7 @@ A soft keep limit per yass folder, notes when it's passed, and yass evict removi
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
-- [x] `yass.yaml` `archive: { keep: N }` (default 10,000), unknown keys under it warn; `Root.keep()`
+- [x] `yass.yaml` `archive: { keep: N }` (default 2,000, after the revision), unknown keys under it warn; `Root.keep()`
 - [x] `.evicted` manifests read at load: evicted changes resolve by name (`Change.Evicted`), never read from disk
 - [x] Notes past `keep` in `yass status` and `yass archive`; `status --archived` lists the tree and summarizes what's evicted
 - [x] `yass evict` (`evict.go`): plans every month first and refuses before changing anything (outside git, uncommitted or never-committed months); oldest whole months until at or under `keep`, never this month; `git rm`, write the manifest, stage it, print the commit
@@ -45,3 +45,6 @@ A soft keep limit per yass folder, notes when it's passed, and yass evict removi
 - Did: built and tested `keep`, `yass evict` and its manifests, the hook's eviction rule, notes and docs. `go test`, `tests/e2e.sh` (482 ok), `tests/examples.sh`, `tests/bench.sh` pass.
 - Did: fixed a marking slip from piece 1: AC1's `[x]` had landed on the commented-out example at the top of plan.md's Acceptance, not on AC1 itself.
 - Next: Jaime reviews the docs (AC42); then this piece is done and `decisions-from-history` can start.
+### 2026-10-08 (claude)
+- Did: Jaime lowered the default `keep` to 2,000 after measuring (revision underneath this PR); constant and docs follow.
+- Next: Jaime reviews the docs (AC42).
