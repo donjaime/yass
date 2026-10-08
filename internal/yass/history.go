@@ -158,5 +158,5 @@ func monthEnd(m string) string { return strings.Replace(m, "/", "-", 1) + "-31" 
 // missingNote says which evicted months a query couldn't read, and how to get them.
 func missingNote(missing []string) string {
 	return fmt.Sprintf("couldn't read %s: evicted, and their commit isn't in this clone (`git fetch --unshallow` gets it)",
-		strings.Join(missing, ", "))
+		strings.Join(sortedCopy(missing), ", "))
 }

@@ -39,3 +39,5 @@ yass decisions reads evicted months from git, only when a query reaches them, an
 ### 2026-10-08 (claude)
 - Did: built and tested reading evicted months from git and `--cites`, and switched `yass-log` to it. `go test`, `tests/e2e.sh` (503 ok), `tests/examples.sh` pass. The piece is done, and so is the change.
 - Next: `yass archive 2026-10-07-archive-that-scales`, in its own pull request.
+### 2026-10-08 (claude)
+- Did: fixed CI on Linux: the note naming unreadable months listed them in Go's random map order (2025/02 before 2025/01); months are now read and named oldest first.

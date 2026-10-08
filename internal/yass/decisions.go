@@ -178,6 +178,9 @@ func cmdDecisions(a *args) (int, error) {
 				}
 			}
 		}
+		for root := range want {
+			sort.Strings(want[root]) // oldest month first, whatever order the map gave
+		}
 		if len(want) > 0 {
 			missing = append(missing, r.readEvicted(want)...)
 			all = append(r.everything(), flatten(r.Archived)...)
