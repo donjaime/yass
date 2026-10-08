@@ -3,6 +3,7 @@ platforms: [ios, android, web]
 source:
 follows:
 blocked:
+archived: 2026-09-12T17:20:00Z
 ---
 # Mood logging
 

@@ -3,6 +3,7 @@ platforms: [web]
 source: gh#29
 follows: 2026-08-03-mood-logging
 blocked:
+archived: 2026-09-08T16:05:00Z
 ---
 # Fix History sort on the web
 
