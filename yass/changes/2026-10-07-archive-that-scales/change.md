@@ -9,7 +9,7 @@ created: 2026-10-07T16:51:19Z
 
 ## Goal
 <!-- Intent. One paragraph; the detail is in prd.md (why and what) and plan.md (how and acceptance). -->
-The archive stays manageable however big a team gets. Archived changes are dated and kept in month folders that GitHub can browse. The CLI reads only their names unless it needs more. Agents ask `yass decisions` for past decisions and get bounded answers instead of grepping everything. Each yass folder has a soft limit on archived changes in its working tree (10,000 by default); past it, YASS says so, and `yass evict` moves the oldest months out to git history, with a small manifest saying where to find them, so a query reaches into history only when it has to.
+The archive stays manageable however big a team gets. Archived changes are dated and kept in month folders that GitHub can browse. The CLI reads only their names unless it needs more. Agents ask `yass decisions` for past decisions and get bounded answers instead of grepping everything. Each yass folder has a soft limit on archived changes in its working tree (2,000 by default); past it, YASS says so, and `yass evict` moves the oldest months out to git history, with a small manifest saying where to find them, so a query reaches into history only when it has to.
 
 
 ## Decisions
@@ -33,6 +33,7 @@ The archive stays manageable however big a team gets. Archived changes are dated
 - Rule 5's eviction wording moves from AC14 (piece 1) to a new AC48 (piece 5) - piece 1 would otherwise tell users about `yass evict` releases before it exists; same bar, later piece (claude, 2026-10-07)
 - AC13 runs the migration on this repo and the private plans folder with a local build of `yass upgrade`, at the version the files are stamped with, instead of waiting for a release - same code, checked sooner, and the build writes no stamp for a version that doesn't exist (Jaime, 2026-10-07)
 - `yass-log` keeps consulting the archive, but through `yass`: a `--cites <sha>` search joins piece 6 (R25, AC49, AC50), and AC29 moves there with it - once months can be evicted, a grep of the working tree would miss evicted changes and report a commit as unlinked; one way into the archive keeps layout changes out of the playbooks (Jaime, 2026-10-07)
+- The default `keep` drops from 10,000 to 2,000 - measured, each archived change adds about 45µs to every `yass status` (git walks its folders: +170ms at 2,000, +460ms at 10,000) and about 10KB to every checkout; `keep` is per yass folder, so a monorepo's folders add up. 2,000 keeps about a year for a 10-person team, and `yass decisions` reaches evicted months (piece 6) (Jaime, 2026-10-08)
 - One large change with five milestones - each milestone helps on its own, so eviction can wait if nobody needs it yet (Jaime)
 
 ## Log
