@@ -20,6 +20,7 @@ Getting a newer `yass` is one command, and agents can do the whole upgrade. `yas
 - Inside a repo newer than the binary, install the repo's version, and say when a newer release exists, how to get it (`--latest`), and the `yass upgrade` and commit that follow; otherwise the latest - teammates match the repo instead of jumping ahead of it, and still learn what's out there (Jaime, 2026-10-08)
 - `yass update --check` only reports: it exits 0 whenever the check succeeds, update available or not - a non-zero code reads as failure to agents and `set -e` scripts, and nothing needs scripts to act on it yet; an opt-in flag (`--exit-code`, or `--json`) can come later (Jaime, 2026-10-08)
 - PRD approved (Jaime, 2026-10-08)
+- Plan: three pieces (decide, install, point agents at it); release builds carry a `main.channel=release` marker; versions from the `releases/latest` redirect, not the API; swap by rename in the binary's folder (aside on Windows); `YASS_RELEASES_URL` as an undocumented test seam (claude, 2026-10-08)
 - Medium scope: `--check`, the version and verification calls above, source builds left alone with the right command, Windows, a `yass-update` playbook and pointers from `yass status`; no mirrors, Homebrew or in-binary Sigstore (Jaime, 2026-10-08)
 
 ## Log
