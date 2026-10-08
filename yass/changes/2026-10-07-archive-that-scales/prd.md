@@ -49,6 +49,7 @@ Targets:
 - **R16** [M4] `yass status --archived` says how many changes are evicted, and from which months, rather than listing them.
 - **R17** [M5] `yass decisions` reads evicted changes from git, using the commit in their month's `.evicted` file, only when a query's dates or `--change` reach an evicted month.
 - **R18** [M5] When an evicted month's commit is missing (a shallow clone), `yass decisions` returns what it could read, names the months it couldn't, and prints the git command that would fetch them.
+- **R25** [M5] `yass decisions --cites <sha>` lists the boxes in active and archived changes, evicted ones included, that cite a commit (`code: <sha>`), with their change, so finding the decision behind a piece of code doesn't mean reading `archive/` directly.
 - **R19** [M1] The yass folder README and AGENTS.md templates describe the monthly layout, and rule 5 says the archive is append-only except for eviction by `yass evict`.
 - **R20** [M4] The docs explain `keep` and eviction, and say that eviction bounds the working tree but not `.git`: a team that needs smaller clones uses partial clones or keeps its plans in another repo. The CI recipes show a scheduled job that runs `yass evict` and opens a PR with the result, for teams that never want to think about it.
 - **R24** [M1] The docs recommend that a yass folder archiving more than about 1,000 changes a month split into team folders. A month folder occasionally passing 1,000 entries is fine.
@@ -73,7 +74,7 @@ Targets:
 | M2 | run `yass status` as fast with 10,000 archived changes as with none |
 | M3 | ask `yass decisions` (or an agent using it) why something was decided, and get a bounded answer however big the archive is |
 | M4 | cap how many archived changes a yass folder keeps in its working tree, with a sensible default nobody needs to touch |
-| M5 | still get answers about evicted changes, from git, without slowing down queries that don't need them |
+| M5 | still get answers about evicted changes, from git, without slowing down queries that don't need them, including which change cites a commit |
 
 ## Open questions
 - None yet.

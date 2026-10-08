@@ -14,7 +14,7 @@ yass decisions reads evicted months from git, only when a query reaches them, an
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC43–AC47 in [plan.md](../plan.md)
+- [ ] Delivers AC43–AC47, AC49, AC50, AC29 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->

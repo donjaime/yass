@@ -14,7 +14,7 @@ yass decisions lists dated decisions across active and archived changes, filtere
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC19–AC30 in [plan.md](../plan.md)
+- [x] Delivers AC19–AC28, AC30 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -23,13 +23,14 @@ yass decisions lists dated decisions across active and archived changes, filtere
 - [x] Change templates, the `AGENTS.md` section and `yass-work` ask for `(<who>, <YYYY-MM-DD>)`; `README.md` shows it and lists the command
 - [x] `yass-log` and `yass-shape` (and `docs/skills.md`) look decisions up with `yass decisions`
 - [x] go test (`TestParseEntry`), e2e section 32 (two yass folders, a piece, an archived change, a follows chain, JSON, templates)
-- [/] AC29: `yass-log`'s "starting from code" step still greps every yass folder, archive included, for a commit sha in `code:` citations; Jaime to decide (see Log)
+- [-] AC29: moved to `decisions-from-history` with a `--cites` search
 - [x] AC30: in a scratch copy upgraded with a local 0.4.0 build, following the refreshed `yass-log`: `yass decisions --about "existing hooks"` finds the decisions, and `git log --follow` across the migration names #16
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
 - Decisions are newest first by their own date, else their change's archived date, else its created date; ties keep file order - "why did we…" is usually about recent calls, and an undated entry is placed as well as the record allows (claude, 2026-10-07)
 - `yass decisions` prints only warnings about files it couldn't read, to stderr - its stdout may be JSON, and the repo's other warnings belong to `yass status` (claude, 2026-10-07)
+- The AC29 step is dropped here: Jaime chose a `--cites` search, built with reading evicted months in `decisions-from-history`, and AC29 moved there (claude, 2026-10-07)
 - Text lines have the entry's own date first (blank when it has none), then the change, the decision, who, and the change's dates in brackets - one line per entry, as AC19 asks, with the date where scanning eyes look first (claude, 2026-10-07)
 
 ## Log
@@ -44,3 +45,6 @@ yass decisions lists dated decisions across active and archived changes, filtere
 ### 2026-10-07 (claude)
 - Did: a release dry run with local builds. A repo set up and archived with v0.3.0, upgraded with 0.4.0: files restamped, its flat archive migrated, both committed without hook warnings, a new archive filed by month, `yass decisions` reads it. A teammate still on 0.3.0 gets the "upgrade your binary" note and archives flat, which the next `yass upgrade` moves. A scratch copy of this repo upgraded cleanly too (12 files, nothing left to migrate), which gave AC30.
 - Next: AC29, which Jaime is deciding (a `--cites` search in `decisions-from-history`, or narrowing AC29).
+### 2026-10-07 (claude)
+- Did: Jaime chose `--cites` for AC29; the plan revision moves it to `decisions-from-history`. Everything this piece delivers is done.
+- Next: none here.
