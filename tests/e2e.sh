@@ -972,5 +972,41 @@ git switch -q main; git merge -q --squash three >/dev/null; git commit -q -m "ya
 S1=$(sed -n 's/^commit: //p' yass/archive/2025/01.evicted)
 run_ok "after a squash merge, the manifest's commit is still on main" git merge-base --is-ancestor "$S1" main
 
+echo "34. decisions from evicted months, and --cites"
+newrepo "$W/e2e/history"; y init >/dev/null; printf 'archive:\n  keep: 1\n' > yass.yaml
+CODE=$(git rev-parse HEAD); C7=${CODE:0:7}
+# mkh <dir> <archived> <follows> <decision> [box]
+mkh() { mkdir -p "$1"; printf -- '---\narchived: %s\nfollows: %s\n---\n# %s\n\n## Steps\n- [x] %s\n\n## Decisions\n- %s\n' "$2" "$3" "$(basename "$1")" "${5:-Done}" "$4" > "$1/change.md"; }
+mkh yass/archive/2025/01/2025-01-02-jan-root 2025-01-20T00:00:00Z "" "Jan call (ann, 2025-01-10)" "Built it — code: $C7"
+mkh yass/archive/2025/01/2025-01-02-jan-root/2025-01-03-jan-piece 2025-01-20T00:00:00Z "" "Jan piece call (ap, 2025-01-11)"
+mkh yass/archive/2025/02/2025-02-02-feb-next 2025-02-20T00:00:00Z 2025-01-02-jan-root "Feb call (bo, 2025-02-10)"
+mkh "yass/archive/$NOWM/$TODAY-now-done" "${TODAY}T00:00:00Z" "" "Now call (cy, $TODAY)" "Cited too — code: $CODE"
+git add -A; git commit -q -m "yass: archives"; y evict >/dev/null; git commit -q -m "yass: evict" -- yass/archive
+mkh yass/changes/2026-06-01-active "" 2025-02-02-feb-next "Active call (dy, 2026-06-02)" "Cites it — code: $C7"
+sub yass/changes/2026-06-01-active/change.md '^archived: \n' ''
+git add -A; git commit -q -m "yass: active"
+[ ! -e yass/archive/2025/01 ] && ok "(set up: January and February are evicted)" || bad "setup: not evicted"
+has   "--since reaching evicted months reads them from git" "^2025-01-10  2025-01-02-jan-root  Jan call \(ann\)  \[created 2025-01-02, archived 2025-01-20\]$" y decisions --since 2025-01-01
+has   "…pieces too" "^2025-01-11  2025-01-02-jan-root/2025-01-03-jan-piece  Jan piece call" y decisions --since 2025-01-01
+has   "--change follows the chain into evicted months, with pieces" "^active,next,piece,root$" bash -c 'yass decisions --change 2026-06-01-active | sed -E "s/^.{12}[^ ]*-([a-z]+)  .*/\1/" | paste -sd, -'
+has   "--change naming an evicted change works" "Feb call" y decisions --change 2025-02-02-feb-next
+has   "a plain query that's filled by the tree doesn't need them" "^$TODAY  $TODAY-now-done  Now call" y decisions --limit 1
+has   "…one that isn't, does" "Jan call" y decisions
+has   "--cites finds boxes citing a commit: active, archived and evicted, by short or long hash" "^2025-01-02-jan-root,2026-06-01-active,${TODAY}-now-done$" bash -c "yass decisions --cites $C7 | cut -d' ' -f1 | sort | paste -sd, -"
+has   "…the same by its full hash" "jan-root" y decisions --cites "$CODE"
+has   "…and says which file and box" "^2026-06-01-active  change.md  \[x\] Cites it — code: $C7$" y decisions --cites "$C7"
+has   "a commit nobody cites" "^no box cites 0000000$" y decisions --cites 0000000
+run_fail "--cites wants a hash" y decisions --cites nothex
+has   "--cites --json" '"file": "change.md",' y decisions --cites "$C7" --json
+SH="$W/e2e/history-shallow"; rm -rf "$SH"; git clone -q --depth 1 "file://$PWD" "$SH"
+hasnt "shallow clone: a query that doesn't reach evicted months reads no history" "couldn't read" bash -c "cd '$SH' && yass decisions --since 2026-01-01"
+has   "…and gives the same answer" "Active call" bash -c "cd '$SH' && yass decisions --since 2026-01-01"
+hasnt "shallow clone: a plain query the tree fills reads no history either" "couldn't read" bash -c "cd '$SH' && yass decisions --limit 1"
+has   "shallow clone: one that reaches them prints the rest" "Active call" bash -c "cd '$SH' && yass decisions --since 2025-01-01"
+has   "…and names what it couldn't read, and how to get it" "couldn't read yass/archive/2025/01, yass/archive/2025/02: .*git fetch --unshallow" bash -c "cd '$SH' && yass decisions --since 2025-01-01"
+run_ok "…and exits 0" bash -c "cd '$SH' && yass decisions --since 2025-01-01"
+has   "--cites in a shallow clone says what it couldn't read too" "couldn't read" bash -c "cd '$SH' && yass decisions --cites $C7"
+has   "…JSON stays clean on stdout" '^\[' bash -c "cd '$SH' && yass decisions --since 2025-01-01 --json 2>/dev/null | head -1"
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

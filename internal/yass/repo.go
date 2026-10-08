@@ -134,8 +134,9 @@ type Change struct {
 	Pieces                  []*Change
 	Large                   bool
 	Archived                bool
-	Evicted                 bool      // archived, then evicted: only its month's .evicted file names it
-	Deps                    []*Change // the changes blocked: names, when it names changes rather than a reason
+	Evicted                 bool              // archived, then evicted: only its month's .evicted file names it
+	Deps                    []*Change         // the changes blocked: names, when it names changes rather than a reason
+	files                   map[string]string // an evicted change read back from git: its .md files by name
 }
 
 func newChange(p string, root *Root, parent *Change) *Change {
@@ -154,14 +155,19 @@ func nameOnly(p string, root *Root, parent *Change) *Change {
 
 func (c *Change) read() {
 	p := c.Path
-	c.Head = readText(filepath.Join(p, "change.md"))
+	c.setHead(readText(filepath.Join(p, "change.md")))
+	c.Large = exists(filepath.Join(p, "prd.md")) || exists(filepath.Join(p, "plan.md"))
+}
+
+// setHead takes in a change's change.md: its frontmatter and title.
+func (c *Change) setHead(text string) {
+	c.Head = text
 	var body string
 	c.Meta, body = frontmatter(c.Head)
 	c.Title = c.Name
 	if m := titleRE.FindStringSubmatch(body); m != nil {
 		c.Title = strings.TrimSpace(m[1])
 	}
-	c.Large = exists(filepath.Join(p, "prd.md")) || exists(filepath.Join(p, "plan.md"))
 }
 
 // readArchived reads the archived changes' files, for commands that show what's in them, and
@@ -204,6 +210,19 @@ func mdFiles(dir string) []string {
 // ownBoxes are the boxes in this folder's own .md files (pieces count separately).
 func (c *Change) ownBoxes() []fileBox {
 	var out []fileBox
+	if c.files != nil {
+		names := make([]string, 0, len(c.files))
+		for f := range c.files {
+			names = append(names, f)
+		}
+		sort.Strings(names)
+		for _, f := range names {
+			for _, b := range boxes(c.files[f]) {
+				out = append(out, fileBox{f, b.mark, b.text})
+			}
+		}
+		return out
+	}
 	for _, f := range mdFiles(c.Path) {
 		for _, b := range boxes(read(filepath.Join(c.Path, f))) {
 			out = append(out, fileBox{f, b.mark, b.text})

@@ -53,7 +53,7 @@
 - [x] AC26 (R9) Given no yass folder, or no decisions matching, then `yass decisions` says so and exits 0 — verify: e2e
 - [x] AC27 (R23) Given `--json`, then the output is one JSON array whose objects have `change`, `title`, `who`, `decision`, `date`, `created` and `archived` (null when unknown), and the same filters apply — verify: e2e (parsed with `python3 -m json.tool`)
 - [x] AC28 (R22) Given the change templates, `yass-work` and the `AGENTS.md` section, then they ask for `(<who>, <YYYY-MM-DD>)` on new entries — verify: e2e (template text); manual: review
-- [ ] AC29 (R10, R25) Given `yass-log` and `yass-shape`, then they look up past decisions and earlier work with `yass decisions` and `yass status --archived`, and nothing in the kit greps or walks `archive/` — verify: manual: review; `grep -rn "archive" kit/` shows no direct reads
+- [x] AC29 (R10, R25) Given `yass-log` and `yass-shape`, then they look up past decisions and earlier work with `yass decisions` and `yass status --archived`, and nothing in the kit greps or walks `archive/` — verify: manual: review; `grep -rn "archive" kit/` shows no direct reads
 - [x] AC30 (R10) Given `yass-log` asked why this repo's hook leaves existing hooks alone, then it finds the decision through `yass decisions` — verify: manual: ask it
 
 ### M4
@@ -69,16 +69,16 @@
 - [x] AC40 (R16) Given evicted months, when you run `yass status --archived`, then it lists what's in the working tree and ends with one line per yass folder giving the evicted count and months — verify: e2e
 - [x] AC41 (R12, R13) Given an eviction commit with the hook on, then the hook passes it; and given a deletion under `archive/` without a matching `.evicted` file, then it still flags it — verify: e2e
 - [x] AC48 (R19) Given a new `yass init`, then the yass folder README's rule 5 says the archive is append-only except for eviction by `yass evict`, and the AGENTS.md section says the same; `yass upgrade` brings existing ones in line — verify: e2e (the text)
-- [/] AC42 (R20) Given `docs/monorepo.md`, then it explains `keep`, `yass evict`, that eviction bounds the working tree but not `.git` (partial clones or a plans repo for that), and gives a scheduled CI recipe that runs `yass evict` and opens a PR — verify: manual: review
+- [x] AC42 (R20) Given `docs/monorepo.md`, then it explains `keep`, `yass evict`, that eviction bounds the working tree but not `.git` (partial clones or a plans repo for that), and gives a scheduled CI recipe that runs `yass evict` and opens a PR — verify: manual: review
 
 ### M5
-- [ ] AC43 (R17) Given an evicted month and a query whose dates reach it, when you run `yass decisions`, then decisions from its changes print as if they were in the tree — verify: e2e
-- [ ] AC44 (R17) Given `--change` naming an evicted change, or one following it, then its decisions print — verify: e2e
-- [ ] AC45 (R17) Given a query whose dates don't reach any evicted month, then it reads no git history: it succeeds with the same results in a clone where the evicted commits are missing — verify: e2e (shallow clone)
-- [ ] AC46 (R18) Given a shallow clone missing an evicted month's commit and a query that reaches it, then the other results print, a line names the months it couldn't read and `git fetch --unshallow`, and it exits 0 — verify: e2e
-- [ ] AC49 (R25) Given boxes citing a commit (`code: a1b2c3d`) in an active change, an archived one and a piece, when you run `yass decisions --cites a1b2c3d` (or a longer prefix of the same commit), then each box prints with its change, and nothing else does — verify: e2e
-- [ ] AC50 (R25) Given a box citing a commit in an evicted change, then `--cites` finds it from git, the way decisions from evicted months are read; and with that month's commit missing, it says so as AC46 does — verify: e2e
-- [ ] AC47 (R17) Given 1,000 evicted changes in range, then `yass decisions` reads them with a constant number of git processes, not one per change — verify: go test (counts git invocations)
+- [x] AC43 (R17) Given an evicted month and a query whose dates reach it, when you run `yass decisions`, then decisions from its changes print as if they were in the tree — verify: e2e
+- [x] AC44 (R17) Given `--change` naming an evicted change, or one following it, then its decisions print — verify: e2e
+- [x] AC45 (R17) Given a query whose dates don't reach any evicted month, then it reads no git history: it succeeds with the same results in a clone where the evicted commits are missing — verify: e2e (shallow clone)
+- [x] AC46 (R18) Given a shallow clone missing an evicted month's commit and a query that reaches it, then the other results print, a line names the months it couldn't read and `git fetch --unshallow`, and it exits 0 — verify: e2e
+- [x] AC49 (R25) Given boxes citing a commit (`code: a1b2c3d`) in an active change, an archived one and a piece, when you run `yass decisions --cites a1b2c3d` (or a longer prefix of the same commit), then each box prints with its change, and nothing else does — verify: e2e
+- [x] AC50 (R25) Given a box citing a commit in an evicted change, then `--cites` finds it from git, the way decisions from evicted months are read; and with that month's commit missing, it says so as AC46 does — verify: e2e
+- [x] AC47 (R17) Given 1,000 evicted changes in range, then `yass decisions` reads them with a constant number of git processes, not one per change — verify: go test (counts git invocations)
 
 ## Pieces
 <!-- PR-sized pieces, each its own folder in here: `yass new "<title>" --in <this change>`.

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -159,33 +160,107 @@ func cmdDecisions(a *args) (int, error) {
 		}
 		limit = n
 	}
+
+	// Evicted months are read from git only when the query reaches them.
+	stubs := r.evictedStubs()
+	done := map[*Root]map[string]bool{}
+	var missing []string
+	readMonths := func(pick func(root *Root, m string) bool) {
+		want := map[*Root][]string{}
+		for root, months := range stubs {
+			for m := range months {
+				if !done[root][m] && pick(root, m) {
+					if done[root] == nil {
+						done[root] = map[string]bool{}
+					}
+					done[root][m] = true
+					want[root] = append(want[root], m)
+				}
+			}
+		}
+		if len(want) > 0 {
+			missing = append(missing, r.readEvicted(want)...)
+			all = append(r.everything(), flatten(r.Archived)...)
+		}
+	}
+	monthOfStub := func(c *Change) string {
+		if c.Parent != nil {
+			c = c.Parent
+		}
+		m := filepath.ToSlash(filepath.Dir(c.Path))
+		return m[len(m)-7:]
+	}
+
+	if sha := strings.ToLower(a.v["cites"]); sha != "" {
+		if !shaRE.MatchString(sha) {
+			return 0, fmt.Errorf("--cites takes a commit hash (7 to 40 hex digits)")
+		}
+		readMonths(func(*Root, string) bool { return true })
+		return citations(a, all, sha, limit, missing)
+	}
+
 	var only map[*Change]bool
 	if name := a.v["change"]; name != "" {
 		c, err := r.resolve(name, all, false)
 		if err != nil {
 			return 0, err
 		}
-		only = related(all, c)
-	}
-	words := strings.Fields(strings.ToLower(a.v["about"]))
-	var found []decision
-	for _, c := range all {
-		if only != nil && !only[c] {
-			continue
-		}
-	entries:
-		for _, d := range decisionsOf(c) {
-			if (a.v["since"] != "" && d.when < a.v["since"]) || (a.v["until"] != "" && (d.when == "" || d.when > a.v["until"])) {
-				continue
-			}
-			hay := strings.ToLower(d.Decision + " " + d.Title)
-			for _, w := range words {
-				if !strings.Contains(hay, w) {
-					continue entries
+		// Follow the chain into evicted months, reading each one the chain reaches.
+		for {
+			only = related(all, c)
+			reach := map[*Root]map[string]bool{}
+			for x := range only {
+				if x.Evicted {
+					if reach[x.Root] == nil {
+						reach[x.Root] = map[string]bool{}
+					}
+					reach[x.Root][monthOfStub(x)] = true
 				}
 			}
-			found = append(found, d)
+			before := len(missing) + countDone(done)
+			readMonths(func(root *Root, m string) bool { return reach[root][m] })
+			if len(missing)+countDone(done) == before {
+				break
+			}
+			for _, x := range all { // the change named may have been a stub, now read
+				if x.Name == c.Name && x.Root == c.Root {
+					c = x
+				}
+			}
 		}
+	} else if since := a.v["since"]; since != "" {
+		readMonths(func(_ *Root, m string) bool { return monthEnd(m) >= since })
+	}
+
+	words := strings.Fields(strings.ToLower(a.v["about"]))
+	collect := func() []decision {
+		var found []decision
+		for _, c := range all {
+			if only != nil && !only[c] {
+				continue
+			}
+		entries:
+			for _, d := range decisionsOf(c) {
+				if (a.v["since"] != "" && d.when < a.v["since"]) || (a.v["until"] != "" && (d.when == "" || d.when > a.v["until"])) {
+					continue
+				}
+				hay := strings.ToLower(d.Decision + " " + d.Title)
+				for _, w := range words {
+					if !strings.Contains(hay, w) {
+						continue entries
+					}
+				}
+				found = append(found, d)
+			}
+		}
+		return found
+	}
+	found := collect()
+	// Without dates or a change to go by, evicted months are older than everything in the tree:
+	// read them only when what's here doesn't fill the answer.
+	if only == nil && a.v["since"] == "" && len(found) < limit && len(stubs) > 0 {
+		readMonths(func(*Root, string) bool { return true })
+		found = collect()
 	}
 	sort.SliceStable(found, func(i, j int) bool {
 		if found[i].when != found[j].when {
@@ -199,6 +274,9 @@ func cmdDecisions(a *args) (int, error) {
 	left := 0
 	if len(found) > limit {
 		left, found = len(found)-limit, found[:limit]
+	}
+	if len(missing) > 0 && a.b["json"] {
+		fmt.Fprintf(os.Stderr, "yass: %s\n", missingNote(missing))
 	}
 	for _, w := range r.Warnings { // only what bears on the answer; yass status shows the rest
 		if strings.Contains(w, "can't read it") {
@@ -243,6 +321,68 @@ func cmdDecisions(a *args) (int, error) {
 	}
 	if left > 0 {
 		fmt.Printf("… %d more not shown; narrow the query or raise --limit\n", left)
+	}
+	if len(missing) > 0 {
+		fmt.Printf("note: %s\n", missingNote(missing))
+	}
+	return 0, nil
+}
+
+func countDone(done map[*Root]map[string]bool) int {
+	n := 0
+	for _, ms := range done {
+		n += len(ms)
+	}
+	return n
+}
+
+type citation struct {
+	Change string `json:"change"`
+	Title  string `json:"title"`
+	File   string `json:"file"`
+	Mark   string `json:"mark"`
+	Box    string `json:"box"`
+}
+
+// citations is yass decisions --cites: the boxes that cite a commit, by any prefix of its hash.
+func citations(a *args, all []*Change, sha string, limit int, missing []string) (int, error) {
+	var found []citation
+	for _, c := range all {
+		for _, b := range c.ownBoxes() {
+			for _, ref := range codeRefs(b.text) {
+				if strings.HasPrefix(ref, sha) || strings.HasPrefix(sha, ref) {
+					found = append(found, citation{c.label(), c.Title, b.file, b.mark, b.text})
+					break
+				}
+			}
+		}
+	}
+	left := 0
+	if len(found) > limit {
+		left, found = len(found)-limit, found[:limit]
+	}
+	if a.b["json"] {
+		if found == nil {
+			found = []citation{}
+		}
+		out, _ := json.MarshalIndent(found, "", "  ")
+		fmt.Println(string(out))
+		if len(missing) > 0 {
+			fmt.Fprintf(os.Stderr, "yass: %s\n", missingNote(missing))
+		}
+		return 0, nil
+	}
+	if len(found) == 0 {
+		fmt.Printf("no box cites %s\n", sha)
+	}
+	for _, f := range found {
+		fmt.Printf("%s  %s  [%s] %s\n", f.Change, f.File, f.Mark, f.Box)
+	}
+	if left > 0 {
+		fmt.Printf("… %d more not shown; raise --limit\n", left)
+	}
+	if len(missing) > 0 {
+		fmt.Printf("note: %s\n", missingNote(missing))
 	}
 	return 0, nil
 }
