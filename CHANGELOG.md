@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.4.0 (unreleased)
+The archive scales: finished changes go into month folders, YASS reads only their names unless it needs more, and a yass folder can move its oldest months into git history. Past decisions are one command away for people and agents.
+- **Archives by month.** `yass archive` stamps `archived:` (UTC) in the change's frontmatter and moves it to `archive/<YYYY>/<MM>/<name>/`, so no folder grows without bound and GitHub can list every month. Every command reads both this layout and the old flat one.
+- **`yass upgrade` migrates.** After writing YASS's files, it brings each yass folder's layout up to date, including folders `yass.yaml` points to outside the repo: the first step moves a flat `archive/` into months, dated by the commit that archived each change (else the date in its name), and prints how to commit that on its own. The hook accepts the move.
+- **`yass decisions`:** every `## Decisions` entry across active and archived changes, in every yass folder, newest first, 50 at a time, with `--since`/`--until`, `--about "words"`, `--change <c>` (which follows the `follows:` chain both ways), `--cites <sha>` (the boxes that cite a commit) and `--json`. `yass-log` and `yass-shape` use it instead of reading `archive/`.
+- **Dated decisions.** Entries now read `- <decision> - <why> (<who>, <YYYY-MM-DD>)`; the templates, the `AGENTS.md` section and `yass-work` ask for it. Older entries stay valid and take their change's dates.
+- **`keep` and `yass evict`.** A yass folder keeps up to 2,000 archived changes in its working tree (`archive: { keep: N }` in its `yass.yaml`). Past that, `yass status` and `yass archive` say so, and `yass evict` moves the oldest whole months into git history, leaving a small `archive/<YYYY>/<MM>.evicted` file per month. Evicted changes still count for `follows:` and `blocked:`, and `yass decisions` reads them back from git when a query reaches them. [docs/monorepo.md](docs/monorepo.md#keeping-the-working-tree-small) has a scheduled CI recipe.
+- **Faster with big archives:** `yass status` reads only archived changes' names; their files are read when a command shows them.
+- **`yass init --hooks` leaves existing hooks alone:** with a hooks setup of its own (a `core.hooksPath`, husky, `.git/hooks/`), the repo keeps it, and YASS prints how to run its check from there.
+- **Same-day changes list in creation order,** from a `created:` stamp `yass new` writes.
+- Docs: what squash merges mean for YASS's rules (a pull request apart from code, where a commit used to be), and pushing and opening pull requests need the same latitude as committing.
+
+Migrating:
+- **Upgrade everyone's `yass` binary before committing the archive migration on a shared repo.** An older binary reads `archive/2026` as a change, its `yass status` says to upgrade the binary, and it still archives flat; the next `yass upgrade`, by anyone, moves those into months too.
+- **To upgrade a repo,** run `yass upgrade` and commit in two steps, as it prints: the archive move on its own (`yass: archive-into-months`), then the rest (`chore: upgrade YASS`).
+- **Big archives:** a yass folder already past 2,000 archived changes gets a note from `yass status`; run `yass evict` when you're ready, or set `keep:` higher.
+
 ## 0.3.0 (2026-10-05)
 Installing and upgrading are now two plain steps. To install: get the `yass` binary, then run `yass init` in your repo. To upgrade: get the newer binary, then run `yass upgrade` in each repo.
 - **The binary carries the playbooks and the hook.** `yass init` sets up a whole repo from the binary alone: the playbooks, the hook script, the `AGENTS.md` section and the yass folder, with `--claude`, `--global`, `--hooks` and `--path`. Nothing is downloaded after the binary. Running it again writes only what's missing, and it ends with the next steps (commit it, then ask your agent).
