@@ -19,9 +19,9 @@
 ## Acceptance
 <!-- Per milestone, one observable behavior each:
 ### M1
-- [x] AC1 (R1) Given …, when …, then … — verify: <test, flow, or manual steps> -->
+- [ ] AC1 (R1) Given …, when …, then … — verify: <test, flow, or manual steps> -->
 ### M1
-- [ ] AC1 (R1) Given a finished change, when you run `yass archive` on it, then its `change.md` frontmatter has `archived:` with the current UTC time, and nothing else in the folder changed beyond what `yass archive` already marks — verify: e2e
+- [x] AC1 (R1) Given a finished change, when you run `yass archive` on it, then its `change.md` frontmatter has `archived:` with the current UTC time, and nothing else in the folder changed beyond what `yass archive` already marks — verify: e2e
 - [x] AC2 (R2) Given that archive, then the change is at `archive/<YYYY>/<MM>/<name>/` for the `archived:` date, with its pieces inside it, and the move is staged — verify: e2e
 - [x] AC3 (R2) Given a change whose name's date is in an earlier month than today, when it's archived, then it lands in today's month — verify: e2e
 - [x] AC4 (R2) Given a change with the same name already archived in some month, when you archive it, then `yass archive` refuses and names where the other one is — verify: e2e
@@ -57,19 +57,19 @@
 - [x] AC30 (R10) Given `yass-log` asked why this repo's hook leaves existing hooks alone, then it finds the decision through `yass decisions` — verify: manual: ask it
 
 ### M4
-- [ ] AC31 (R11) Given `archive: { keep: 3 }` in a yass folder's `yass.yaml`, then that folder's limit is 3 and other folders keep 2,000; an unknown key under `archive:` warns like other unknown settings — verify: go test (config); e2e
-- [ ] AC32 (R14) Given a folder past `keep`, when you run `yass status` and `yass archive`, then each prints a note naming the folder, how far past it is, and `yass evict`; `yass status --strict` still exits 0; under `keep`, no note — verify: e2e
-- [ ] AC33 (R12) Given a folder 5 past `keep` whose oldest month holds 3 and next holds 4, when you run `yass evict`, then both months are deleted, the output names them with their counts, says to commit it on its own, and the current month is never touched — verify: e2e
-- [ ] AC34 (R12) Given a folder at or under `keep`, then `yass evict` changes nothing and says so — verify: e2e
-- [ ] AC35 (R12) Given a month with uncommitted changes, or a yass folder outside git, then `yass evict` refuses and says why — verify: e2e
-- [ ] AC36 (R13) Given an evicted month, then `archive/<YYYY>/<MM>.evicted` has the commit that last touched the month's folder, its path, and its change names sorted, as in design §3 — verify: e2e
-- [ ] AC37 (R13) Given two branches from the same commit that each run `yass evict` on the same month and commit, when one is merged into the other, then the merge has no conflicts — verify: e2e
-- [ ] AC38 (R13) Given a month evicted on a branch that was then squash-merged, then the manifest's commit is still reachable from main — verify: e2e (`git merge --squash`, then `git cat-file -e`)
-- [ ] AC39 (R15) Given an active change with `follows:` or `blocked:` naming an evicted change, then `yass status` resolves it without warnings, and reads no git history — verify: e2e (works with the evicted commit missing)
-- [ ] AC40 (R16) Given evicted months, when you run `yass status --archived`, then it lists what's in the working tree and ends with one line per yass folder giving the evicted count and months — verify: e2e
-- [ ] AC41 (R12, R13) Given an eviction commit with the hook on, then the hook passes it; and given a deletion under `archive/` without a matching `.evicted` file, then it still flags it — verify: e2e
-- [ ] AC48 (R19) Given a new `yass init`, then the yass folder README's rule 5 says the archive is append-only except for eviction by `yass evict`, and the AGENTS.md section says the same; `yass upgrade` brings existing ones in line — verify: e2e (the text)
-- [ ] AC42 (R20) Given `docs/monorepo.md`, then it explains `keep`, `yass evict`, that eviction bounds the working tree but not `.git` (partial clones or a plans repo for that), and gives a scheduled CI recipe that runs `yass evict` and opens a PR — verify: manual: review
+- [x] AC31 (R11) Given `archive: { keep: 3 }` in a yass folder's `yass.yaml`, then that folder's limit is 3 and other folders keep 2,000; an unknown key under `archive:` warns like other unknown settings — verify: go test (config); e2e
+- [x] AC32 (R14) Given a folder past `keep`, when you run `yass status` and `yass archive`, then each prints a note naming the folder, how far past it is, and `yass evict`; `yass status --strict` still exits 0; under `keep`, no note — verify: e2e
+- [x] AC33 (R12) Given a folder 5 past `keep` whose oldest month holds 3 and next holds 4, when you run `yass evict`, then both months are deleted, the output names them with their counts, says to commit it on its own, and the current month is never touched — verify: e2e
+- [x] AC34 (R12) Given a folder at or under `keep`, then `yass evict` changes nothing and says so — verify: e2e
+- [x] AC35 (R12) Given a month with uncommitted changes, or a yass folder outside git, then `yass evict` refuses and says why — verify: e2e
+- [x] AC36 (R13) Given an evicted month, then `archive/<YYYY>/<MM>.evicted` has the commit that last touched the month's folder, its path, and its change names sorted, as in design §3 — verify: e2e
+- [x] AC37 (R13) Given two branches from the same commit that each run `yass evict` on the same month and commit, when one is merged into the other, then the merge has no conflicts — verify: e2e
+- [x] AC38 (R13) Given a month evicted on a branch that was then squash-merged, then the manifest's commit is still reachable from main — verify: e2e (`git merge --squash`, then `git cat-file -e`)
+- [x] AC39 (R15) Given an active change with `follows:` or `blocked:` naming an evicted change, then `yass status` resolves it without warnings, and reads no git history — verify: e2e (works with the evicted commit missing)
+- [x] AC40 (R16) Given evicted months, when you run `yass status --archived`, then it lists what's in the working tree and ends with one line per yass folder giving the evicted count and months — verify: e2e
+- [x] AC41 (R12, R13) Given an eviction commit with the hook on, then the hook passes it; and given a deletion under `archive/` without a matching `.evicted` file, then it still flags it — verify: e2e
+- [x] AC48 (R19) Given a new `yass init`, then the yass folder README's rule 5 says the archive is append-only except for eviction by `yass evict`, and the AGENTS.md section says the same; `yass upgrade` brings existing ones in line — verify: e2e (the text)
+- [/] AC42 (R20) Given `docs/monorepo.md`, then it explains `keep`, `yass evict`, that eviction bounds the working tree but not `.git` (partial clones or a plans repo for that), and gives a scheduled CI recipe that runs `yass evict` and opens a PR — verify: manual: review
 
 ### M5
 - [ ] AC43 (R17) Given an evicted month and a query whose dates reach it, when you run `yass decisions`, then decisions from its changes print as if they were in the tree — verify: e2e

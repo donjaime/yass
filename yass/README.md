@@ -11,6 +11,6 @@ Rules:
 2. **Progress travels with the code.** Ticking boxes and appending to Log and Decisions go in the same commits as the code.
 3. **Intent changes get their own commit.** `prd.md`, `design.md`, `plan.md` beyond ticking boxes, and a change's title, Goal and Acceptance (including dropping a criterion).
 4. **Done means every box is checked.** Then `yass archive <change>`, in its own commit.
-5. **The archive is append-only.**
+5. **The archive is append-only,** except that `yass evict` moves its oldest months to git history when the folder is past its `keep:` setting.
 
 `yass status` shows what's in flight.

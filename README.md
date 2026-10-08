@@ -25,7 +25,7 @@ yass/
 └── archive/2026/10/                        finished changes, moved here as they were, by the month they were archived
 ```
 
-That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`), five playbooks your agent follows, and an optional git hook.
+That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`, `evict`), five playbooks your agent follows, and an optional git hook.
 
 YASS doesn't commit for you. The CLI never commits (archiving only stages the move), and the playbooks only commit, branch or rebase when you or your harness have given the agent that latitude; otherwise they hand you the commands. The rules below are about what lands on your main branch, and the hook checks them.
 
@@ -36,7 +36,7 @@ YASS doesn't commit for you. The CLI never commits (archiving only stages the mo
 3. **Progress travels with the code.** Marking boxes in progress or done and appending to `## Log` and `## Decisions` go in the same commits as the code they describe.
 4. **Intent changes get their own commit.** The PRD, the design, the plan's text, and a change's title, Goal and Acceptance, including dropping an acceptance criterion. If the plan turns out wrong, change it on purpose, in a commit someone can review, not quietly next to the code. Mid-build, that means a stacked branch: the intent change underneath, the code rebased on top, so work keeps moving and decisions can still be reviewed apart from execution.
 5. **Done means every box is checked.** Then `yass archive` moves the folder to `archive/<YYYY>/<MM>/`. Finishing is separate from merging: a large change spans many branches and pull requests, and feedback can reopen the plan before it's done.
-6. **The archive is append-only.** Follow-up work is a new change with `follows: <archived folder>`.
+6. **The archive is append-only.** Follow-up work is a new change with `follows: <archived folder>`. Only `yass evict` removes from it, moving the oldest months into git history once a yass folder holds more than its `keep:` setting ([big archives](docs/monorepo.md#big-archives)).
 
 ## Install
 
@@ -125,6 +125,7 @@ yass new "<title>"              a small change
 yass status [<change>]          what's in flight, progress, next steps, what's blocked, not started or done
             [--archived] [--strict]
 yass archive <change>           move a finished change to archive/<YYYY>/<MM>/ (refuses while boxes are open)
+yass evict                      move the oldest archived months into git history, when past keep:
 yass decisions                  past decisions, active and archived, newest first, 50 at a time
                [--since D] [--until D] [--about "words"] [--change <c>] [--limit N] [--json]
 yass root                       print the yass folder(s) this repo uses
@@ -281,7 +282,7 @@ path: ../my-project-plans        # relative to this file
 - **A path inside the repo works too,** under any name (`path: planning`), and the hook recognizes it.
 - **One team can plan privately in a shared repo.** `yass init private --path ~/plans/private --private` makes a team folder that git never sees: it's listed in the clone's `.git/info/exclude`, and named in the clone's git config (`yass.include`) so YASS still finds it, from the top of the repo and from every worktree. Nothing is written to the repo, so each clone sets it up for itself. `yass paths` leaves it out, since no commit can contain it. To stop: `git config --unset yass.include '^private$'`, then delete the folder.
 
-`yass.yaml` is also where YASS settings go as they're added (`path`, `branch` and [`ignore`](#folders-that-arent-yours) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
+`yass.yaml` is also where YASS settings go as they're added (`path`, `branch`, [`ignore`](#folders-that-arent-yours) and [`archive: keep:`](docs/monorepo.md#keeping-the-working-tree-small) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
 
 ## Monorepos
 

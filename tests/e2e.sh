@@ -899,5 +899,78 @@ newrepo "$W/e2e/decisions-none"
 has   "no yass folder says so" "no yass folder" y decisions
 run_ok "…and exits 0" y decisions
 
+echo "33. keep and yass evict"
+NOWM=$(date -u +%Y/%m)
+mka() { mkdir -p "$1"; printf -- '---\narchived: %s\n---\n# %s\n\n- [x] Done\n' "${2:-2025-01-15T00:00:00Z}" "$(basename "$1")" > "$1/change.md"; }
+newrepo "$W/e2e/evict"; y init --hooks >/dev/null
+for n in 3 1 2; do mka yass/archive/2025/01/2025-01-0$n-jan-$n; done
+for n in 1 2 3 4; do mka yass/archive/2025/02/2025-02-0$n-feb-$n 2025-02-20T00:00:00Z; done
+mka "yass/archive/$NOWM/$TODAY-now-1" "${TODAY}T00:00:00Z"
+printf 'archive:\n  keep: 3\n  kepp: 4\n' > yass.yaml
+y init teams/x --no-agents >/dev/null; mka teams/x/yass/archive/2025/01/2025-01-01-team-one
+git add -A; git commit -q -m "yass: archives"; JANSHA=$(git log -1 --format=%H -- yass/archive/2025/01)
+has   "an unknown setting under archive: warns" "unknown setting 'archive.kepp'" y status
+has   "a folder past keep gets a note" "note: yass/archive holds 8 archived changes, 5 past its keep of 3; .yass evict." y status
+hasnt "…another folder keeps the default" "teams/x/yass/archive holds" y status
+run_ok "…and --strict still passes on it" bash -c 'yass status --strict | grep -v kepp; sed -i.bak "/kepp/d" yass.yaml; yass status --strict'
+rm -f yass.yaml.bak; git add -A; git commit -q -m "yass: settings"
+N=$(y new "One more"); sub "$N/change.md" '^- \[ \] $' '- [x] Done'; git add -A; git commit -q -m wip
+has   "archive says so too" "note: yass/archive holds 9 archived changes, 6 past its keep of 3" y archive one-more
+git commit -q -m "yass: archive one-more"
+OUT="$(y evict)"
+has   "evict removes the oldest whole months…" "evicted yass/archive/2025/01: 3 archived change" echo "$OUT"
+has   "…until it's at or under keep" "evicted yass/archive/2025/02: 4 archived change" echo "$OUT"
+has   "…says what's left" "now holds 2 archived changes \(keep: 3\)" echo "$OUT"
+has   "…and how to commit it" 'Commit it on its own: git commit -m "yass: evict archived months" -- yass/archive' echo "$OUT"
+[ ! -e yass/archive/2025/01 ] && [ ! -e yass/archive/2025/02 ] && ok "…the months are gone" || bad "months left"
+[ -d "yass/archive/$NOWM/$TODAY-now-1" ] && ok "…never this month" || bad "current month touched"
+[ -d teams/x/yass/archive/2025/01 ] && ok "…nor a folder within its keep" || bad "other folder evicted"
+has   "the manifest names the commit, its path and the changes, sorted" "^commit: $JANSHA
+path: yass/archive/2025/01
+changes:
+  - 2025-01-01-jan-1
+  - 2025-01-02-jan-2
+  - 2025-01-03-jan-3$" bash -c 'grep -v "^#" yass/archive/2025/01.evicted'
+hasnt "the hook passes the eviction" "heads-up|append-only" git commit -q -m "yass: evict archived months" -- yass/archive
+has   "…and it reads back from git" "# 2025-01-02-jan-2" git show "$JANSHA:yass/archive/2025/01/2025-01-02-jan-2/change.md"
+has   "evict again: nothing to do" "nothing to evict" y evict
+mkb yass/changes/2026-05-05-uses-old / "2025-02-03-feb-3"; sub yass/changes/2026-05-05-uses-old/change.md '^blocked:' 'follows: 2025-01-02-jan-2\nblocked:'
+hasnt "evicted changes still resolve for follows: and blocked:" "warning" y status
+hasnt "…and count as met" "uses-old .*waiting" y status
+has   "status --archived summarizes what's evicted" "… and 7 evicted, from 2025/01, 2025/02" y status --archived
+hasnt "…and lists only what's in the tree" "jan-2|feb-3" y status --archived
+git add -A; git commit -q -m "uses old" >/dev/null 2>&1
+SH="$W/e2e/evict-shallow"; rm -rf "$SH"; git clone -q --depth 1 "file://$PWD" "$SH"
+run_fail "in a shallow clone the evicted months' commit is missing" git -C "$SH" cat-file -e "$JANSHA"
+hasnt "…and evicted names still resolve there" "warning" bash -c "cd '$SH' && yass status"
+git reset -q --hard HEAD~1
+git rm -q -r "yass/archive/$NOWM/$TODAY-now-1"
+has   "deleting from the archive without a manifest is still flagged" "append-only" git commit -q -m "yass: tidy"
+git reset -q --hard HEAD~1
+has   "init's yass README says evict is the one exception" "append-only,\*\* except that .yass evict." cat yass/README.md
+has   "…and so does AGENTS.md" "only .yass evict. removes from it" cat AGENTS.md
+
+newrepo "$W/e2e/evict-refuse"; y init >/dev/null; printf 'archive:\n  keep: 1\n' > yass.yaml
+for n in 1 2; do mka yass/archive/2025/0$n/2025-0$n-01-m$n; done; git add -A; git commit -q -m arch
+echo "- [x] late edit" >> yass/archive/2025/01/2025-01-01-m1/change.md
+run_fail "a month with uncommitted changes: evict refuses" y evict
+has   "…and says why" "has changes that aren't committed" y evict
+[ -d yass/archive/2025/01 ] && ok "…and changes nothing" || bad "evicted anyway"
+git checkout -q -- yass
+P7="$W/e2e/plain-evict"; rm -rf "$P7"; for n in 1 2; do mka "$P7/archive/2025/0$n/2025-0$n-01-p$n"; done
+newrepo "$W/e2e/evict-plain"; printf 'path: %s\narchive:\n  keep: 1\n' "$P7" > yass.yaml
+run_fail "outside git, evict refuses" y evict
+has   "…and says why" "isn't in git" y evict
+
+newrepo "$W/e2e/evict-merge"; y init >/dev/null; printf 'archive:\n  keep: 1\n' > yass.yaml
+for n in 1 2 3; do mka yass/archive/2025/0$n/2025-0$n-01-x$n; done; git add -A; git commit -q -m arch
+git switch -q -c one; y evict >/dev/null; git commit -q -m "yass: evict" -- yass/archive
+git switch -q main; git switch -q -c two; y evict >/dev/null; git commit -q -m "yass: evict" -- yass/archive
+run_ok "two branches evicting the same months merge without conflict" git merge -q --no-edit one
+git switch -q main; git switch -q -c three; y evict >/dev/null; git commit -q -m "yass: evict" -- yass/archive
+git switch -q main; git merge -q --squash three >/dev/null; git commit -q -m "yass: evict (squashed)"
+S1=$(sed -n 's/^commit: //p' yass/archive/2025/01.evicted)
+run_ok "after a squash merge, the manifest's commit is still on main" git merge-base --is-ancestor "$S1" main
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

@@ -132,6 +132,31 @@ func (h *hook) intoMonths(e entry, pl place, entries []entry, oldRef, newRef str
 	return old == cur || old == strings.TrimPrefix(cur, "---\n---\n")
 }
 
+// evicting is yass evict's commit: an archived change deleted while the same commit adds its month's
+// .evicted file naming it (evicting), or that new .evicted file itself (manifest).
+func (h *hook) evicting(e entry, pl place, entries []entry, newRef string) (evicting, manifest bool) {
+	if strings.HasSuffix(e.path, evictedExt) {
+		return false, e.status == "A" && monthRE.MatchString(strings.TrimSuffix(path.Base(e.path), evictedExt))
+	}
+	if e.status != "D" {
+		return false, false
+	}
+	month := path.Dir(pl.folder) // <archive>/<YYYY>/<MM>
+	if !monthRE.MatchString(path.Base(month)) || !yearRE.MatchString(path.Base(path.Dir(month))) {
+		return false, false
+	}
+	for _, a := range entries {
+		if a.status == "A" && a.path == month+evictedExt {
+			for _, l := range lines(show(newRef, a.path)) {
+				if strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(l), "- ")) == path.Base(pl.folder) {
+					return true, false
+				}
+			}
+		}
+	}
+	return false, false
+}
+
 // monthOf says whether to is from's flat archived change, under archive/<YYYY>/<MM>/.
 func (h *hook) monthOf(from, to place) bool {
 	month := path.Dir(to.folder) // <archive>/<YYYY>/<MM>
@@ -207,6 +232,12 @@ func (h *hook) check(entries []entry, oldRef, newRef string) []string {
 			if h.intoMonths(e, pl, entries, oldRef, newRef) {
 				if hasCode {
 					out = append(out, e.path+": move the archive into months in its own commit, not alongside code")
+				}
+				continue
+			}
+			if evicting, manifest := h.evicting(e, pl, entries, newRef); evicting || manifest {
+				if hasCode && manifest {
+					out = append(out, e.path+": evict archived months in their own commit, not alongside code")
 				}
 				continue
 			}

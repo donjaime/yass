@@ -86,6 +86,16 @@ type Root struct {
 	Queue    []string // the changes queue.md ranks, top first, as written
 }
 
+// keep is how many archived changes the yass folder should keep in its working tree (a soft limit).
+func (root *Root) keep() int {
+	if root.Config != "" {
+		if c, _, err := loadConfig(root.Config); err == nil && c.Archive.Keep > 0 {
+			return c.Archive.Keep
+		}
+	}
+	return DefaultKeep
+}
+
 // rank is a change's place in its yass folder's queue.md; changes it doesn't list come after all that it does.
 func (root *Root) rank(name string) int {
 	for i, n := range root.Queue {
@@ -124,6 +134,7 @@ type Change struct {
 	Pieces                  []*Change
 	Large                   bool
 	Archived                bool
+	Evicted                 bool      // archived, then evicted: only its month's .evicted file names it
 	Deps                    []*Change // the changes blocked: names, when it names changes rather than a reason
 }
 
@@ -158,6 +169,9 @@ func (c *Change) read() {
 func (r *Repo) readArchived() {
 	r.archivedPieces()
 	for _, c := range flatten(r.Archived) {
+		if c.Evicted {
+			continue
+		}
 		head := filepath.Join(c.Path, "change.md")
 		if _, err := os.ReadFile(head); err != nil && !os.IsNotExist(err) {
 			r.warn("%s: can't read it: %v", r.disp(head), errors.Unwrap(err))
@@ -645,6 +659,15 @@ func (r *Repo) load(root *Root, kind string, warn bool) []*Change {
 		}
 		byCreated(c.Pieces)
 	}
+	if kind == "archive" {
+		for _, m := range evictedMonths(root) {
+			for _, name := range m.Changes {
+				c := nameOnly(filepath.Join(root.Dir, "archive", filepath.FromSlash(m.Month), name), root, nil)
+				c.Archived, c.Evicted = true, true
+				out = append(out, c)
+			}
+		}
+	}
 	byCreated(out)
 	return out
 }
@@ -657,6 +680,9 @@ func (r *Repo) archivedPieces() {
 	}
 	r.piecesFound = true
 	for _, c := range r.Archived {
+		if c.Evicted {
+			continue
+		}
 		for _, sub := range subdirs(c.Path) {
 			if sp := filepath.Join(c.Path, sub); isFile(filepath.Join(sp, "change.md")) {
 				piece := nameOnly(sp, c.Root, c)
