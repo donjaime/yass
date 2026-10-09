@@ -14,7 +14,7 @@ yass status and yass upgrade name yass update, a yass-update playbook does both 
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC18–AC23 in [plan.md](../plan.md)
+- [x] Delivers AC18–AC23 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -24,7 +24,7 @@ yass status and yass upgrade name yass update, a yass-update playbook does both 
 - [x] The `AGENTS.md` section and `yass-status` point to it when versions are out of step
 - [x] `README.md` (six playbooks, the "Update YASS" row, upgrading with `yass update`, the command list), `docs/install.md` (Upgrading), `docs/skills.md` (row and section), `site/index.html` and `tests/site.sh` (six playbooks, a row)
 - [x] go test (the kit carries six playbooks); e2e (563 ok): the messages, the next step, init and upgrade installing the playbook, the pointers; `tests/site.sh` (75 ok)
-- [ ] Jaime reviews the playbook and docs (AC21, AC23)
+- [x] Jaime reviews the playbook and docs (AC21, AC23)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -39,3 +39,6 @@ yass status and yass upgrade name yass update, a yass-update playbook does both 
 ### 2026-10-08 (claude)
 - Did: built and tested the pointers, the next step after installing, the `yass-update` playbook and the docs. `go test`, `tests/e2e.sh` (563 ok), `tests/examples.sh`, `tests/site.sh` pass.
 - Next: Jaime reviews the playbook and docs (AC21, AC23); then this piece is done.
+### 2026-10-08 (claude)
+- Did: Jaime reviewed and merged it (#51, #52, #54). The piece is done.
+- Next: none here; the change waits on AC12 (Windows) and AC17 (the real release).
