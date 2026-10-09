@@ -37,12 +37,12 @@ Source builds stop after stage 1 with the command for their install method. The 
 - [ ] AC17 (R1–R10) Given the real 0.4.0-or-later release on GitHub, when a release binary runs `yass update --check` and `yass update`, then both behave as above against github.com — verify: manual: after the next release, on macOS and Linux
 
 ### M2
-- [ ] AC18 (R11) Given a binary older than the repo, then `yass status`'s note and `yass upgrade`'s refusal name `yass update` — verify: e2e
-- [ ] AC19 (R12) Given an update that leaves the binary ahead of the current repo, then the output ends with `yass upgrade` for that repo — verify: e2e
-- [ ] AC20 (R13) Given `yass init`, then `yass-update` is installed with the other playbooks (and in `.claude/skills/` with `--claude`); given an existing repo, `yass upgrade` adds it — verify: e2e
-- [ ] AC21 (R13) Given the `yass-update` playbook, then it checks both versions with `yass update --check`, asks before downloading, runs `yass update` then `yass upgrade`, shows the diff, and commits only with latitude — verify: manual: review; ask an agent to "update YASS" in a scratch repo with fake releases
-- [ ] AC22 (R14) Given the `AGENTS.md` section and `yass-status`, then both point to `yass-update` when the binary and the repo are out of step — verify: e2e (section text); manual: review
-- [ ] AC23 (R15) Given `docs/install.md`, `docs/skills.md` and `README.md`, then they describe `yass update` (what it verifies, how it picks a version, when to use a download, `install.sh` or `go install` instead) and the sixth playbook — verify: manual: review
+- [x] AC18 (R11) Given a binary older than the repo, then `yass status`'s note and `yass upgrade`'s refusal name `yass update` — verify: e2e
+- [x] AC19 (R12) Given an update that leaves the binary ahead of the current repo, then the output ends with `yass upgrade` for that repo — verify: e2e
+- [x] AC20 (R13) Given `yass init`, then `yass-update` is installed with the other playbooks (and in `.claude/skills/` with `--claude`); given an existing repo, `yass upgrade` adds it — verify: e2e
+- [/] AC21 (R13) Given the `yass-update` playbook, then it checks both versions with `yass update --check`, asks before downloading, runs `yass update` then `yass upgrade`, shows the diff, and commits only with latitude — verify: manual: review; ask an agent to "update YASS" in a scratch repo with fake releases
+- [x] AC22 (R14) Given the `AGENTS.md` section and `yass-status`, then both point to `yass-update` when the binary and the repo are out of step — verify: e2e (section text); manual: review
+- [/] AC23 (R15) Given `docs/install.md`, `docs/skills.md` and `README.md`, then they describe `yass update` (what it verifies, how it picks a version, when to use a download, `install.sh` or `go install` instead) and the sixth playbook — verify: manual: review
 
 ## Pieces
 <!-- PR-sized pieces, each its own folder in here: `yass new "<title>" --in <this change>`.

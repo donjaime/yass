@@ -1,6 +1,6 @@
 # The playbooks
 
-YASS ships five playbooks, as [Agent Skills](https://agentskills.io) in [`kit/.agents/skills/`](../kit/.agents/skills). Every `yass` binary carries them, and `yass init` writes them to `.agents/skills/` in your repo (project scope); `--claude` also copies them to `.claude/skills/`. With `--global`, they go in your user folder instead. `yass upgrade` brings them up to a newer binary's version. Agents pick one by matching your request against its `description`.
+YASS ships six playbooks, as [Agent Skills](https://agentskills.io) in [`kit/.agents/skills/`](../kit/.agents/skills). Every `yass` binary carries them, and `yass init` writes them to `.agents/skills/` in your repo (project scope); `--claude` also copies them to `.claude/skills/`. With `--global`, they go in your user folder instead. `yass upgrade` brings them up to a newer binary's version. Agents pick one by matching your request against its `description`.
 
 This page is an index for reviewing what each playbook lets an agent do. The `SKILL.md` files are the source of truth; if this page and a playbook disagree, the playbook wins and this page needs fixing.
 
@@ -11,6 +11,7 @@ This page is an index for reviewing what each playbook lets an agent do. The `SK
 | [`yass-work`](../kit/.agents/skills/yass-work/SKILL.md) | attended or unattended | building the one change it's pointed at | code, progress sections, stacked intent fixes | when it isn't pointed at a change, or isn't confident a plan fix is right |
 | [`yass-status`](../kit/.agents/skills/yass-status/SKILL.md) | report | "where are we?" | nothing | no; it lists what needs one |
 | [`yass-log`](../kit/.agents/skills/yass-log/SKILL.md) | report | "why did we…?", "why does this code…?", release notes, retros | nothing | no |
+| [`yass-update`](../kit/.agents/skills/yass-update/SKILL.md) | attended | "update YASS", or `yass status`'s version note | the `yass` binary; YASS's files in the repo | before downloading a binary, and before committing |
 
 The usual flow is (plan mode →) shape → plan → work, with `yass-status` along the way and `yass-log` whenever someone asks why. Small changes skip straight to `yass-work`. Each step ends where the next begins: shaping never plans, planning never builds.
 
@@ -69,3 +70,12 @@ Reconstructs decisions from the files and git, and links them to code through `c
 - **Reports:** newest first, grouped by change, with the cited code under each decision, citing file paths and commit shas (and which repo each sha is from). Flags decisions with no author, and moved goalposts: intent edits in the same commit as code when the plans are in the repo; acceptance criteria reworded or dropped after their code's box was marked `[x]` when they're in another folder.
 - **Plans in another folder:** runs git for the plans with `git -C <folder> … -- .` (the folder may share a repo) and for the code here. With no git history, dates decisions only approximately, from the Log headings around them, and says so.
 - **Never:** infers a decision that isn't written down; it says when the record is silent.
+
+## yass-update
+
+Brings YASS up to date on two levels: the `yass` binary on this machine, and YASS's files in the repo.
+
+- **Reads:** `yass update --check` (the binary's version and how it was built, the repo's YASS version, the latest release, what would be installed).
+- **Runs:** `yass update` (with `--latest` only when the human wants the repo upgraded past the team's version), then `yass upgrade`; `git status` and a diff summary.
+- **Writes:** the `yass` binary, through `yass update`, which verifies it first; YASS's files in the repo, through `yass upgrade`. Commits only with latitude: a layout migration in its own commit, then `chore: upgrade YASS`.
+- **Human gates:** asks before downloading a binary, unless it has latitude to; never works around a failed checksum or provenance check, and never fetches a binary another way. A source build's update command (`go install`, a clone rebuild) runs only when the human says so.

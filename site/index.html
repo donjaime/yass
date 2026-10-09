@@ -69,7 +69,7 @@
 │       ├── design.md              <span class="dim">…the hard-to-undo calls (optional)</span>
 │       └── 2026-09-16-offline-queue/  <span class="dim">…and PR-sized pieces</span>
 └── <b>archive/</b>                       <span class="dim">finished changes, as they were</span></pre>
-  <p>That's the whole system: no database, no server, no integrations to set up. One small CLI, five playbooks your agent follows, and an optional git hook. It fits the workflow you already have: plans and progress travel in the same commits and pull requests as the code, and YASS never commits for you.</p>
+  <p>That's the whole system: no database, no server, no integrations to set up. One small CLI, six playbooks your agent follows, and an optional git hook. It fits the workflow you already have: plans and progress travel in the same commits and pull requests as the code, and YASS never commits for you.</p>
 </section>
 
 <section id="you-say" class="wrap">
@@ -84,6 +84,7 @@
       <tr><td>“Fix the double-tap crash” or “Keep going”</td><td><code>yass-work</code></td><td>builds against the acceptance criteria, ticking boxes and logging as it goes, resuming from the last <b>Next:</b></td></tr>
       <tr><td>“Where are we?”</td><td><code>yass-status</code></td><td>progress, blockers, recent decisions, what's ready to archive</td></tr>
       <tr><td>“Why did we pick SQLite?”</td><td><code>yass-log</code></td><td>the decision, who made it and when, with the code that carried it out</td></tr>
+      <tr><td>“Update YASS”</td><td><code>yass-update</code></td><td>a verified newer binary, then the repo upgraded, asking before it downloads</td></tr>
     </tbody>
   </table>
   </div>

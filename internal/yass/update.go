@@ -117,6 +117,7 @@ func cmdUpdate(a *args) (int, error) {
 	}
 	fmt.Printf("latest release: %s\n", plain(latest))
 	upToDate := bin != "" && semver.Compare(p.target, bin) == 0
+	installed := false
 	switch {
 	case upToDate:
 		fmt.Printf("yass is up to date (%s)\n", plain(bin))
@@ -131,9 +132,14 @@ func cmdUpdate(a *args) (int, error) {
 			return 0, err
 		}
 		fmt.Printf("installed yass %s (%s)\n", plain(p.target), how)
+		installed = true
 	}
 	if semver.Compare(latest, p.target) > 0 && !a.b["latest"] && a.v["version"] == "" {
 		fmt.Printf("%s is newer: `yass update --latest` gets it; then run `yass upgrade` in each repo and commit the diff (chore: upgrade YASS)\n", plain(latest))
+	}
+	if installed && repo != "" && semver.Compare(p.target, repo) > 0 {
+		fmt.Printf("next: this repo's YASS files are older (%s); run `yass upgrade` here and commit the diff (chore: upgrade YASS), and teammates then need yass %s too (`yass update`)\n",
+			plain(repo), plain(p.target))
 	}
 	return 0, nil
 }

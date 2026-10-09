@@ -45,7 +45,7 @@ for spec in terminal:Terminal "source:From Source" "agent:Agent Prompt"; do
 done
 if grep -q '<div class="tablist" hidden>' <<<"$install"; then ok "the tab bar is hidden without JavaScript"; else bad "the tab bar should start hidden, so the page works without JavaScript"; fi
 yousay="$(section you-say)"
-for s in yass-shape yass-plan yass-work yass-status yass-log; do
+for s in yass-shape yass-plan yass-work yass-status yass-log yass-update; do
   if grep -qF "<code>$s</code>" <<<"$yousay"; then ok "#you-say has $s"; else bad "#you-say has no row for $s"; fi
 done
 

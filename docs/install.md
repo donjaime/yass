@@ -119,7 +119,11 @@ Or, with Go, `go install github.com/donjaime/yass/cmd/yass@latest`. Run `yass st
 
 Upgrading has the same two parts as installing: the binary, once per machine, and each repo's files, once per repo.
 
-1. **Get the newer binary** the way you got it: download and verify a [release](#from-a-release) and copy its `yass` onto your PATH (or run its `install.sh --bin-dir ~/.local/bin`), `go install github.com/donjaime/yass/cmd/yass@latest`, or pull and rebuild a clone. `yass --version` shows what you have.
+1. **Get the newer binary:** `yass update` (a binary installed from a release, 0.4.0 or later). `yass update --check` shows what it would do, changing nothing.
+   - **Which version:** inside a repo whose YASS files are newer than your binary, exactly that version, so you match your team; otherwise the latest release. When a newer release exists than the one it installs, it says so: `yass update --latest` gets it, and `yass upgrade` and a commit follow. `--version vX.Y.Z` picks one. It never downgrades.
+   - **What it checks:** it refuses unless the download matches the release's `checksums.txt`. With the [GitHub CLI](https://cli.github.com) installed and signed in, it also verifies the release's signed build provenance (`gh attestation verify`), and refuses if that fails; without it, it says provenance wasn't checked. `--require-provenance` refuses to install without that check. The new binary must run and report the version asked for before it replaces the old one, which happens by a rename in the same folder (on Windows, the old one is set aside as `yass.exe.old` and removed on the next run).
+   - **When it won't:** a binary built with `go install` or from a clone isn't replaced; it prints `go install github.com/donjaime/yass/cmd/yass@<version>`, or how to rebuild the clone. A binary in a folder you can't write to: rerun with permission to write there, or install into a folder of your own. From a release before 0.4.0, update by hand once, as below.
+   - **By hand:** download and verify a [release](#from-a-release) and copy its `yass` onto your PATH (or run its `install.sh --bin-dir ~/.local/bin`), `go install github.com/donjaime/yass/cmd/yass@latest`, or pull and rebuild a clone. `yass --version` shows what you have.
 2. **Run `yass upgrade` in each repo,** from anywhere in it:
 
    ```bash
@@ -135,7 +139,7 @@ Then it brings each yass folder's layout up to date, including folders `yass.yam
 What it does with each file depends on the version stamped in it:
 - **Older, or no stamp** (files written by v0.2 or earlier): replaced with this binary's version. A skills folder also gets any playbook it's missing.
 - **The same version:** left alone. When nothing needs doing, it says everything is already up to date.
-- **Newer:** nothing is written, and it says to upgrade your binary first. `yass upgrade` never downgrades.
+- **Newer:** nothing is written, and it says to run `yass update` first. `yass upgrade` never downgrades.
 
 Your changes, `yass.yaml` and anything outside the `yass:begin`/`yass:end` markers in `AGENTS.md` are left alone. Hand edits to YASS's own files are replaced; since they're committed, the diff shows them. Files outside version control (user-folder playbooks) are labeled as such in the list of what it wrote.
 
