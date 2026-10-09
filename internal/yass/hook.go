@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -31,6 +32,7 @@ type place struct {
 }
 
 type hook struct {
+	top      string   // the repo's top, where git's paths start
 	prefixes []string // yass folders inside the repo that yass.yaml files point to, repo-relative
 	ignored  []string // folders a yass.yaml ignores, repo-relative: their files are ordinary files
 }
@@ -41,6 +43,7 @@ func newHook() *hook {
 	r := &Repo{}
 	r.Top = repoTop(getwd())
 	r.Cwd = r.Top
+	h.top = r.Top
 	r.findRoots()
 	for _, d := range r.Ignored {
 		rel, _ := filepath.Rel(r.Top, d)
@@ -282,7 +285,53 @@ func (h *hook) check(entries []entry, oldRef, newRef string) []string {
 			}
 		}
 	}
+	if hasCode {
+		out = append(out, h.outsideThePiece(entries, places)...)
+	}
 	return out
+}
+
+// outsideThePiece flags a commit with code that reaches past one piece of a large change: it edits
+// the parent's own files, or files in two of its pieces. A piece's branch changes only its own
+// folder, so parallel branches on different pieces never touch the same file. New files are fine.
+func (h *hook) outsideThePiece(entries []entry, places map[string]place) []string {
+	var out []string
+	pieces := map[string]map[string]bool{} // parent folder → pieces touched
+	for _, e := range entries {
+		pl := places[e.path]
+		if pl.kind != "changes" || e.status[0] == 'A' || !h.hasPieces(pl.folder) {
+			continue
+		}
+		rel := strings.TrimPrefix(e.path, pl.folder+"/")
+		piece, _, inside := strings.Cut(rel, "/")
+		if !inside || !isFile(filepath.Join(h.top, filepath.FromSlash(pl.folder), piece, "change.md")) {
+			// the parent's own files, its assets/ included: anything not in a piece
+			out = append(out, e.path+": a large change's own files change in commits without code; a piece's branch changes only its own folder")
+			continue
+		}
+		if pieces[pl.folder] == nil {
+			pieces[pl.folder] = map[string]bool{}
+		}
+		pieces[pl.folder][piece] = true
+	}
+	for folder, ps := range pieces {
+		if len(ps) > 1 {
+			var names []string
+			for p := range ps {
+				names = append(names, p)
+			}
+			sort.Strings(names)
+			out = append(out, fmt.Sprintf("%s: this commit with code changes pieces %s; each piece's branch changes only its own folder",
+				folder, strings.Join(names, " and ")))
+		}
+	}
+	return out
+}
+
+// hasPieces says whether a change folder holds pieces: subfolders with a change.md.
+func (h *hook) hasPieces(folder string) bool {
+	m, _ := filepath.Glob(filepath.Join(h.top, filepath.FromSlash(folder), "*", "change.md"))
+	return len(m) > 0
 }
 
 // nameStatus lists what a diff changed. With -z, paths come raw (no quoting of non-ASCII names) and

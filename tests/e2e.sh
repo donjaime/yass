@@ -1202,5 +1202,32 @@ sub "$N/plan.md" '^## Validation' '- [x] AC1 (R1) Given a mockup — verify: e2e
 git add -A; git commit -q -m "yass: with a mockup"; y archive with-a-mockup --force >/dev/null
 [ -f "yass/archive/$MONTH/$TODAY-with-a-mockup/assets/mockup.png" ] && ok "an asset in a change folder moves with it into the archive" || bad "asset left behind"
 
+echo "40. pieces own their files"
+newrepo "$W/e2e/own"; y init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+L=$(y new "Parallel" --large); printf '### M1\n- [ ] AC1 (R1) Given A — verify: e2e\n- [ ] AC2 (R1) Given B — verify: e2e\n' >> "$L/plan.md"
+PA=$(y new "Piece a" --in parallel); PB=$(y new "Piece b" --in parallel)
+sub "$PA/change.md" '^- \[ \] $' '- [ ] Delivers AC1\n- [ ] Work a'; sub "$PB/change.md" '^- \[ \] $' '- [ ] Delivers AC2\n- [ ] Work b'
+git add -A; git commit -q -m "yass: plan parallel"
+git switch -q -c a; sub "$PA/change.md" '^- \[ \] Work a' '- [x] Work a'; printf '### %s (sam)\n- Did: a\n' "$TODAY" >> "$PA/change.md"; echo a >> a.txt; git add -A
+hasnt "code with progress in one piece: no heads-up" "heads-up" git commit -q -m "feat: a"
+git switch -q main; git switch -q -c b; sub "$PB/change.md" '^- \[ \] Work b' '- [x] Work b'; printf '### %s (kim)\n- Did: b\n' "$TODAY" >> "$PB/change.md"; echo b >> b.txt; git add -A; git commit -q -m "feat: b"
+run_ok "branches on different pieces rebase onto each other without conflicts" git rebase -q a
+has   "…and both pieces' progress survives" "Work a.*Work b|Work b.*Work a" bash -c "grep -h '\[x\] Work' '$PA/change.md' '$PB/change.md' | tr '\n' ' '"
+sub "$L/plan.md" '^- \[ \] AC1 ' '- [x] AC1 '; echo c >> c.txt; git add -A
+has   "code plus a tick in the parent's plan.md: a heads-up naming it" "parallel/plan.md: a large change's own files change in commits without code" git commit -q -m "feat: c"
+git reset -q --hard HEAD~1
+printf '### %s (sam)\n- Did: parent note\n' "$TODAY" >> "$L/change.md"; echo d >> d.txt; git add -A
+has   "code plus a Log entry in the parent's change.md: a heads-up" "parallel/change.md: a large change's own files" git commit -q -m "feat: d"
+git reset -q --hard HEAD~1
+echo "- [/] more" >> "$PA/change.md"; echo "- [/] more" >> "$PB/change.md"; echo e >> e.txt; git add -A
+has   "code plus progress in two pieces: a heads-up naming both" "this commit with code changes pieces $TODAY-piece-a and $TODAY-piece-b" git commit -q -m "feat: e"
+git reset -q --hard HEAD~1
+sub "$L/plan.md" '^- \[ \] AC1 ' '- [x] AC1 '; printf '### %s (sam)\n- Did: closing note\n' "$TODAY" >> "$L/change.md"; git add -A
+hasnt "the parent's boxes and Log in a commit without code: no heads-up" "heads-up" git commit -q -m "yass: parallel progress"
+mkdir -p "$L/assets"; head -c 64 /dev/urandom > "$L/assets/sketch.png"; git add -A; git commit -q -m "yass: sketch"
+head -c 64 /dev/urandom > "$L/assets/sketch.png"; echo f >> f.txt; git add -A
+has   "a parent's subfolder that isn't a piece counts as the parent" "assets/sketch.png: a large change's own files" git commit -q -m "feat: f"
+git reset -q --hard HEAD~1
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

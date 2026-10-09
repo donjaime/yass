@@ -17,7 +17,8 @@ description: Work on a YASS change you've been pointed at. Create it if it's new
    - **No change yet?** For a small, clear request (a bug, a tweak), create one: `yass new "<title>" [--source <issue link>]` and write its Goal and Acceptance. If there's an approved plan from the harness's plan mode, turn it into the Goal, Acceptance and Steps. Anything that changes what users can do in a big way, or needs a design call, goes to `yass-shape` first.
 2. **Load.** `yass status <change>` lists its files and open boxes. Read `change.md` and resume from the last **Next:** in its Log. For a piece, also read the parent's `prd.md` and `plan.md`. Read the code and docs you'll touch.
 3. **Build.** Alongside the code:
-   - mark a box `[/]` when you start on it, and `[x]` once it's finished (Steps, Acceptance, and plan criteria the work delivers). If you stop partway, leave it `[/]` so the next session sees where you were.
+   - mark a box `[/]` when you start on it, and `[x]` once it's finished (Steps, Acceptance, and a large change's plan criteria when it has no pieces). If you stop partway, leave it `[/]` so the next session sees where you were.
+   - working on a piece, change only that piece's folder: tick its own boxes, including its `Delivers` box, and leave the parent's files alone. The parent needs no closing commit: `yass status` counts the criteria its pieces deliver, and `yass archive` ticks them.
    - append real choices to `## Decisions`: `- <decision> - <why> (<who>, <YYYY-MM-DD>)`
    - keep `## Steps` current; it's your checklist
    - if `yass root` is outside this repo, cite the code commits; see **Plans in another folder** below
