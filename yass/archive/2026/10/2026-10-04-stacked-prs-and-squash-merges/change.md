@@ -3,6 +3,7 @@ platforms: [all]
 source: design discussion with Jaime, 2026-10-04
 follows: 
 blocked:
+archived: 2026-10-09T14:22:20Z
 ---
 # Stacked PRs and squash merges
 
