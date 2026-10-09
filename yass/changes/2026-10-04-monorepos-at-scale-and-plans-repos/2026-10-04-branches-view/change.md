@@ -15,6 +15,7 @@ yass status shows by default who is working on which change or piece on unmerged
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
 - [ ] Delivers AC18–AC22 in [plan.md](../plan.md)
 - [ ] The README's `yass status` section documents the branch view, `--since` and `--no-branches`
+- [ ] `docs/monorepo.md` recommends `git commit-graph write --changed-paths` (or `fetch.writeCommitGraph`) and a recent git for large repos, and explains what the branch view reads and how fresh it is
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->

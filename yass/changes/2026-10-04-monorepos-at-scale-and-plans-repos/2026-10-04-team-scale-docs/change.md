@@ -13,15 +13,14 @@ A platform owner can roll YASS out across many teams: CODEOWNERS per yass folder
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC6–AC9, AC15 in [plan.md](../plan.md)
-- [ ] `docs/monorepo.md` recommends `git commit-graph write --changed-paths` (or `fetch.writeCommitGraph`) and a recent git for large repos, and explains what the branch view reads and how fresh it is
+- [x] Delivers AC6–AC9, AC15 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
 - [x] Sparse checkouts: a `blocked:` or `follows:` naming a change git has but this checkout doesn't (`notCheckedOut`, from `git ls-files` only when a name doesn't resolve) gets a note naming its yass folder, not a warning
 - [x] e2e §39: a cone-mode sparse checkout without `services/search/` (status, `--strict`, `blocked:`, `follows:`, a real typo still warning), and a binary asset archived with its change (585 ok)
 - [x] `docs/monorepo.md` "Many teams in one repo": CODEOWNERS, sparse checkouts, LFS for assets, history without the plans (each command run in this repo, in zsh and bash); README points to it
-- [ ] Jaime reviews the docs (AC6, AC9)
+- [x] Jaime reviews the docs (AC6, AC9)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -38,3 +37,6 @@ A platform owner can roll YASS out across many teams: CODEOWNERS per yass folder
 ### 2026-10-09 (claude)
 - Did: sparse checkouts say where an unseen change is; e2e for that and for assets; the many-teams docs.
 - Next: Jaime reviews the docs (AC6, AC9). The commit-graph and branch-view box should move to `branches-view` (a plan revision).
+### 2026-10-09 (claude)
+- Did: Jaime reviewed the docs and merged them (#62); the commit-graph box moved to `branches-view` in the revision. The piece is done.
+- Next: none here.
