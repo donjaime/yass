@@ -1178,5 +1178,29 @@ hasnt "the archive commit passes the hook" "heads-up|append-only" git commit -q 
 hasnt "main's whole history passes the hook" "." yass hook --range "$BASE..HEAD"
 [ "$(git log --oneline "$BASE..HEAD" | grep -c "close\|done")" -eq 0 ] && ok "no closing commit per piece" || bad "a closing commit snuck in"
 
+echo "39. sparse checkouts and assets"
+newrepo "$W/e2e/sparse-full"; y init >/dev/null; y init services/search --no-agents >/dev/null; y init services/web --no-agents >/dev/null
+mkb services/search/yass/changes/2026-01-02-search-thing; mkb services/search/yass/archive/2025/12/2025-12-01-search-old x
+mkb services/web/yass/changes/2026-01-01-web-thing / "2026-01-02-search-thing"
+sub services/web/yass/changes/2026-01-01-web-thing/change.md '^blocked:' 'follows: 2025-12-01-search-old\nblocked:'
+git add -A; git commit -q -m "chore: teams"
+SP="$W/e2e/sparse"; rm -rf "$SP"; git clone -q --no-checkout "file://$PWD" "$SP"; cd "$SP"
+git sparse-checkout set --cone services/web; git checkout -q main
+[ ! -e services/search ] && ok "(set up: a cone-mode sparse checkout without services/search/)" || bad "setup: search is checked out"
+has   "status lists the yass folder that's checked out" "2026-01-01-web-thing" y status
+hasnt "…and says nothing of the one that isn't" "services/search/yass/ *$|search-thing +[0-9]" y status
+run_ok "…and --strict passes" y status --strict
+has   "a blocked: outside the checkout says so, not that there's no such change" "blocked: '2026-01-02-search-thing' is in services/search/yass/, outside this sparse checkout, so it can't be checked" y status
+has   "…as does a follows:" "follows '2025-12-01-search-old', which is in services/search/yass/, outside this sparse checkout" y status
+hasnt "…and neither is a warning" "warning" y status
+cd "$W/e2e/sparse-full"
+mkb services/web/yass/changes/2026-01-03-typo / "2026-09-09-nope"
+has   "a name that really doesn't exist still warns" "warning: .*blocked: '2026-09-09-nope' looks like a change, but there's no such change" y status
+rm -rf services/web/yass/changes/2026-01-03-typo
+N=$(y new "With a mockup" --large); mkdir -p "$N/assets"; head -c 2048 /dev/urandom > "$N/assets/mockup.png"
+sub "$N/plan.md" '^## Validation' '- [x] AC1 (R1) Given a mockup — verify: e2e\n\n## Validation'
+git add -A; git commit -q -m "yass: with a mockup"; y archive with-a-mockup --force >/dev/null
+[ -f "yass/archive/$MONTH/$TODAY-with-a-mockup/assets/mockup.png" ] && ok "an asset in a change folder moves with it into the archive" || bad "asset left behind"
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

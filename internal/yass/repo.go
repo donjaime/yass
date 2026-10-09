@@ -469,7 +469,8 @@ type Repo struct {
 	Notes            []string // worth knowing, but not a problem: they don't fail --strict
 	Linked           bool     // a yass.yaml's folder wasn't found from this linked worktree
 	Active, Archived []*Change
-	piecesFound      bool // whether archivedPieces has run
+	piecesFound      bool              // whether archivedPieces has run
+	absent           map[string]string // changes git has that aren't on disk (sparse checkouts), by name
 }
 
 // findRepo finds the repo and its yass folders, without reading any changes.
@@ -838,7 +839,11 @@ func (r *Repo) check() {
 	}
 	for _, c := range r.everything() {
 		if f := c.Meta["follows"]; f != "" && !isKnown(path.Base(strings.TrimRight(f, "/"))) {
-			r.warn("%s: follows '%s', which isn't in changes/ or archive/", r.disp(c.Path), f)
+			if where := r.notCheckedOut(path.Base(strings.TrimRight(f, "/"))); where != "" {
+				r.note("%s: follows '%s', which is in %s, outside this sparse checkout, so it can't be checked", r.disp(c.Path), f, where)
+			} else {
+				r.warn("%s: follows '%s', which isn't in changes/ or archive/", r.disp(c.Path), f)
+			}
 		}
 		if t := c.Meta["created"]; t != "" {
 			if _, err := time.Parse(time.RFC3339, t); err != nil {
@@ -899,7 +904,11 @@ func (r *Repo) checkDeps() {
 			}
 			names = false
 			if nameRE.MatchString(path.Base(item)) {
-				r.warn("%s: blocked: '%s' looks like a change, but there's no such change (or more than one; give its path)", r.disp(c.Path), item)
+				if where := r.notCheckedOut(path.Base(item)); where != "" {
+					r.note("%s: blocked: '%s' is in %s, outside this sparse checkout, so it can't be checked", r.disp(c.Path), item, where)
+				} else {
+					r.warn("%s: blocked: '%s' looks like a change, but there's no such change (or more than one; give its path)", r.disp(c.Path), item)
+				}
 			}
 		}
 		if names && len(deps) > 0 {
@@ -1043,6 +1052,26 @@ func (r *Repo) mergedBranch(root *Root) string {
 
 // everything is the active changes and their pieces.
 func (r *Repo) everything() []*Change { return flatten(r.Active) }
+
+// notCheckedOut is the yass folder (repo-relative) holding a change by that name that git knows
+// but this checkout doesn't have on disk, as in a sparse checkout; "" if there's none. It asks git
+// only the first time a name doesn't resolve.
+func (r *Repo) notCheckedOut(name string) string {
+	if r.absent == nil {
+		r.absent = map[string]string{}
+		out, _ := git(r.Top, "ls-files", "--cached", "-z", "--",
+			":(glob)**/yass/changes/**/change.md", ":(glob)**/yass/archive/**/change.md")
+		for _, f := range strings.Split(out, "\x00") {
+			if f == "" || exists(filepath.Join(r.Top, filepath.FromSlash(f))) {
+				continue
+			}
+			if m := yassDirRE.FindStringSubmatch(f); m != nil {
+				r.absent[path.Base(path.Dir(f))] = path.Join(m[1], "yass") + "/"
+			}
+		}
+	}
+	return r.absent[name]
+}
 
 func (r *Repo) hasName(cs []*Change, name string) bool {
 	for _, c := range cs {

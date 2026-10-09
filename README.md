@@ -292,7 +292,7 @@ path: ../my-project-plans        # relative to this file
 
 Any folder named `yass/` with `changes/` or `archive/` inside counts, and so does any `yass.yaml`, so teams opt in by running `yass init services/payments`. `yass status` shows every `yass/` folder in the repo, and `yass new` puts a change in the nearest one to where you're standing. Cross-team work is links, not copies: a root change's plan names the team changes that deliver each criterion, each team change names the criterion it delivers, and a team change that needs another team's work first names it in `blocked:`. Ownership and review rules belong in your CODEOWNERS. Team folders also keep each archive a manageable size: a yass folder archiving more than about 1,000 changes a month is a sign to split it. See [examples/monorepo](examples/monorepo).
 
-Rolling it out across a large monorepo, with expensive CI and many teams? [docs/monorepo.md](docs/monorepo.md) shows how to keep plan-only commits from running builds and tests, including GitHub required checks, merge queues and Bazel.
+Rolling it out across a large monorepo, with expensive CI and many teams? [docs/monorepo.md](docs/monorepo.md) shows how to keep plan-only commits from running builds and tests (including GitHub required checks, merge queues and Bazel), route each team's plans to its reviewers with CODEOWNERS, work in sparse checkouts, store mockups with Git LFS, and leave the plans out of `git log` and `git diff`.
 
 ### Folders that aren't yours
 
