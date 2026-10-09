@@ -41,3 +41,6 @@ YASS works at a large company with one big monorepo, many teams and expensive CI
 ### 2026-10-09 (claude)
 - Did: piece 4 (`team-scale-docs`) done (#62). Revised the plan for #59: no closing commits (AC13 dropped), the commit-graph box moved to piece 6.
 - Next: piece 5 (`2026-10-04-pieces-own-their-files`); then piece 6 (`branches-view`), which also finishes piece 3's last benchmark.
+### 2026-10-09 (claude)
+- Did: pieces 3 (`speed-at-scale`) and 5 (`pieces-own-their-files`) done; piece 6 (`branches-view`) built, waiting on Jaime's review of its docs.
+- Next: piece 7 (`separate-plans-mode`), the start of the separate-plans pieces (8–11).
