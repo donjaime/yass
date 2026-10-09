@@ -143,7 +143,7 @@ func upgradeFiles() (int, error) {
 		}
 		switch upgradeAction(stamp, binVersion) {
 		case actNewer:
-			fmt.Fprintf(os.Stderr, "yass: %s was written by yass %s, newer than this one (%s); upgrade your yass binary, then run yass upgrade\n",
+			fmt.Fprintf(os.Stderr, "yass: %s was written by yass %s, newer than this one (%s); `yass update` gets that version, then run yass upgrade\n",
 				r.disp(t.path), stamp, binVersion)
 			return 1, nil
 		case actWrite:
@@ -258,7 +258,7 @@ func versionNote(r *Repo) string {
 	}
 	switch {
 	case newest != "":
-		return fmt.Sprintf("YASS's files here were written by yass %s, newer than this one (%s); upgrade your yass binary", newest, binVersion)
+		return fmt.Sprintf("YASS's files here were written by yass %s, newer than this one (%s); `yass update` gets that version", newest, binVersion)
 	case older:
 		return fmt.Sprintf("YASS's files here are older than this yass (%s); `yass upgrade` would upgrade them", binVersion)
 	}

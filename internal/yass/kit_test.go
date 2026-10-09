@@ -11,7 +11,7 @@ import (
 
 func TestKitCarriesThePlaybooksAndHook(t *testing.T) {
 	names, text := kitSkills()
-	want := []string{"yass-log", "yass-plan", "yass-shape", "yass-status", "yass-work"}
+	want := []string{"yass-log", "yass-plan", "yass-shape", "yass-status", "yass-update", "yass-work"}
 	if strings.Join(names, ",") != strings.Join(want, ",") {
 		t.Fatalf("kit playbooks = %v, want %v", names, want)
 	}

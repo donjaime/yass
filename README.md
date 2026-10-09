@@ -25,7 +25,7 @@ yass/
 └── archive/2026/10/                        finished changes, moved here as they were, by the month they were archived
 ```
 
-That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`, `evict`), five playbooks your agent follows, and an optional git hook.
+That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`, `evict`), six playbooks your agent follows, and an optional git hook.
 
 YASS doesn't commit for you. The CLI never commits (archiving only stages the move), and the playbooks only commit, branch or rebase when you or your harness have given the agent that latitude; otherwise they hand you the commands. The rules below are about what lands on your main branch, and the hook checks them.
 
@@ -95,13 +95,14 @@ Then talk to your agent:
 | "Where are we?" | `yass-status` | progress, blockers, recent decisions, what's ready to archive; changes nothing |
 | "Why did we pick SQLite?" | `yass-log` | the decision, who made it and when, from the folders and git, with the code that carried it out |
 | "Why does sync.go merge like this?" | `yass-log` | from the file's commits back to the change and decision that cite them |
+| "Update YASS" | `yass-update` | checks the binary against the repo and the latest release, gets a verified one (asking first), then upgrades the repo and hands you the diff |
 
 ### Upgrading
 
 Like installing, upgrading has two parts: the binary, once per machine, then each repo you use YASS in.
-1. **Get the newer binary,** the same way you got it: a [release](https://github.com/donjaime/yass/releases), `go install github.com/donjaime/yass/cmd/yass@latest`, or a rebuilt clone.
+1. **Get the newer binary:** `yass update`. It installs the version your repo's YASS files are at when the repo is ahead of your binary, else the latest release (`--latest` to go past the repo, `--check` to only look), verifies it first, and says when a newer release exists. It replaces release builds only; a binary from `go install` or a clone gets the command to update it that way. Or ask your agent to "update YASS" (`yass-update` does both steps, asking before it downloads).
 2. **Run `yass upgrade` in each repo,** from anywhere in it. It finds every YASS file from the repo root down (the playbooks wherever they are, each `AGENTS.md` section, the hook) and your user folder's playbooks, and brings them to the binary's version. It lists what it wrote, says when everything is already up to date, and won't downgrade: if the repo is newer than your binary, it tells you to upgrade the binary instead. Then it brings each yass folder's layout up to date (moving an older flat `archive/` into month folders, for one), and says how to commit that on its own. Your changes, `yass.yaml` and your own parts of `AGENTS.md` are never touched; hand edits to YASS's own files are replaced, so check the diff.
-3. **Commit it** (`chore: upgrade YASS`), so teammates get the new playbooks. They upgrade their binary when the repo moves ahead; `yass status` and `yass upgrade` tell anyone whose binary is older.
+3. **Commit it** (`chore: upgrade YASS`), so teammates get the new playbooks. They run `yass update` when the repo moves ahead; `yass status` and `yass upgrade` tell anyone whose binary is older.
 
 Read the [release notes](https://github.com/donjaime/yass/releases) first: before 1.0, a minor version can change the file format or the CLI. [docs/install.md](docs/install.md#upgrading) has the details.
 
@@ -116,8 +117,11 @@ yass init [dir]                 set up YASS: yass/, and for the repo itself the 
           [--global]            …with the playbooks in your user folder instead of the repo
           [--hooks]             …and turn the hook on for this clone
           [--no-agents]         …leaving AGENTS.md, the playbooks and the hook alone
+yass update                     get a newer yass binary, verified: the repo's version if the repo is
+                                ahead, else the latest release
+            [--check] [--latest] [--version vX.Y.Z] [--require-provenance]
 yass upgrade                    bring every YASS file in the repo, and your user folder's playbooks,
-                                up to this binary's version (after you upgrade the binary)
+                                up to this binary's version (after yass update)
 yass new "<title>"              a small change
          [--large] [--design]   …with prd.md and plan.md, and design.md
          [--in <change>]        …as a piece of a large change

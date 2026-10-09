@@ -34,7 +34,8 @@ echo "1. install"
 has   "a first install suggests the adopting commit" "chore: adopt YASS" echo "$INSTALL_OUT"
 for f in tools/yass/githooks/pre-commit yass/README.md yass/changes/.gitkeep \
          yass/archive/.gitkeep AGENTS.md .agents/skills/yass-work/SKILL.md .agents/skills/yass-shape/SKILL.md \
-         .agents/skills/yass-plan/SKILL.md .agents/skills/yass-status/SKILL.md .agents/skills/yass-log/SKILL.md; do
+         .agents/skills/yass-plan/SKILL.md .agents/skills/yass-status/SKILL.md .agents/skills/yass-log/SKILL.md \
+         .agents/skills/yass-update/SKILL.md; do
   [ -e "$f" ] && ok "has $f" || bad "missing $f"
 done
 has "the yass folder README describes the monthly archive" "archive/.*<YYYY>/<MM>/" cat yass/README.md
@@ -713,7 +714,7 @@ git add -A; git commit -qm "chore: upgrade YASS"
 has   "at the binary's version, it's already up to date" "already up to date: YASS's files are at 0.5.0" "$Y5" upgrade
 [ -z "$(git status --porcelain)" ] && ok "…and changes nothing" || bad "an up-to-date upgrade changed files"
 run_fail "an older binary refuses" "$Y4" upgrade
-has   "…naming the newer version and the fix" "written by yass 0.5.0, newer than this one \(0.4.0\); upgrade your yass binary" "$Y4" upgrade
+has   "…naming the newer version and the fix" "written by yass 0.5.0, newer than this one \(0.4.0\); .yass update. gets that version" "$Y4" upgrade
 [ -z "$(git status --porcelain)" ] && ok "…and writes nothing" || bad "a refused upgrade changed files"
 has   "a +dirty build rewrites its own version" "wrote AGENTS.md" "$Y5D" upgrade
 git checkout -q -- .
@@ -753,7 +754,7 @@ has   "…but leaves folders yass.yaml ignores alone" "0.4.0" cat vendor/x/.agen
 echo "27. yass status knows the versions"
 Y4="$(vbin 0.4.0)"; Y5="$(vbin 0.5.0)"; Y6="$(vbin 0.6.0)"
 newrepo "$W/e2e/st"; "$Y5" init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
-has   "an older binary hears the repo is newer, and to upgrade the binary" "note: YASS's files here were written by yass 0.5.0, newer than this one \(0.4.0\); upgrade your yass binary" "$Y4" status
+has   "an older binary hears the repo is newer, and to run yass update" "note: YASS's files here were written by yass 0.5.0, newer than this one \(0.4.0\); .yass update. gets that version" "$Y4" status
 run_ok "…as a note, so --strict doesn't fail on it" "$Y4" status --strict
 has   "a newer binary hears yass upgrade would upgrade the repo" "note: YASS's files here are older than this yass \(0.6.0\); .yass upgrade. would upgrade them" "$Y6" status
 hasnt "the same version says nothing about versions" "YASS's files" "$Y5" status
@@ -1126,10 +1127,24 @@ has   "…saying where, and what to do" "can't write to .*inst, where this yass 
 chmod u+w "$W/inst"
 run_fail "a release that doesn't exist: refused" upd "$NOGH" update --version v0.42.0
 has   "…naming it" "there's no release v0.42.0" upd "$NOGH" update --version v0.42.0
+fresh >/dev/null
+has   "installing past the repo says to upgrade it next, and that teammates follow" "^next: this repo's YASS files are older \(0.5.0\); run .yass upgrade. here and commit the diff \(chore: upgrade YASS\), and teammates then need yass 0.6.0 too" upd "$NOGH" update --latest
+fresh >/dev/null
+hasnt "…matching the repo, there's nothing next" "^next:" upd "$NOGH" update
+fresh >/dev/null
 { kill "$RELPID"; wait "$RELPID"; } 2>/dev/null; RELPID=""
 run_fail "releases unreachable: refused" upd "$NOGH" update
 has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
 unset YASS_RELEASES_URL
+
+echo "37. yass-update, the playbook"
+newrepo "$W/e2e/update-kit"; "$(vbin 0.5.0)" init --claude >/dev/null
+[ -f .agents/skills/yass-update/SKILL.md ] && [ -f .claude/skills/yass-update/SKILL.md ] && ok "init installs yass-update with the others" || bad "no yass-update playbook"
+has   "the AGENTS.md section points to it" "out of step, or someone asks to update YASS: .yass-update." cat AGENTS.md
+has   "…and so does yass-status" "Versions out of step.*yass-update" cat .agents/skills/yass-status/SKILL.md
+git add -A; git commit -q -m "chore: adopt YASS"; rm -rf .agents/skills/yass-update .claude/skills/yass-update
+has   "upgrade adds it to a repo that doesn't have it" "wrote .agents/skills/yass-update/SKILL.md" "$(vbin 0.5.0)" upgrade
+[ -f .claude/skills/yass-update/SKILL.md ] && ok "…in .claude/skills too" || bad "not added to .claude/skills"
 
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

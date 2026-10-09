@@ -22,5 +22,6 @@ description: Report where YASS work stands. Summarize progress across active cha
    - **Blocked:** the question to answer. If the answer changes intent, `yass-shape` or `yass-plan` makes the edit.
    - **Disagreeing with a decision:** the reversal is recorded as a new decision, not by rewriting the old one.
    - **Ready to archive:** `yass archive <change>`.
+   - **Versions out of step** (`yass status` ends with a note about the `yass` binary and the repo's YASS files): `yass-update` sorts out both.
    - **Stale or abandoned:** resume it with `yass-work`, or drop what's left (`[-]`, with a reason in Decisions) and archive it.
 4. **Offer one next move.** Asked "what's next?", it's the first change in `yass status` order that isn't `done` or blocked; without a `queue.md`, say that nothing ranks the changes and offer to start one. Plan a shaped change, point `yass-work` at a specific change or piece, or shape something new. Don't make it until the human says so.
