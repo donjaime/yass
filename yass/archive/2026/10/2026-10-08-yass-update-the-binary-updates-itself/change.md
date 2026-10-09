@@ -4,6 +4,7 @@ source: Jaime, 2026-10-08: users shouldn't have to download binaries by hand bef
 follows: 2026-10-04-the-binary-carries-the-playbooks
 blocked:
 created: 2026-10-08T12:48:58Z
+archived: 2026-10-09T03:02:25Z
 ---
 # yass update: the binary updates itself
 
