@@ -8,8 +8,12 @@ import (
 	"github.com/donjaime/yass/internal/yass"
 )
 
-// version is set by release builds: -ldflags "-X main.version=1.2.3".
-var version = "dev"
+// version is set by release builds: -ldflags "-X main.version=1.2.3". channel is "release" in
+// release builds (-X main.channel=release), so yass update knows it may replace this binary.
+var (
+	version = "dev"
+	channel = ""
+)
 
 func main() {
 	if version == "dev" {
@@ -17,5 +21,5 @@ func main() {
 			version = bi.Main.Version // go install github.com/donjaime/yass/cmd/yass@v1.2.3
 		}
 	}
-	os.Exit(yass.Main(os.Args[1:], version))
+	os.Exit(yass.MainChannel(os.Args[1:], version, channel))
 }

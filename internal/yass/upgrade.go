@@ -199,6 +199,40 @@ func outsideNote(outside bool) string {
 	return ""
 }
 
+// stampedFiles are the YASS files at the repo root that carry a version stamp: the AGENTS.md
+// section, the playbooks in .agents/ and .claude/, the hook; and, with user, the user folder's
+// playbooks. Only the root, so it stays fast in large repos.
+func stampedFiles(r *Repo, user bool) []string {
+	var paths []string
+	if ap := filepath.Join(r.Top, "AGENTS.md"); strings.Contains(read(ap), "<!-- yass:begin") {
+		paths = append(paths, ap)
+	}
+	dirs := []string{filepath.Join(r.Top, ".agents", "skills"), filepath.Join(r.Top, ".claude", "skills")}
+	if user {
+		dirs = append(dirs, userSkillsDir(), userClaudeSkillsDir())
+	}
+	for _, d := range dirs {
+		m, _ := filepath.Glob(filepath.Join(d, "yass-*", "SKILL.md"))
+		paths = append(paths, m...)
+	}
+	if hp := filepath.Join(r.Top, filepath.FromSlash(HookPath), "pre-commit"); exists(hp) {
+		paths = append(paths, hp)
+	}
+	return paths
+}
+
+// repoVersion is the newest version stamped in the repo's own YASS files, or "" outside a repo
+// that uses YASS.
+func repoVersion(r *Repo) string {
+	newest := ""
+	for _, p := range stampedFiles(r, false) {
+		if v := semverOf(readStamp(p)); v != "" && (newest == "" || semver.Compare(v, newest) > 0) {
+			newest = v
+		}
+	}
+	return newest
+}
+
 // versionNote is yass status's one line about versions: whether this binary is older than the
 // version that wrote the repo's YASS files (upgrade the binary), or newer (yass upgrade would
 // upgrade them). It only reads the files at the repo root and the user folder's playbooks, so
@@ -207,17 +241,7 @@ func versionNote(r *Repo) string {
 	if semverOf(binVersion) == "" {
 		return ""
 	}
-	var paths []string
-	if ap := filepath.Join(r.Top, "AGENTS.md"); strings.Contains(read(ap), "<!-- yass:begin") {
-		paths = append(paths, ap)
-	}
-	for _, d := range []string{filepath.Join(r.Top, ".agents", "skills"), filepath.Join(r.Top, ".claude", "skills"), userSkillsDir(), userClaudeSkillsDir()} {
-		m, _ := filepath.Glob(filepath.Join(d, "yass-*", "SKILL.md"))
-		paths = append(paths, m...)
-	}
-	if hp := filepath.Join(r.Top, filepath.FromSlash(HookPath), "pre-commit"); exists(hp) {
-		paths = append(paths, hp)
-	}
+	paths := stampedFiles(r, true)
 	newest, older := "", false
 	for _, p := range paths {
 		stamp := readStamp(p)

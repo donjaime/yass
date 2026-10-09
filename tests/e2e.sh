@@ -1008,5 +1008,63 @@ run_ok "…and exits 0" bash -c "cd '$SH' && yass decisions --since 2025-01-01"
 has   "--cites in a shallow clone says what it couldn't read too" "couldn't read" bash -c "cd '$SH' && yass decisions --cites $C7"
 has   "…JSON stays clean on stdout" '^\[' bash -c "cd '$SH' && yass decisions --since 2025-01-01 --json 2>/dev/null | head -1"
 
+echo "35. yass update --check"
+# rbin <version>: a release build (it carries the release marker), built once
+rbin() { local d="$W/rbin/$1"
+  [ -x "$d/yass" ] || { mkdir -p "$d"; (cd "$ROOT" && go build -ldflags "-X main.version=$1 -X main.channel=release" -o "$d/yass" ./cmd/yass); }
+  echo "$d/yass"; }
+# releases <latest>: a fake release server whose /releases/latest redirects to v<latest>, as GitHub's does
+RELPID=""
+releases() { [ -n "$RELPID" ] && { kill "$RELPID"; wait "$RELPID"; } 2>/dev/null; rm -f "$W/relport"
+  python3 - "$1" "$W/relport" "$W/releases" <<'PY' &
+import http.server, socketserver, sys, os
+latest, portfile, root = sys.argv[1], sys.argv[2], sys.argv[3]
+class H(http.server.BaseHTTPRequestHandler):
+    def do_HEAD(self, body=False):
+        if self.path == "/releases/latest":
+            self.send_response(302); self.send_header("Location", "/releases/tag/v" + latest); self.end_headers(); return
+        f = os.path.join(root, self.path.removeprefix("/releases/download/"))
+        if self.path.startswith("/releases/download/") and os.path.isfile(f):
+            data = open(f, "rb").read()
+            self.send_response(200); self.send_header("Content-Length", str(len(data))); self.end_headers()
+            if body: self.wfile.write(data)
+            return
+        self.send_response(404); self.end_headers()
+    def do_GET(self): self.do_HEAD(body=True)
+    def log_message(self, *a): pass
+s = socketserver.TCPServer(("127.0.0.1", 0), H)
+open(portfile, "w").write(str(s.server_address[1])); s.serve_forever()
+PY
+  RELPID=$!
+  for _ in $(seq 50); do [ -s "$W/relport" ] && break; sleep 0.1; done
+  export YASS_RELEASES_URL="http://127.0.0.1:$(cat "$W/relport")/releases"; }
+R4="$(rbin 0.4.0)"; R6="$(rbin 0.6.0)"
+newrepo "$W/e2e/update"; "$(vbin 0.5.0)" init >/dev/null
+releases 0.6.0
+OUT="$("$R4" update --check)"
+has   "--check names the binary and how it was built" "^yass 0.4.0 \(release build, " echo "$OUT"
+has   "…the repo's version" "^this repo's YASS files: 0.5.0$" echo "$OUT"
+has   "…the latest release" "^latest release: 0.6.0$" echo "$OUT"
+has   "…and that it would match the repo" "^yass update would install 0.5.0 \(to match this repo's YASS files\)$" echo "$OUT"
+has   "…says a newer one exists, how to get it, and what follows" "^0.6.0 is newer: .yass update --latest. gets it; then run .yass upgrade. in each repo and commit the diff" echo "$OUT"
+run_ok "…exits 0" "$R4" update --check
+has   "…and changes nothing" "^yass 0.4.0$" "$R4" version
+has   "--latest: it would install the latest" "would install 0.6.0 \(the latest release\)" "$R4" update --check --latest
+hasnt "…and says no more about newer ones" "is newer" "$R4" update --check --latest
+has   "the latest binary is up to date" "^yass is up to date \(0.6.0\)$" "$R6" update --check
+run_ok "…and exits 0" "$R6" update --check
+cd "$W"
+has   "outside a repo: no repo line, and the latest" "would install 0.6.0 \(the latest release\)" "$R4" update --check
+hasnt "…no repo line" "this repo" "$R4" update --check
+cd "$W/e2e/update"
+has   "a go install build isn't replaced, and gets its command" "won't replace this binary: it was built with go install; .*go install github.com/donjaime/yass/cmd/yass@v0.5.0" "$(vbin 0.4.0)" update --check
+has   "a clone build gets how to rebuild" "built from a clone; update it there" y update --check
+run_fail "an older --version is refused" "$R6" update --check --version v0.4.0
+has   "…and says why" "never downgrades" "$R6" update --check --version v0.4.0
+{ kill "$RELPID"; wait "$RELPID"; } 2>/dev/null; RELPID=""
+run_fail "unreachable releases: it says so" "$R4" update --check
+has   "…naming where it looked" "couldn't reach http://127.0.0.1" "$R4" update --check
+unset YASS_RELEASES_URL
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]
