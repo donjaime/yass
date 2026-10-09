@@ -126,8 +126,9 @@ yass new "<title>"              a small change
          [--large] [--design]   …with prd.md and plan.md, and design.md
          [--in <change>]        …as a piece of a large change
          [--source gh#41] [--follows <archived>] [--platforms "ios, android"] [--goal "…"]
-yass status [<change>]          what's in flight, progress, next steps, what's blocked, not started or done
-            [--archived] [--strict]
+yass status [<change>]          what's in flight, progress, next steps, what's blocked, not started or done,
+                                and the unmerged branches working on each
+            [--archived] [--strict] [--since 14d|DATE] [--no-branches]
 yass archive <change>           move a finished change to archive/<YYYY>/<MM>/ (refuses while boxes are open)
 yass evict                      move the oldest archived months into git history, when past keep:
 yass decisions                  past decisions, active and archived, newest first, 50 at a time
@@ -146,9 +147,13 @@ yass hook [--range A..B]        the optional hook's check, for CI
 2026-09-14-offline-sync  (large)   5/16  next: offline-queue first; sync-badge needs it.
   ├ 2026-09-16-offline-queue        4/8  next: drain on `online` for the web, then batch the drain.
   └ 2026-09-24-sync-badge           0/5  BLOCKED: does the web get the badge too?
+        ↳ origin/badge-web  Kim, 2 h ago  2/5  next: ask Sam about the web
+branches: unmerged work since 2026-09-02; remote branches as of the last fetch, 2 h ago
 ```
 
 Changes are listed oldest first, unless the yass folder has a [`queue.md`](#the-queue) saying what order to tackle them in.
+
+Under each change or piece, `yass status` lists the branches working on it that haven't merged yet: local branches, and pushed ones as of your last fetch, with commits to that change's folder in the last 30 days. Each line has the branch, who touched it last and when, its progress there, and its latest **Next:**. So you see who's on what, and how far they've got, without anyone claiming work anywhere. It never fetches; the last line says how fresh the pushed branches are, so run `git fetch` first for an up-to-date view. `--since 14d` (or a date) changes the window, and `--no-branches` leaves the view out.
 
 The CLI is one Go binary with no runtime dependencies. It reads the files and moves folders; it never commits, branches or merges.
 

@@ -13,8 +13,8 @@ Parallel branches on different pieces of one change never touch the same YASS fi
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC10, AC11, AC14 in [plan.md](../plan.md)
-- [/] The README's section on large changes explains the rule, and that the parent needs no closing commit
+- [x] Delivers AC10, AC11, AC14 in [plan.md](../plan.md)
+- [x] The README's section on large changes explains the rule, and that the parent needs no closing commit
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -22,7 +22,7 @@ Parallel branches on different pieces of one change never touch the same YASS fi
 - [x] e2e §40: two branches on different pieces rebase onto each other without conflicts (AC10); each heads-up, and the commits that get none (AC11) (593 ok)
 - [x] `yass-plan`, `yass-work` and the README say a piece's branch changes only that piece's folder and the parent needs no closing commit (AC14)
 - [x] This piece's own progress follows the rule: only this folder changes; AC10, AC11 and AC14 count as delivered through the `Delivers` box
-- [ ] Jaime reviews the wording (AC14, README)
+- [x] Jaime reviews the wording (AC14, README)
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -39,3 +39,6 @@ Parallel branches on different pieces of one change never touch the same YASS fi
 ### 2026-10-09 (claude)
 - Did: the hook's heads-up for commits with code that reach past one piece; e2e for parallel pieces; the wording in `yass-plan`, `yass-work` and the README. `go test`, `tests/e2e.sh` (593 ok), `tests/examples.sh`, `tests/site.sh` pass.
 - Next: Jaime reviews the wording (AC14, README); then this piece is done.
+### 2026-10-09 (claude)
+- Did: Jaime reviewed the wording and merged it (#64). The piece is done.
+- Next: none here.

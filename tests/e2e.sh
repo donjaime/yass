@@ -1229,5 +1229,44 @@ head -c 64 /dev/urandom > "$L/assets/sketch.png"; echo f >> f.txt; git add -A
 has   "a parent's subfolder that isn't a piece counts as the parent" "assets/sketch.png: a large change's own files" git commit -q -m "feat: f"
 git reset -q --hard HEAD~1
 
+echo "41. the branch view"
+O="$W/e2e/bv-origin"; newrepo "$O"; git config uploadpack.allowfilter true; y init >/dev/null
+L=$(y new "Shared" --large); A=$(y new "Piece a" --in shared); B=$(y new "Piece b" --in shared)
+sub "$A/change.md" '^- \[ \] $' '- [ ] Delivers AC1\n- [ ] Work a'; sub "$B/change.md" '^- \[ \] $' '- [ ] Delivers AC2\n- [ ] Work b'
+git add -A; git commit -q -m "yass: shared"
+git switch -q -c feat-b; sub "$B/change.md" '^- \[ \] Work b' '- [x] Work b'; printf '### %s (kim)\n- Next: polish b\n' "$TODAY" >> "$B/change.md"
+git -c user.name=Kim commit -qam "feat: b"; git switch -q main
+C1="$W/e2e/bv"; rm -rf "$C1"; git clone -q "file://$O" "$C1"; cd "$C1"; git config user.email t@t; git config user.name Sam
+git switch -q -c feat-a; sub "$A/change.md" '^- \[ \] Work a' '- [x] Work a'; printf '### %s (sam)\n- Next: test a\n' "$TODAY" >> "$A/change.md"
+git commit -qam "feat: a"; git switch -q main
+git switch -q -c code-only; echo x >> app.txt; git commit -qam "feat: code only"; git switch -q main
+git switch -q -c merged-one; echo "- [/] merged" >> "$A/change.md"; git commit -qam "wip"; git switch -q main
+git -C "$O" fetch -q "$C1" merged-one:merged-one; git -C "$O" merge -q --ff-only merged-one; git fetch -q   # merged on the origin's main
+git switch -q -c old-one; echo "- [/] old" >> "$B/change.md"; git add -A
+D40=$(date -v-40d +%Y-%m-%dT12:00:00 2>/dev/null || date -d '40 days ago' +%Y-%m-%dT12:00:00); GIT_AUTHOR_DATE="$D40" GIT_COMMITTER_DATE="$D40" git commit -q -m "old"; git switch -q main
+git switch -q -c ten-days; echo "- [/] ten" >> "$L/change.md"; git add -A
+D10=$(date -v-10d +%Y-%m-%dT12:00:00 2>/dev/null || date -d '10 days ago' +%Y-%m-%dT12:00:00); GIT_AUTHOR_DATE="$D10" GIT_COMMITTER_DATE="$D10" git commit -q -m "ten"; git switch -q main
+OUT="$(y status)"
+hasnt "a Next: inside the template's comment isn't taken for one" "next: … -->" echo "$OUT"
+has   "a local branch shows under its piece, with author, progress and next" "↳ feat-a  Sam, .*  1/2  next: test a" echo "$OUT"
+has   "a pushed branch too" "↳ origin/feat-b  Kim, .*  1/2  next: polish b" echo "$OUT"
+hasnt "a branch that only changes code isn't listed" "code-only" echo "$OUT"
+hasnt "nor one already merged" "merged-one" echo "$OUT"
+hasnt "nor one with nothing in the last 30 days" "old-one" echo "$OUT"
+has   "a branch on the parent shows under the parent" "↳ ten-days  Sam" echo "$OUT"
+has   "it says how fresh the remote branches are" "^branches: unmerged work since .*; remote branches as of the last fetch" echo "$OUT"
+hasnt "--since 7d leaves out a branch from 10 days ago" "ten-days" y status --since 7d
+has   "…--since an earlier date takes it in" "ten-days" y status --since "$(date -v-20d +%F 2>/dev/null || date -d '20 days ago' +%F)"
+hasnt "--no-branches shows none" "↳|^branches:" y status --no-branches
+hasnt "…and looks none up" "for-each-ref" bash -c 'GIT_TRACE=1 yass status --no-branches 2>&1'
+hasnt "the branch view never fetches" "fetch|remote-https|upload-pack" bash -c 'GIT_TRACE=1 yass status 2>&1 | grep "trace: \(built-in\|exec\|run_command\)"'
+P2="$W/e2e/bv-partial"; rm -rf "$P2"; git clone -q --filter=blob:none "file://$O" "$P2"; cd "$P2"
+has   "a blobless clone shows a branch whose files aren't local, without progress" "↳ origin/feat-b  Kim, .*\(its files aren't local\)" y status
+hasnt "…and downloads nothing to do it" "fetch|upload-pack" bash -c 'GIT_TRACE=1 yass status 2>&1 | grep "trace: \(built-in\|exec\|run_command\)"'
+NR="$W/e2e/bv-noremote"; newrepo "$NR"; y init >/dev/null; N=$(y new "Lonely"); git add -A; git commit -q -m "yass: lonely"
+hasnt "no unmerged branches: status looks as it always did" "↳|^branches:" y status
+git switch -q -c local-only; sub "$N/change.md" '^- \[ \] $' '- [/] Started'; git commit -qam "start"; git switch -q main
+has   "with no remote, it says there are only local branches" "^branches: .*no remote branches here" y status
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

@@ -280,6 +280,14 @@ func cmdStatus(a *args) (int, error) {
 		return 0, nil
 	}
 	archived := a.b["archived"]
+	since, err := parseSince(a.v["since"], time.Now())
+	if err != nil {
+		return 0, err
+	}
+	var view *branchView
+	if !archived && !a.b["no-branches"] {
+		view = r.branches(since)
+	}
 	multi := len(r.Roots) > 1
 	pad := ""
 	if multi {
@@ -329,21 +337,27 @@ func cmdStatus(a *args) (int, error) {
 				name += "  (large)"
 			}
 			rows = append(rows, [2]string{name, statusLine(c)})
+			rows = append(rows, view.linesFor(r, c, pad+"      ")...)
 			for i, p := range c.Pieces {
 				branch := "├"
 				if i == len(c.Pieces)-1 {
 					branch = "└"
 				}
 				rows = append(rows, [2]string{"  " + branch + " " + p.Name, statusLine(p)})
+				rows = append(rows, view.linesFor(r, p, pad+"        ")...)
 			}
 		}
 		w := 0
 		for _, row := range rows {
-			if n := len([]rune(row[0])); n > w {
+			if n := len([]rune(row[0])); n > w && row[0] != branchRowMark {
 				w = n
 			}
 		}
 		for _, row := range rows {
+			if row[0] == branchRowMark {
+				fmt.Println(row[1])
+				continue
+			}
 			fmt.Println(strings.TrimRight(pad+padRight(row[0], w)+"  "+row[1], " "))
 		}
 		if len(evicted) > 0 {
@@ -358,6 +372,9 @@ func cmdStatus(a *args) (int, error) {
 	}
 	if len(r.Roots) == 0 {
 		fmt.Println(r.noRoot("no yass/ folder yet; run `yass init`"))
+	}
+	if view != nil && !archived {
+		fmt.Printf("branches: unmerged work since %s; %s\n", since.Format("2006-01-02"), view.fresh)
 	}
 	if n := versionNote(r); n != "" {
 		r.note("%s", n)

@@ -141,6 +141,19 @@ Route each yass folder's plans to the team that owns it, and the root folder (cr
 
 A pull request that changes a team's PRD, plan or progress then asks that team to review it, and a cross-team change's plan goes to the people who coordinate across teams. Keep these lines below any broader rule for the same paths: the last matching line wins.
 
+### Seeing who's working on what
+
+`yass status` lists, under each change and piece, the unmerged branches with recent commits to its folder ([README](../README.md#the-cli)). It reads what's already in your clone, in a few git commands whatever the number of branches: the branch refs, one `git log` over them limited to the yass folders, and the changed files at their tips. It never fetches, so it's as fresh as your last `git fetch`, which its last line says; a branch deleted on the server stays listed until `git fetch --prune`. In a blobless partial clone it never downloads a branch's files to read its progress: such branches show without it.
+
+On a large repo, keep git recent (2.44 or later, so a partial clone is never asked to download) and let it keep a commit graph with changed-path filters, which makes walking many branches by path fast:
+
+```bash
+git config fetch.writeCommitGraph true             # refresh the commit graph on every fetch
+git commit-graph write --reachable --changed-paths # or build it once now
+```
+
+With 1,000 recently active remote branches on a repo of 200 yass folders and 2,000 changes, `yass status` takes about 1.5s on a 2024 laptop; with 100, the view adds next to nothing. `--no-branches` leaves it out, for scripts.
+
 ### Sparse checkouts
 
 In a sparse checkout, `yass status` reports on the yass folders you have checked out and says nothing about the rest. A change that names one outside your checkout, in `blocked:` or `follows:`, gets a note saying where it is and that it can't be checked from here, not a warning, so `yass status --strict` still passes. To see it, add its folder (`git sparse-checkout add services/search`).
