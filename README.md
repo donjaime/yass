@@ -193,7 +193,7 @@ A large change has a slimmer `change.md` (goal, decisions, log) and adds:
 - **`prd.md`:** why, for whom, measurable outcomes, requirements (`R1`), non-goals, milestones, open questions.
 - **`plan.md`:** approach, acceptance criteria per milestone (`AC1 (R1) Given … — verify: …`), the order of the pieces, validation.
 - **`design.md`** (optional): context, at least two options, the decision and who made it, rollback.
-- **Pieces:** PR-sized changes in their own dated folders inside it. Each names the plan criteria it delivers.
+- **Pieces:** PR-sized changes in their own dated folders inside it. Each names the plan criteria it delivers (`- [ ] Delivers AC1, AC3–AC5 in plan.md`). A criterion counts as done in `yass status` once every piece that delivers it is done, and `yass archive` ticks it in the archived `plan.md`, so landing a piece needs no closing commit for the parent.
 
 ### The queue
 
