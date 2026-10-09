@@ -44,8 +44,8 @@ This repo's own `ci.yml` adopts the GitHub recipe, so the recipe is tested every
 - [ ] AC10 (R7) Given two branches each working on a different piece of the same change, ticking boxes and appending Log entries only in their own piece's folder, when one rebases onto the other, then it finishes without conflicts — verify: e2e §15
 - [ ] AC11 (R7) Given a commit with code that also changes the parent's `plan.md` or `change.md`, or files in two pieces, when it's committed with the hook on, then the hook gives a heads-up naming the files, and a closing commit with no code that marks parent boxes gets none — verify: e2e §15
 - [-] AC12 (R7) Given a parent criterion whose delivering pieces (by their `Delivers AC1, AC3–AC5` boxes) are all done, when you run `yass status <change>`, then it lists that criterion as ready to mark. A criterion with any piece still open isn't listed, and one no piece delivers is left alone — verify: e2e §15; go test for parsing ID lists and ranges
-- [ ] AC13 (R7) Given a parent whose criteria are all marked done in a closing commit, after its pieces are done, when you run `yass status`, then the change is `done` and `yass archive` accepts it, as today — verify: e2e §15
-- [ ] AC14 (R7) Given the `yass-plan` and `yass-work` skills, then they say a branch working on a piece changes only that piece's folder, and parent boxes are marked in a closing commit with no code when status says they're ready — verify: manual: review
+- [-] AC13 (R7) Given a parent whose criteria are all marked done in a closing commit, after its pieces are done, when you run `yass status`, then the change is `done` and `yass archive` accepts it, as today — verify: e2e §15
+- [ ] AC14 (R7) Given the `yass-plan` and `yass-work` skills, then they say a branch working on a piece changes only that piece's folder, and that the parent needs no closing commit: `yass status` counts the criteria its pieces deliver, and `yass archive` ticks them — verify: manual: review
 - [x] AC15 (R8) Given `docs/monorepo.md`, then it gives commands for `git log`, `blame` and diff that leave YASS paths out, built from `yass paths` — verify: manual: run each in this repo
 - [ ] AC16 (R9) Given a generated repo with 200 yass folders and 2,000 changes, with 100 recently active branches, when you run `yass status` (branch view included), then it finishes in under 1s on a 2024-or-later laptop — verify: `tests/bench.sh`; record the timing in the Log
 - [ ] AC17 (R9) Given a generated repo of 100,000 files, when you commit a one-file change with the hook on, then the hook adds under 200ms — verify: `tests/bench.sh`; record the timing in the Log
@@ -95,7 +95,7 @@ This repo's own `ci.yml` adopts the GitHub recipe, so the recipe is tested every
 - [ ] AC56 (R18) Given a fresh agent session in a linked worktree of a code repo with separate plans, when it's pointed at a change with "keep going", then it pulls the plans, builds, commits code with the trailer, and records progress in the plans repo, without running `yass init` — verify: manual: one agent run; summarize it in the Log
 
 ## Pieces
-In order. Each leaves main green and is one PR. This plan follows its own rule: a piece's branch changes only its own folder, and the boxes here are marked in closing commits.
+In order. Each leaves main green and is one PR. This plan follows its own rule: a piece's branch changes only its own folder. The boxes here count as delivered once their pieces are done (`stacked-prs-and-squash-merges`, #59); `yass archive` ticks them.
 1. `2026-10-04-worktrees-find-the-plans` (R11, R22, R23): first, because it breaks agents in the desktop app's worktrees today, and every later piece is tested from worktrees.
 2. `2026-10-04-yass-paths-and-ci-recipes` (R1–R3): the gate job, dogfooded in this repo's CI. It also starts `docs/monorepo.md`.
 3. `2026-10-04-speed-at-scale` (R9): the benchmark comes early, so later pieces are measured against it rather than tuned afterwards.

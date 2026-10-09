@@ -28,6 +28,8 @@ YASS works at a large company with one big monorepo, many teams and expensive CI
 - AC4 and AC5 dropped (`[-]`) here, which lowers this change's bar: neither a Bazel repo nor a GitHub merge queue (it needs an organization-owned repo) is available yet. Testing both moves to `2026-10-04-validate-the-ci-recipes-in-the-field`, along with inviting reports for other CI systems. In their place, AC57 and AC58 hold the docs to saying plainly what's tested and what isn't; R2 and R3 are reworded to match (Jaime, 2026-10-04)
 
 - AC12 ("ready to mark" in `yass status`) dropped here: `2026-10-04-stacked-prs-and-squash-merges` takes over counting delivered parent criteria (its R5, R6), so piece 5 keeps only the rule that pieces own their files and the hook's heads-up. design.md §5 notes it (Jaime, 2026-10-04)
+- Closing commits are gone: since `stacked-prs-and-squash-merges` (#59), `yass status` counts the criteria pieces deliver and `yass archive` ticks them. AC13 (a closing commit marks the parent done) is dropped, which lowers the bar: #59's e2e already proves the behaviour without one. AC14, piece 5's Goal and README box, the Pieces note and design §'Pieces own their files' now say no closing commit is needed. The commit-graph and branch-view box moves from piece 4 to piece 6, where the branch view is built (Jaime, 2026-10-09)
+
 ## Log
 <!-- Progress. Change-level notes; each piece keeps its own Log.
 ### YYYY-MM-DD (<who>)
