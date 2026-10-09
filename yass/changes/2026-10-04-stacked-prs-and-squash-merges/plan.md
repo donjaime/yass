@@ -13,12 +13,12 @@
 ### M1
 - [ ] AC1 (R1) Given …, when …, then … — verify: <test, flow, or manual steps> -->
 ### M1
-- [/] AC1 (R2) Given `docs/monorepo.md`, then it says that a squash merge folds a PR into one commit, so a plan revision, an archive move or a `queue.md` reorder needs a PR apart from code, that intent, progress and archive commits can share a PR, and that splitting and stacking branches is the team's call — verify: manual: review
-- [/] AC2 (R13) Given `yass-work`, then where it asks for intent and archives in their own commits, it says that means apart from code, and under squash merges a PR apart from code — verify: manual: review
+- [x] AC1 (R2) Given `docs/monorepo.md`, then it says that a squash merge folds a PR into one commit, so a plan revision, an archive move or a `queue.md` reorder needs a PR apart from code, that intent, progress and archive commits can share a PR, and that splitting and stacking branches is the team's call — verify: manual: review
+- [x] AC2 (R13) Given `yass-work`, then where it asks for intent and archives in their own commits, it says that means apart from code, and under squash merges a PR apart from code — verify: manual: review
 - [x] AC3 (R13) Given the `AGENTS.md` section `yass init` writes, then its intent and archive lines say "apart from code", and `yass upgrade` brings existing sections up to it — verify: e2e (the section's text); manual: review
-- [/] AC4 (R14) Given `yass-work`'s git paragraph, then pushing a branch and opening or updating a PR need the same latitude as committing, branching and rebasing, and without it the playbook shows the commands — verify: manual: review
+- [x] AC4 (R14) Given `yass-work`'s git paragraph, then pushing a branch and opening or updating a PR need the same latitude as committing, branching and rebasing, and without it the playbook shows the commands — verify: manual: review
 - [x] AC5 (R9) Given `yass-log` explaining a decision whose commit was squash-merged, then it names the PR from the `(#N)` in the commit's subject — verify: manual: ask it why `yass init --hooks` leaves existing hooks alone, and check it names #16
-- [/] AC6 (non-goals) Given the kit after M1, then it adds no workflow guidance: nothing on how to branch, stack, sync, merge or which tools to use — verify: manual: review the diff
+- [x] AC6 (non-goals) Given the kit after M1, then it adds no workflow guidance: nothing on how to branch, stack, sync, merge or which tools to use — verify: manual: review the diff
 
 ### M2
 - [ ] AC7 (R5) Given a parent criterion named by `Delivers` boxes in two pieces, when both pieces are done, then `yass status` counts the criterion done in the parent's progress and doesn't offer it as `next:` — verify: e2e

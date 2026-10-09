@@ -14,7 +14,7 @@ docs/monorepo.md and yass-work say what squash merges mean for YASS's rules (a c
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC1–AC6 in [plan.md](../plan.md)
+- [x] Delivers AC1–AC6 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -22,7 +22,7 @@ docs/monorepo.md and yass-work say what squash merges mean for YASS's rules (a c
 - [x] `yass-work`: "apart from code" and the squash-merge sentence; push and PRs need latitude
 - [x] `templates/agents.md`: "apart from code" on the intent and archive lines
 - [x] `yass-log`: name a squash-merged commit's PR
-- [/] Review the diff: no workflow guidance
+- [x] Review the diff: no workflow guidance
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -39,3 +39,6 @@ docs/monorepo.md and yass-work say what squash merges mean for YASS's rules (a c
 ### 2026-10-05 (claude)
 - Did: `docs/monorepo.md` gets a "Squash merges" section (apart from code means a pull request apart from code; intent, progress and archive can share one; how to split and stack is the team's call; the hook checks per commit). `yass-work`'s git paragraph asks for latitude to push and open pull requests and says what "separately" means under squash merges; its Finish step says the same for the archive. The `AGENTS.md` template says it on the intent, latitude and archive lines. `yass-log` names the `(#N)` pull request of a squash-merged commit, and follows an archived change's file across its move. e2e §30 (4 checks: the section's text after init, and after `yass upgrade` of an older one). All 390 e2e checks, examples, `tests/site.sh` and `go test` pass. AC5 tried by hand: following the steps for the hooks change names #15 (the decision) and #16 (the code). No workflow guidance added: no stacking tools, merge styles or branching advice in the kit diff.
 - Next: Jaime reviews the text (AC1, AC2, AC4, AC6); then piece 2, `delivered-criteria-count`, stacked on this branch.
+### 2026-10-09 (claude)
+- Did: Jaime reviewed the text and merged it (#31); AC1, AC2, AC4 and AC6 done. The piece is done.
+- Next: none here.
