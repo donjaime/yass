@@ -1066,5 +1066,70 @@ run_fail "unreachable releases: it says so" "$R4" update --check
 has   "…naming where it looked" "couldn't reach http://127.0.0.1" "$R4" update --check
 unset YASS_RELEASES_URL
 
+echo "36. yass update installs"
+GO_OS=$(cd "$ROOT" && go env GOOS); GO_ARCH=$(cd "$ROOT" && go env GOARCH); ASSET="yass_${GO_OS}_${GO_ARCH}.tar.gz"
+rm -rf "$W/releases"
+# mkrel <version> <binary> [ok|bad|unlisted]: a fake release, laid out as GitHub serves one
+mkrel() { local d="$W/releases/v$1" sum; mkdir -p "$d/x/yass_${GO_OS}_${GO_ARCH}"
+  cp "$2" "$d/x/yass_${GO_OS}_${GO_ARCH}/yass"; tar -czf "$d/$ASSET" -C "$d/x" "yass_${GO_OS}_${GO_ARCH}"; rm -rf "$d/x"
+  sum=$( (sha256sum "$d/$ASSET" 2>/dev/null || shasum -a 256 "$d/$ASSET") | cut -d' ' -f1)
+  case "${3:-ok}" in ok) echo "$sum  $ASSET";; bad) echo "0000000000000000000000000000000000000000000000000000000000000000  $ASSET";; unlisted) echo "$sum  other.tar.gz";; esac > "$d/checksums.txt"; }
+mkrel 0.5.0 "$(rbin 0.5.0)"; mkrel 0.6.0 "$R6"
+printf '#!/bin/sh\necho "yass 9.9.9"\n' > "$W/liar"; chmod +x "$W/liar"; mkrel 0.7.0 "$W/liar"
+mkrel 0.8.0 "$(rbin 0.8.0)" bad; mkrel 0.9.0 "$(rbin 0.9.0)" unlisted
+# PATHs with git and nothing else, and with a fake gh: auth status and attestation verify exit as told
+mkpath() { local d="$W/path-$1"; rm -rf "$d"; mkdir -p "$d"; ln -s "$(command -v git)" "$d/git"
+  [ -n "${2:-}" ] && { printf '#!/bin/sh\ncase "$1" in auth) exit %s;; attestation) [ %s = 0 ] && exit 0; echo "verification failed: no attestation"; exit 1;; esac\n' "$2" "$3" > "$d/gh"; chmod +x "$d/gh"; }
+  echo "$d"; }
+NOGH=$(mkpath nogh); GHOK=$(mkpath ghok 0 0); GHBAD=$(mkpath ghbad 0 1); GHOUT=$(mkpath ghout 1 0)
+fresh() { rm -rf "$W/inst"; mkdir -p "$W/inst"; cp "${1:-$R4}" "$W/inst/yass"; echo "$W/inst/yass"; }
+upd() { env PATH="$1" "$W/inst/yass" "${@:2}"; }
+cd "$W/e2e/update"; releases 0.6.0
+fresh >/dev/null; OUT="$(upd "$NOGH" update 2>&1)"
+has   "in a repo ahead of it, update installs the repo's version" "^installed yass 0.5.0 " echo "$OUT"
+has   "…which runs" "^yass 0.5.0$" "$W/inst/yass" version
+has   "…after the checksum; provenance unchecked without gh, and why" "checksum verified; build provenance not checked: the GitHub CLI isn't installed" echo "$OUT"
+has   "…and says a newer one exists, and what follows" "0.6.0 is newer: .yass update --latest. gets it; then run .yass upgrade. in each repo and commit the diff" echo "$OUT"
+hasnt "…leaving nothing beside the binary" "yass-new|\.old" ls -A "$W/inst"
+fresh >/dev/null; OUT="$(upd "$NOGH" update --latest 2>&1)"
+has   "--latest installs the latest" "^installed yass 0.6.0 " echo "$OUT"
+hasnt "…and says nothing about newer ones" "is newer" echo "$OUT"
+fresh >/dev/null
+has   "--version installs that one" "^installed yass 0.5.0 " upd "$NOGH" update --version v0.5.0
+fresh "$R6" >/dev/null
+run_fail "an older --version is refused" upd "$NOGH" update --version v0.5.0
+has   "…and the binary is unchanged" "^yass 0.6.0$" "$W/inst/yass" version
+cd "$W"; fresh >/dev/null
+has   "outside a repo, update installs the latest" "^installed yass 0.6.0 " upd "$NOGH" update
+cd "$W/e2e/update"; fresh >/dev/null
+run_fail "a checksum that doesn't match: refused" upd "$NOGH" update --version v0.8.0
+has   "…and says so" "doesn't match the release's checksums.txt" upd "$NOGH" update --version v0.8.0
+has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
+has   "an archive checksums.txt doesn't list: refused" "isn't listed in the release's checksums.txt" upd "$NOGH" update --version v0.9.0
+has   "with gh, provenance is verified" "checksum verified, build provenance verified" upd "$GHOK" update
+fresh >/dev/null
+run_fail "provenance that doesn't verify: refused" upd "$GHBAD" update
+has   "…and says why" "not installing 0.5.0: its build provenance didn't verify" upd "$GHBAD" update
+has   "…with what gh said" "verification failed: no attestation" upd "$GHBAD" update
+has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
+has   "gh not signed in: installs, and says provenance wasn't checked" "not checked: the GitHub CLI isn't signed in" upd "$GHOUT" update
+fresh >/dev/null
+run_fail "--require-provenance without gh: refused" upd "$NOGH" update --require-provenance
+has   "…and says why" "provenance can't be checked: the GitHub CLI isn't installed" upd "$NOGH" update --require-provenance
+run_fail "a downloaded binary that isn't the version asked for: refused" upd "$NOGH" update --version v0.7.0
+has   "…and says what it said" "doesn't run as 0.7.0 here \(it said: yass 9.9.9\)" upd "$NOGH" update --version v0.7.0
+has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
+hasnt "…and nothing left beside it" "yass-new" ls -A "$W/inst"
+chmod a-w "$W/inst"
+run_fail "a folder it can't write: refused before downloading" upd "$NOGH" update
+has   "…saying where, and what to do" "can't write to .*inst, where this yass is; rerun with permission" upd "$NOGH" update
+chmod u+w "$W/inst"
+run_fail "a release that doesn't exist: refused" upd "$NOGH" update --version v0.42.0
+has   "…naming it" "there's no release v0.42.0" upd "$NOGH" update --version v0.42.0
+{ kill "$RELPID"; wait "$RELPID"; } 2>/dev/null; RELPID=""
+run_fail "releases unreachable: refused" upd "$NOGH" update
+has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
+unset YASS_RELEASES_URL
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

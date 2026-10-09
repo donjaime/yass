@@ -32,6 +32,9 @@ usage: yass <command> [options]
   status [<change>] [--archived] [--strict]
                                         what's in flight, or one change in detail
   archive <change> [--force]            move a finished change to the archive
+  update [--check] [--latest] [--version V] [--require-provenance]
+                                        get a newer yass binary: the repo's version when the repo is
+                                        ahead of this one, else the latest release; verified first
   evict                                 move the oldest archived months out of the working tree, into
                                         git history, where a yass folder is past its keep: setting
   decisions [--since D] [--until D] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]
@@ -59,7 +62,7 @@ var specs = map[string]spec{
 	"archive": {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
 	"decisions": {[]string{"json"}, []string{"since", "until", "about", "change", "limit", "cites"}, 0, 0,
 		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]"},
-	"update":   {[]string{"check", "latest"}, []string{"version"}, 0, 0, "yass update [--check] [--latest] [--version vX.Y.Z]"},
+	"update":   {[]string{"check", "latest", "require-provenance"}, []string{"version"}, 0, 0, "yass update [--check] [--latest] [--version vX.Y.Z] [--require-provenance]"},
 	"evict":    {nil, nil, 0, 0, "yass evict"},
 	"root":     {nil, nil, 0, 0, "yass root"},
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
@@ -133,6 +136,7 @@ func MainChannel(argv []string, version, channel string) int {
 }
 
 func run(argv []string) int {
+	cleanOldBinary()
 	cmd, explicit := "status", false
 	if len(argv) > 0 && !strings.HasPrefix(argv[0], "-") {
 		cmd, argv, explicit = argv[0], argv[1:], true

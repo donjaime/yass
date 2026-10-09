@@ -14,17 +14,27 @@ yass update fetches, verifies (checksum, then provenance through gh) and swaps t
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC3–AC12, AC14, AC15 in [plan.md](../plan.md)
+- [/] Delivers AC3–AC12, AC14, AC15 in [plan.md](../plan.md)
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
-- [ ] 
+- [x] `install.go`: refuse before downloading if the binary's folder isn't writable; check the release exists (its `checksums.txt`); fetch the archive and `checksums.txt` into a temp folder; checksum; `gh attestation verify` when `gh` is installed and signed in; unpack (`.tar.gz`, `.zip`); write the new binary beside the old, run `<new> version` and require the version asked for; swap by rename (aside to `.old` on Windows, removed on the next run)
+- [x] `yass update` installs; `--require-provenance`; listed in `yass --help`
+- [x] go test (`TestSwapBinary` for both strategies and a failed Windows swap, `TestChecksumOK`); e2e section 36 with fake releases and fake `gh` on a PATH with nothing else (555 ok)
+- [x] A real install from github.com in scratch: a release-marked 0.2.0 build ran `yass update --version v0.3.0`; the download, checksum, provenance (the real `gh`) and swap all passed
+- [ ] AC12's manual part: one update on Windows, which can't run here
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
+- "Not signed in" is checked with `gh auth status` before verifying, so an unauthenticated `gh` reads as "provenance not checked", as the design says, rather than as a failed verification (claude, 2026-10-08)
+- Downloads follow redirects (GitHub serves assets from another host) while the version lookup doesn't (it reads the redirect itself) - two HTTP clients (claude, 2026-10-08)
+- e2e runs `yass update` with a PATH holding only `git` and, when wanted, a fake `gh`: the real `gh` on a developer machine or a CI runner would otherwise verify fake archives against GitHub (claude, 2026-10-08)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
 ### YYYY-MM-DD (<who>)
 - Did: …
 - Next: … -->
+### 2026-10-08 (claude)
+- Did: built and tested installing: fetch, verify, check the new binary, swap. `go test`, `tests/e2e.sh` (555 ok), and a real install from github.com pass.
+- Next: AC12's Windows run (Jaime, or once a Windows machine is at hand); then this piece is done, and `update-for-agents` can start.
