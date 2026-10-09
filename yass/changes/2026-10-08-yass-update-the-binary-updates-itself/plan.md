@@ -20,19 +20,19 @@ Source builds stop after stage 1 with the command for their install method. The 
 ### M1
 - [x] AC1 (R1) Given a release binary at 0.4.0 in a repo stamped 0.5.0, with 0.6.0 the latest release, when you run `yass update --check`, then it prints the three versions and that `yass update` would install 0.5.0, changes nothing, and exits 0 — verify: e2e (fake releases)
 - [x] AC2 (R1) Given the binary already at the latest release, then `--check` says it's up to date and exits 0 — verify: e2e
-- [ ] AC3 (R2) Given that repo, when you run `yass update`, then the binary is replaced by 0.5.0 (`yass version` says so) — verify: e2e
-- [ ] AC4 (R3) Given that update, then the output says 0.6.0 exists, gives `yass update --latest`, and says `yass upgrade` in each repo and a `chore: upgrade YASS` commit come after; with no newer release, it says neither — verify: e2e
-- [ ] AC5 (R4) Given a release binary outside any repo, or in a repo at or behind it, when you run `yass update`, then it installs the latest release — verify: e2e
-- [ ] AC6 (R4) Given `--latest` in a repo stamped 0.5.0, then it installs 0.6.0; given `--version v0.5.0`, then 0.5.0 — verify: e2e
-- [ ] AC7 (R4) Given `--version` older than the binary, then it refuses and changes nothing — verify: e2e
-- [ ] AC8 (R5) Given a release whose archive doesn't match `checksums.txt`, or isn't listed in it, then `yass update` refuses, says so, and the binary is unchanged — verify: e2e
-- [ ] AC9 (R6) Given `gh` on PATH whose `attestation verify` succeeds, then the output says provenance was verified; given one that fails, it refuses and the binary is unchanged — verify: e2e (fake `gh`)
-- [ ] AC10 (R6) Given no `gh` on PATH, then it installs after the checksum and says provenance wasn't checked and why; with `--require-provenance`, it refuses — verify: e2e
-- [ ] AC11 (R7) Given a downloaded binary that doesn't run, or reports a different version, then nothing is replaced — verify: e2e (a release whose binary is a shell script printing the wrong version)
-- [ ] AC12 (R7) Given the swap, then it's a rename in the binary's folder: no moment leaves the binary missing or partly written; on Windows the old one moves to `yass.exe.old` and is removed on the next run — verify: go test (swap function on a temp folder, both strategies); manual: one update on Windows
+- [x] AC3 (R2) Given that repo, when you run `yass update`, then the binary is replaced by 0.5.0 (`yass version` says so) — verify: e2e
+- [x] AC4 (R3) Given that update, then the output says 0.6.0 exists, gives `yass update --latest`, and says `yass upgrade` in each repo and a `chore: upgrade YASS` commit come after; with no newer release, it says neither — verify: e2e
+- [x] AC5 (R4) Given a release binary outside any repo, or in a repo at or behind it, when you run `yass update`, then it installs the latest release — verify: e2e
+- [x] AC6 (R4) Given `--latest` in a repo stamped 0.5.0, then it installs 0.6.0; given `--version v0.5.0`, then 0.5.0 — verify: e2e
+- [x] AC7 (R4) Given `--version` older than the binary, then it refuses and changes nothing — verify: e2e
+- [x] AC8 (R5) Given a release whose archive doesn't match `checksums.txt`, or isn't listed in it, then `yass update` refuses, says so, and the binary is unchanged — verify: e2e
+- [x] AC9 (R6) Given `gh` on PATH whose `attestation verify` succeeds, then the output says provenance was verified; given one that fails, it refuses and the binary is unchanged — verify: e2e (fake `gh`)
+- [x] AC10 (R6) Given no `gh` on PATH, then it installs after the checksum and says provenance wasn't checked and why; with `--require-provenance`, it refuses — verify: e2e
+- [x] AC11 (R7) Given a downloaded binary that doesn't run, or reports a different version, then nothing is replaced — verify: e2e (a release whose binary is a shell script printing the wrong version)
+- [/] AC12 (R7) Given the swap, then it's a rename in the binary's folder: no moment leaves the binary missing or partly written; on Windows the old one moves to `yass.exe.old` and is removed on the next run — verify: go test (swap function on a temp folder, both strategies); manual: one update on Windows
 - [x] AC13 (R8) Given a binary without the release marker, then `yass update` replaces nothing and prints `go install github.com/donjaime/yass/cmd/yass@<version>` for a tagged build, or how to rebuild a clone build — verify: e2e
-- [ ] AC14 (R9) Given the binary's folder isn't writable, then it says so before downloading anything, with what to do — verify: e2e (`chmod -w`)
-- [ ] AC15 (R9) Given the release source unreachable, or `--version` naming a release that doesn't exist, then it says which and changes nothing — verify: e2e (server stopped; a missing version)
+- [x] AC14 (R9) Given the binary's folder isn't writable, then it says so before downloading anything, with what to do — verify: e2e (`chmod -w`)
+- [x] AC15 (R9) Given the release source unreachable, or `--version` naming a release that doesn't exist, then it says which and changes nothing — verify: e2e (server stopped; a missing version)
 - [x] AC16 (R10) Given each platform releases are built for, then `yass update` picks that platform's archive (`.zip` on Windows) — verify: go test (asset name per GOOS/GOARCH)
 - [ ] AC17 (R1–R10) Given the real 0.4.0-or-later release on GitHub, when a release binary runs `yass update --check` and `yass update`, then both behave as above against github.com — verify: manual: after the next release, on macOS and Linux
 

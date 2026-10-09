@@ -125,8 +125,12 @@ func cmdUpdate(a *args) (int, error) {
 	case a.b["check"]:
 		fmt.Printf("yass update would install %s (%s)\n", plain(p.target), p.why)
 	default:
-		fmt.Printf("yass update would install %s (%s), but installing isn't built yet; get it from %s/tag/%s\n",
-			plain(p.target), p.why, releasesURL(), p.target)
+		fmt.Printf("installing %s (%s) …\n", plain(p.target), p.why)
+		how, err := install(p.target, a.b["require-provenance"])
+		if err != nil {
+			return 0, err
+		}
+		fmt.Printf("installed yass %s (%s)\n", plain(p.target), how)
 	}
 	if semver.Compare(latest, p.target) > 0 && !a.b["latest"] && a.v["version"] == "" {
 		fmt.Printf("%s is newer: `yass update --latest` gets it; then run `yass upgrade` in each repo and commit the diff (chore: upgrade YASS)\n", plain(latest))
