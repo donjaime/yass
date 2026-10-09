@@ -1059,7 +1059,7 @@ has   "outside a repo: no repo line, and the latest" "would install 0.6.0 \(the 
 hasnt "…no repo line" "this repo" "$R4" update --check
 cd "$W/e2e/update"
 has   "a go install build isn't replaced, and gets its command" "won't replace this binary: it was built with go install; .*go install github.com/donjaime/yass/cmd/yass@v0.5.0" "$(vbin 0.4.0)" update --check
-has   "a clone build gets how to rebuild" "built from a clone; update it there" y update --check
+has   "a clone build gets how to rebuild" "built from a clone; update it there" "$(vbin dev)" update --check   # not y: on a tagged commit, a clone build carries the plain tag
 run_fail "an older --version is refused" "$R6" update --check --version v0.4.0
 has   "…and says why" "never downgrades" "$R6" update --check --version v0.4.0
 { kill "$RELPID"; wait "$RELPID"; } 2>/dev/null; RELPID=""
