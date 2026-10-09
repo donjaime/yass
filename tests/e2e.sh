@@ -1268,5 +1268,29 @@ hasnt "no unmerged branches: status looks as it always did" "↳|^branches:" y s
 git switch -q -c local-only; sub "$N/change.md" '^- \[ \] $' '- [/] Started'; git commit -qam "start"; git switch -q main
 has   "with no remote, it says there are only local branches" "^branches: .*no remote branches here" y status
 
+echo "42. inline or separate plans"
+newrepo "$W/e2e/inline"; y init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+hasnt "plans in the repo: status says nothing more" "^plans:" y status
+has   "…and root -v says inline" "/yass	inline$" y root -v
+git worktree add -q "$W/e2e/inline-wt" -b wt 2>/dev/null
+has   "from a linked worktree too" "	inline$" bash -c "cd '$W/e2e/inline-wt' && yass root -v"
+PO="$W/e2e/plans-origin"; newrepo "$PO"; mkdir -p archive changes; touch changes/.gitkeep; git add -A; git commit -q -m plans
+PR="$W/e2e/plans-clone"; rm -rf "$PR"; git clone -q "file://$PO" "$PR"
+newrepo "$W/e2e/sep"; printf 'path: %s\n' "$PR" > yass.yaml; git add -A; git commit -q -m "chore: adopt YASS"
+has   "plans in another repo: status ends saying so" "^plans: separate \(.*plans-clone\)$" bash -c 'yass status | tail -1'
+has   "…root -v says separate" "plans-clone	separate$" y root -v
+has   "…and plain root prints the folder alone" "plans-clone$" y root
+echo "draft" > "$PR/changes/notes.md"
+has   "uncommitted files in the plans repo get a note" "plans-clone has 1 uncommitted file\(s\)" y status
+run_ok "…and --strict still passes" y status --strict
+rm "$PR/changes/notes.md"
+(cd "$PO" && echo more > more.txt && git add -A && git commit -q -m more); git -C "$PR" fetch -q
+has   "a plans repo behind its upstream gets a note, and how to catch up" "plans-clone is 1 commit\(s\) behind origin/main as of its last fetch; pull there \(git -C .*plans-clone pull\)" y status
+hasnt "…without fetching" "fetch" bash -c 'GIT_TRACE=1 yass status 2>&1 | grep "trace: \(built-in\|exec\|run_command\)"'
+PN="$W/e2e/plans-plain"; rm -rf "$PN"; mkdir -p "$PN/changes" "$PN/archive"
+newrepo "$W/e2e/sep-plain"; printf 'path: %s\n' "$PN" > yass.yaml; git add -A; git commit -q -m "chore: adopt YASS"
+has   "plans in no repo are separate too" "^plans: separate \(.*plans-plain\)$" bash -c 'yass status | tail -1'
+hasnt "…with nothing to say about commits" "uncommitted|behind" y status
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

@@ -379,11 +379,15 @@ func cmdStatus(a *args) (int, error) {
 	if n := versionNote(r); n != "" {
 		r.note("%s", n)
 	}
+	plans := r.plansNotes()
 	for _, w := range r.Warnings {
 		fmt.Printf("warning: %s\n", w)
 	}
 	for _, n := range r.Notes {
 		fmt.Printf("note: %s\n", n)
+	}
+	for _, l := range plans {
+		fmt.Println(l)
 	}
 	if a.b["strict"] && len(r.Warnings) > 0 {
 		return 1, nil
@@ -546,7 +550,11 @@ func cmdRoot(a *args) error {
 		return fmt.Errorf("%s", msg)
 	}
 	for _, root := range r.Roots {
-		fmt.Println(root.Dir)
+		if a.b["v"] {
+			fmt.Printf("%s\t%s\n", root.Dir, r.kind(root))
+		} else {
+			fmt.Println(root.Dir)
+		}
 	}
 	for _, n := range r.Notes { // stderr, so scripts reading the folders aren't disturbed
 		fmt.Fprintf(os.Stderr, "note: %s\n", n)

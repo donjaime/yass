@@ -40,7 +40,8 @@ usage: yass <command> [options]
                                         git history, where a yass folder is past its keep: setting
   decisions [--since D] [--until D] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]
                                         past decisions, active and archived, newest first
-  root                                  print the yass folder(s) this repo uses
+  root [-v]                             print the yass folder(s) this repo uses; -v says whether
+                                        each is inline (in this repo) or separate
   paths [--only RANGE]                  the repo paths that are YASS's, as globs (for CI filters);
                                         --only exits 0 if a commit range touches nothing else
   template <name>                       print a template: change, change-large, prd, plan, design
@@ -65,7 +66,7 @@ var specs = map[string]spec{
 		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]"},
 	"update":   {[]string{"check", "latest", "require-provenance"}, []string{"version"}, 0, 0, "yass update [--check] [--latest] [--version vX.Y.Z] [--require-provenance]"},
 	"evict":    {nil, nil, 0, 0, "yass evict"},
-	"root":     {nil, nil, 0, 0, "yass root"},
+	"root":     {[]string{"v"}, nil, 0, 0, "yass root [-v]"},
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
 	"template": {nil, nil, 1, 1, "yass template <change|change-large|prd|plan|design|readme|agents>"},
 	"hook":     {[]string{"strict"}, []string{"range"}, 0, 0, "yass hook [--range A..B] [--strict]"},
@@ -96,6 +97,10 @@ func parse(sp spec, argv []string) (*args, error) {
 		if arg == "--" {
 			a.pos = append(a.pos, argv[i+1:]...)
 			break
+		}
+		if len(arg) == 2 && arg[0] == '-' && contains(sp.bools, arg[1:]) { // a one-letter switch, like yass root -v
+			a.b[arg[1:]] = true
+			continue
 		}
 		if !strings.HasPrefix(arg, "--") {
 			a.pos = append(a.pos, arg)
