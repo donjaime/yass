@@ -1146,5 +1146,37 @@ git add -A; git commit -q -m "chore: adopt YASS"; rm -rf .agents/skills/yass-upd
 has   "upgrade adds it to a repo that doesn't have it" "wrote .agents/skills/yass-update/SKILL.md" "$(vbin 0.5.0)" upgrade
 [ -f .claude/skills/yass-update/SKILL.md ] && ok "…in .claude/skills too" || bad "not added to .claude/skills"
 
+echo "38. criteria the pieces deliver"
+newrepo "$W/e2e/delivers"; y init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"; BASE=$(git rev-parse HEAD)
+L=$(y new "Three pieces" --large)
+printf '### M1\n- [ ] AC1 (R1) Given two pieces — verify: e2e\n- [ ] AC2 (R1) Given one — verify: e2e\n- [ ] AC3 (R2) Given none — verify: e2e\n- [ ] AC4 (R2) Given part — verify: e2e\n' >> "$L/plan.md"
+P1=$(y new "Piece one" --in three-pieces); P2=$(y new "Piece two" --in three-pieces); P3=$(y new "Piece three" --in three-pieces)
+sub "$P1/change.md" '^- \[ \] $' '- [ ] Delivers AC1 in [plan.md](../plan.md)\n- [ ] Work one'
+sub "$P2/change.md" '^- \[ \] $' '- [ ] Delivers AC1–AC2 in [plan.md](../plan.md)\n- [ ] Work two'
+sub "$P3/change.md" '^- \[ \] $' '- [ ] Delivers AC4'"'"'s other half\n- [ ] Work three'
+git add -A; git commit -q -m "yass: plan three-pieces"
+# land <piece dir> <n>: tick the piece's boxes with code on a branch, squash-merge it into main
+land() { git switch -q -c "piece-$2"; sub "$1/change.md" '^- \[ \] ' '- [x] '; echo "code $2" >> app.txt; git add -A; git commit -q -m "feat: piece $2"
+  git switch -q main; git merge -q --squash "piece-$2" >/dev/null; git commit -q -m "feat: piece $2 (#$2)"; }
+land "$P1" 1
+has   "one of two delivering pieces done: the criterion stays open" "AC1 \(R1\) Given two pieces" y status three-pieces
+land "$P2" 2
+hasnt "both pieces done: the criterion counts as done" "\[ \] AC1 \(R1\)" bash -c 'yass status three-pieces | sed -n "/^open:/,\$p"'
+hasnt "…and isn't offered as next" "next: AC1" y status three-pieces
+hasnt "a criterion delivered by one done piece counts too" "AC2 \(R1\) Given one" bash -c 'yass status three-pieces | sed -n "/^open:/,\$p"'
+has   "a criterion no piece delivers counts by its own box" "AC3 \(R2\) Given none" bash -c 'yass status three-pieces | sed -n "/^open:/,\$p"'
+has   "…and the parent's progress counts what's delivered" "three-pieces  \(large\) +6/10" y status
+land "$P3" 3
+sub "$L/plan.md" '^- \[ \] AC3 ' '- [x] AC3 '; git commit -q -am "yass: AC3 checked"
+cp "$L/plan.md" "$W/plan.orig"
+has   "with every piece done and AC3 ticked, the change is done" "three-pieces  \(large\) +10/10 +done" y status
+run_ok "archive doesn't refuse for criteria its pieces delivered" y archive three-pieces
+A="yass/archive/$MONTH/$TODAY-three-pieces/plan.md"
+has   "…and ticks them in the archived plan.md" "^- \[x\] AC1 .*\n?" grep -E "^- \[x\] AC(1|2|4) " "$A"
+has   "…and nothing else changes in it" "^AC1,AC1,AC2,AC2,AC4,AC4$" bash -c "diff '$W/plan.orig' '$A' | grep -E '^[<>]' | grep -oE 'AC[0-9]+' | sort | paste -sd, -"
+hasnt "the archive commit passes the hook" "heads-up|append-only" git commit -q -m "yass: archive three-pieces"
+hasnt "main's whole history passes the hook" "." yass hook --range "$BASE..HEAD"
+[ "$(git log --oneline "$BASE..HEAD" | grep -c "close\|done")" -eq 0 ] && ok "no closing commit per piece" || bad "a closing commit snuck in"
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

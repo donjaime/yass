@@ -460,6 +460,7 @@ func cmdArchive(a *args) error {
 			return fmt.Errorf("%s is already archived, at %s; rename one of them", c.Name, r.disp(o.Path))
 		}
 	}
+	delivered := c.delivered() // before the move, while the pieces are where they were read
 	now := time.Now().UTC()
 	dest := archiveDir(c.Root, c.Name, now)
 	if exists(dest) {
@@ -477,6 +478,12 @@ func cmdArchive(a *args) error {
 	// The stamp is part of the move: an archived change is never edited after it lands.
 	if head := filepath.Join(dest, "change.md"); isFile(head) {
 		if err := write(head, setMeta(read(head), "archived", now.Format(time.RFC3339))); err != nil {
+			return err
+		}
+	}
+	// So is ticking the criteria the pieces delivered: the archive is the one closing commit.
+	if plan := filepath.Join(dest, "plan.md"); isFile(plan) && len(delivered) > 0 {
+		if err := write(plan, markDelivered(read(plan), delivered)); err != nil {
 			return err
 		}
 	}

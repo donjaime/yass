@@ -21,13 +21,13 @@
 - [x] AC6 (non-goals) Given the kit after M1, then it adds no workflow guidance: nothing on how to branch, stack, sync, merge or which tools to use — verify: manual: review the diff
 
 ### M2
-- [ ] AC7 (R5) Given a parent criterion named by `Delivers` boxes in two pieces, when both pieces are done, then `yass status` counts the criterion done in the parent's progress and doesn't offer it as `next:` — verify: e2e
-- [ ] AC8 (R5) Given one of those pieces still open, then the criterion stays open — verify: e2e
-- [ ] AC9 (R5) Given a criterion no piece delivers, then it counts by its own box, as today — verify: e2e
-- [ ] AC10 (R5) Given a large change whose only open boxes are criteria its done pieces deliver, when you run `yass archive`, then it doesn't refuse — verify: e2e
-- [ ] AC11 (R6) Given that archive, then the archived `plan.md` has those criteria marked `[x]`, and no other box changed — verify: e2e
-- [ ] AC12 (R5, R6) Given `Delivers` boxes written as lists and ranges (`AC1, AC3`, `AC2–AC9`, `AC2-AC9`, with trailing words such as "and AC19's preview card" or "in plan.md"), then each names the right criteria — verify: go test
-- [ ] AC13 (R10) Given an e2e scenario that lands a three-piece change one squash-merged branch at a time (`git merge --squash`, rebasing the rest onto main), then `yass status` is right after each landing, no piece needs a closing commit, `yass archive` closes the change, and every commit on main passes the hook — verify: e2e
+- [x] AC7 (R5) Given a parent criterion named by `Delivers` boxes in two pieces, when both pieces are done, then `yass status` counts the criterion done in the parent's progress and doesn't offer it as `next:` — verify: e2e
+- [x] AC8 (R5) Given one of those pieces still open, then the criterion stays open — verify: e2e
+- [x] AC9 (R5) Given a criterion no piece delivers, then it counts by its own box, as today — verify: e2e
+- [x] AC10 (R5) Given a large change whose only open boxes are criteria its done pieces deliver, when you run `yass archive`, then it doesn't refuse — verify: e2e
+- [x] AC11 (R6) Given that archive, then the archived `plan.md` has those criteria marked `[x]`, and no other box changed — verify: e2e
+- [x] AC12 (R5, R6) Given `Delivers` boxes written as lists and ranges (`AC1, AC3`, `AC2–AC9`, `AC2-AC9`, with trailing words such as "and AC19's preview card" or "in plan.md"), then each names the right criteria — verify: go test
+- [x] AC13 (R10) Given an e2e scenario that lands a three-piece change one squash-merged branch at a time (`git merge --squash`, rebasing the rest onto main), then `yass status` is right after each landing, no piece needs a closing commit, `yass archive` closes the change, and every commit on main passes the hook — verify: e2e
 
 ## Pieces
 <!-- PR-sized pieces, each its own folder in here: `yass new "<title>" --in <this change>`.

@@ -41,3 +41,28 @@ func TestChangeFolder(t *testing.T) {
 		}
 	}
 }
+
+func TestDeliveredIDs(t *testing.T) {
+	for text, want := range map[string][]int{
+		"Delivers AC1, AC3 in [plan.md](../plan.md)": {1, 3},
+		"Delivers AC2–AC5":                           {2, 3, 4, 5},
+		"Delivers AC2-AC4, AC9":                      {2, 3, 4, 9},
+		"Delivers AC1, AC10, and AC19's preview card, in [plan.md](../plan.md)":      {1, 10, 19},
+		"Delivers AC1, AC2 and AC3 of the plan.":                                     {1, 2, 3},
+		"Delivers AC9–AC19, AC34 and AC35 in plan.md; the live checks are elsewhere": {9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 34, 35},
+		"Builds AC1 but doesn't say delivers":                                        nil,
+		"Fix AC2 (no delivers here)":                                                 nil,
+	} {
+		if got := deliveredIDs(text); !reflect.DeepEqual(got, want) {
+			t.Errorf("deliveredIDs(%q) = %v, want %v", text, got, want)
+		}
+	}
+}
+
+func TestMarkDelivered(t *testing.T) {
+	in := "## Acceptance\n<!-- e.g.\n- [ ] AC1 (R1) Given … -->\n- [ ] AC1 (R1) real\n- [/] AC2 (R1) going\n- [ ] AC3 (R2) not delivered\n- [-] AC4 dropped\r\n- [ ] AC5 crlf\r\nprose AC1\n"
+	want := "## Acceptance\n<!-- e.g.\n- [ ] AC1 (R1) Given … -->\n- [x] AC1 (R1) real\n- [x] AC2 (R1) going\n- [ ] AC3 (R2) not delivered\n- [-] AC4 dropped\r\n- [x] AC5 crlf\r\nprose AC1\n"
+	if got := markDelivered(in, map[int]bool{1: true, 2: true, 3: false, 4: true, 5: true}); got != want {
+		t.Errorf("markDelivered =\n%q\nwant\n%q", got, want)
+	}
+}

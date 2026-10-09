@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -233,9 +234,114 @@ func (c *Change) ownBoxes() []fileBox {
 
 // allOpen lists open and in-progress boxes in this folder's own files and its pieces': the same
 // boxes tally and progress count, so status and archive always agree.
+var (
+	deliversRE  = regexp.MustCompile(`(?i)\bdelivers\b`)
+	acRefRE     = regexp.MustCompile(`\bAC(\d+)(?:\s*[–-]\s*AC(\d+))?`)
+	criterionRE = regexp.MustCompile(`^AC(\d+)\b`)
+)
+
+// deliveredIDs reads a piece's "Delivers AC1, AC3–AC5 in plan.md" box: the parent's criteria it
+// names, as lists and ranges, ignoring the words around them ("and AC19's preview card" counts AC19).
+func deliveredIDs(text string) []int {
+	loc := deliversRE.FindStringIndex(text)
+	if loc == nil {
+		return nil
+	}
+	var out []int
+	for _, m := range acRefRE.FindAllStringSubmatch(text[loc[1]:], -1) {
+		from, _ := strconv.Atoi(m[1])
+		to := from
+		if m[2] != "" {
+			to, _ = strconv.Atoi(m[2])
+		}
+		for n := from; n <= to && n-from < 1000; n++ {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+// delivered is the parent's criteria (by number) that pieces deliver, and whether every piece
+// delivering each one is done: a criterion is met once all the pieces that name it are.
+func (c *Change) delivered() map[int]bool {
+	if c.Parent != nil || len(c.Pieces) == 0 {
+		return nil
+	}
+	by := map[int]map[*Change]bool{}
+	for _, p := range c.Pieces {
+		for _, b := range p.ownBoxes() {
+			for _, n := range deliveredIDs(b.text) {
+				if by[n] == nil {
+					by[n] = map[*Change]bool{}
+				}
+				by[n][p] = true
+			}
+		}
+	}
+	out := map[int]bool{}
+	for n, ps := range by {
+		all := true
+		for p := range ps {
+			all = all && p.state() == "done"
+		}
+		out[n] = all
+	}
+	return out
+}
+
+// countedBoxes are a folder's own boxes as progress counts them: a parent's criterion in plan.md
+// that its pieces have delivered counts as done, so no closing commit is needed to tick it.
+func (c *Change) countedBoxes() []fileBox {
+	bs := c.ownBoxes()
+	d := c.delivered()
+	if len(d) == 0 {
+		return bs
+	}
+	for i, b := range bs {
+		if b.file != "plan.md" || !isOpen(b.mark) {
+			continue
+		}
+		if m := criterionRE.FindStringSubmatch(b.text); m != nil {
+			if n, _ := strconv.Atoi(m[1]); d[n] {
+				bs[i].mark = markDone
+			}
+		}
+	}
+	return bs
+}
+
+var boxLineRE = regexp.MustCompile(`^(\s*[-*+]\s+\[)([ /])(\]\s+)(AC(\d+)\b.*)$`)
+
+// markDelivered ticks the open criteria in a plan.md that the pieces delivered, leaving every other
+// line as it was, comments included.
+func markDelivered(text string, delivered map[int]bool) string {
+	ls := strings.SplitAfter(text, "\n")
+	inComment := false
+	for i, l := range ls {
+		body := strings.TrimRight(l, "\r\n")
+		wasComment := inComment
+		if strings.Contains(body, "<!--") {
+			inComment = true
+		}
+		if strings.Contains(body, "-->") {
+			inComment = false
+			wasComment = true
+		}
+		if wasComment || inComment {
+			continue
+		}
+		if m := boxLineRE.FindStringSubmatch(body); m != nil {
+			if n, _ := strconv.Atoi(m[5]); delivered[n] {
+				ls[i] = m[1] + "x" + m[3] + m[4] + l[len(body):]
+			}
+		}
+	}
+	return strings.Join(ls, "")
+}
+
 func (c *Change) allOpen() []fileBox {
 	var out []fileBox
-	for _, b := range c.ownBoxes() {
+	for _, b := range c.countedBoxes() {
 		if isOpen(b.mark) {
 			out = append(out, b)
 		}
@@ -250,7 +356,7 @@ func (c *Change) allOpen() []fileBox {
 
 // tally counts the boxes in this folder and its pieces: open (or in progress), done, and dropped.
 func (c *Change) tally() (open, done, dropped int) {
-	for _, b := range c.ownBoxes() {
+	for _, b := range c.countedBoxes() {
 		switch b.mark {
 		case markDone:
 			done++
@@ -307,7 +413,7 @@ func (c *Change) started() bool {
 	if logEntryRE.MatchString(c.log()) {
 		return true
 	}
-	for _, b := range c.ownBoxes() {
+	for _, b := range c.countedBoxes() {
 		if b.mark == markDone || b.mark == markWorking {
 			return true
 		}
@@ -324,7 +430,7 @@ func (c *Change) nextStep() string {
 	if m := nextRE.FindAllStringSubmatch(c.log(), -1); len(m) > 0 {
 		return strings.TrimSpace(m[len(m)-1][1])
 	}
-	own := c.ownBoxes()
+	own := c.countedBoxes()
 	for _, mark := range []string{markWorking, markOpen} {
 		for _, b := range own {
 			if b.mark == mark {
