@@ -123,6 +123,57 @@ fi
 
 In Buildkite, run this as the step that uploads the rest of the pipeline, and upload nothing when it exits 0.
 
+## Many teams in one repo
+
+Each team gets its own yass folder (`yass init services/search`), so its changes, archive and `keep:` setting are its own. `yass status` shows them all; `yass new` puts a change in the one nearest where you're standing.
+
+### Who reviews plans: CODEOWNERS
+
+Route each yass folder's plans to the team that owns it, and the root folder (cross-team changes) to whoever owns those:
+
+```
+# .github/CODEOWNERS (or CODEOWNERS at the root; GitLab uses the same file)
+/yass/                   @acme/architecture
+/services/search/yass/   @acme/search
+/services/web/yass/      @acme/web
+/yass.yaml               @acme/platform
+```
+
+A pull request that changes a team's PRD, plan or progress then asks that team to review it, and a cross-team change's plan goes to the people who coordinate across teams. Keep these lines below any broader rule for the same paths: the last matching line wins.
+
+### Sparse checkouts
+
+In a sparse checkout, `yass status` reports on the yass folders you have checked out and says nothing about the rest. A change that names one outside your checkout, in `blocked:` or `follows:`, gets a note saying where it is and that it can't be checked from here, not a warning, so `yass status --strict` still passes. To see it, add its folder (`git sparse-checkout add services/search`).
+
+### Images, PDFs and other binaries
+
+A mockup, a screenshot or a spec PDF belongs in the change folder it's about (`yass/changes/<change>/assets/`), and moves with the change when it's archived, so the archive keeps a change's evidence with its decisions. Store them with [Git LFS](https://git-lfs.com), so clones and CI fetch them only when they're read:
+
+```
+# .gitattributes
+**/yass/**/*.png  filter=lfs diff=lfs merge=lfs -text
+**/yass/**/*.jpg  filter=lfs diff=lfs merge=lfs -text
+**/yass/**/*.gif  filter=lfs diff=lfs merge=lfs -text
+**/yass/**/*.pdf  filter=lfs diff=lfs merge=lfs -text
+```
+
+### History without the plans
+
+Plans live next to the code, so `git log` and `git diff` show both. `yass paths` prints the paths that are YASS's; turned into exclusions, they leave the plans out:
+
+```bash
+yass paths | sed 's/^/:(exclude,glob)/' | xargs git log --oneline -- .        # commits that touch code
+yass paths | sed 's/^/:(exclude,glob)/' | xargs git diff --stat main... -- .  # a branch's code changes
+```
+
+As an alias, so it's `git codelog` from then on (any `git log` options pass through):
+
+```bash
+git config alias.codelog '!f() { yass paths | sed "s/^/:(exclude,glob)/" | xargs git log "$@" -- .; }; f'
+```
+
+`git blame` needs nothing: a commit that touches only plans never changes a line of code, so it never shows up in a code file's blame. The other way around, `git log -- yass/` (or `yass decisions`) is the plans' own history.
+
 ## Squash merges
 
 A squash merge folds a pull request into one commit on main. YASS's rules are about commits: intent (a PRD, a design, plan text, a change's Goal or Acceptance), an archive move and a `queue.md` reorder each land apart from code, and progress (boxes, Log, Decisions) lands with the code it describes. With squash merges, "apart from code" means a pull request apart from code:
