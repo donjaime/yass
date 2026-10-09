@@ -2,7 +2,7 @@
 name: yass-plan
 description: Plan a YASS change. Write plan.md (approach, acceptance criteria per milestone, validation), split a large change into PR-sized pieces, record hard-to-undo calls in design.md, or revise the plan after feedback. Can start from a plan drafted in the harness's plan mode. Use after shaping a PRD, before building a large change, when saving a harness plan as a YASS plan, or when the approach must change.
 metadata:
-  yass-version: "0.3.0"
+  yass-version: "0.4.0"
 ---
 
 # yass-plan
