@@ -38,3 +38,6 @@ yass update fetches, verifies (checksum, then provenance through gh) and swaps t
 ### 2026-10-08 (claude)
 - Did: built and tested installing: fetch, verify, check the new binary, swap. `go test`, `tests/e2e.sh` (555 ok), and a real install from github.com pass.
 - Next: AC12's Windows run (Jaime, or once a Windows machine is at hand); then this piece is done, and `update-for-agents` can start.
+### 2026-10-08 (claude)
+- Did: merged (#52).
+- Next: AC12's Windows run (Jaime). AC17 runs against the real 0.4.0 release once it's tagged.

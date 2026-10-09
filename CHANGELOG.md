@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 (unreleased)
+## 0.4.0 (2026-10-08)
 The archive scales: finished changes go into month folders, YASS reads only their names unless it needs more, and a yass folder can move its oldest months into git history. Past decisions are one command away for people and agents.
 - **`yass update` gets a newer binary.** Inside a repo whose YASS files are newer than the binary, it installs exactly that version, so you match your team; otherwise the latest release. It says when a newer release exists (`--latest` gets it) and that `yass upgrade` and a commit follow; `--check` only looks. It verifies before installing: the release's `checksums.txt` always, and its signed build provenance when the GitHub CLI is installed (`--require-provenance` to insist), then checks the new binary runs before swapping it in. Binaries from `go install` or a clone aren't replaced; it prints the command for those.
 - **A sixth playbook, `yass-update`:** ask your agent to "update YASS", and it checks both versions, asks before downloading, runs `yass update` and `yass upgrade`, and hands back the diff. `yass status`'s version note and the `AGENTS.md` section point to it.
