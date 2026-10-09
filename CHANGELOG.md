@@ -2,6 +2,8 @@
 
 ## 0.4.0 (unreleased)
 The archive scales: finished changes go into month folders, YASS reads only their names unless it needs more, and a yass folder can move its oldest months into git history. Past decisions are one command away for people and agents.
+- **`yass update` gets a newer binary.** Inside a repo whose YASS files are newer than the binary, it installs exactly that version, so you match your team; otherwise the latest release. It says when a newer release exists (`--latest` gets it) and that `yass upgrade` and a commit follow; `--check` only looks. It verifies before installing: the release's `checksums.txt` always, and its signed build provenance when the GitHub CLI is installed (`--require-provenance` to insist), then checks the new binary runs before swapping it in. Binaries from `go install` or a clone aren't replaced; it prints the command for those.
+- **A sixth playbook, `yass-update`:** ask your agent to "update YASS", and it checks both versions, asks before downloading, runs `yass update` and `yass upgrade`, and hands back the diff. `yass status`'s version note and the `AGENTS.md` section point to it.
 - **Archives by month.** `yass archive` stamps `archived:` (UTC) in the change's frontmatter and moves it to `archive/<YYYY>/<MM>/<name>/`, so no folder grows without bound and GitHub can list every month. Every command reads both this layout and the old flat one.
 - **`yass upgrade` migrates.** After writing YASS's files, it brings each yass folder's layout up to date, including folders `yass.yaml` points to outside the repo: the first step moves a flat `archive/` into months, dated by the commit that archived each change (else the date in its name), and prints how to commit that on its own. The hook accepts the move.
 - **`yass decisions`:** every `## Decisions` entry across active and archived changes, in every yass folder, newest first, 50 at a time, with `--since`/`--until`, `--about "words"`, `--change <c>` (which follows the `follows:` chain both ways), `--cites <sha>` (the boxes that cite a commit) and `--json`. `yass-log` and `yass-shape` use it instead of reading `archive/`.
@@ -13,6 +15,7 @@ The archive scales: finished changes go into month folders, YASS reads only thei
 - Docs: what squash merges mean for YASS's rules (a pull request apart from code, where a commit used to be), and pushing and opening pull requests need the same latitude as committing.
 
 Migrating:
+- **From 0.3.0, update the binary by hand once** (a release download, `install.sh` or `go install`): `yass update` arrives in 0.4.0, and only release builds from 0.4.0 on can replace themselves.
 - **Upgrade everyone's `yass` binary before committing the archive migration on a shared repo.** An older binary reads `archive/2026` as a change, its `yass status` says to upgrade the binary, and it still archives flat; the next `yass upgrade`, by anyone, moves those into months too.
 - **To upgrade a repo,** run `yass upgrade` and commit in two steps, as it prints: the archive move on its own (`yass: archive-into-months`), then the rest (`chore: upgrade YASS`).
 - **Big archives:** a yass folder already past 2,000 archived changes gets a note from `yass status`; run `yass evict` when you're ready, or set `keep:` higher.
