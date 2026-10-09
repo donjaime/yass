@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -119,13 +120,16 @@ func (r *Repo) readEvicted(want map[*Root][]string) []string {
 }
 
 // catFiles reads many files from git in one process: `git cat-file --batch`, by <commit>:<path>.
-func catFiles(dir string, specs []string) map[string]string {
+func catFiles(dir string, specs []string, env ...string) map[string]string {
 	out := map[string]string{}
 	if len(specs) == 0 {
 		return out
 	}
 	cmd := exec.Command("git", "cat-file", "--batch")
 	cmd.Dir = dir
+	if len(env) > 0 {
+		cmd.Env = append(os.Environ(), env...)
+	}
 	cmd.Stdin = strings.NewReader(strings.Join(specs, "\n") + "\n")
 	pipe, err := cmd.StdoutPipe()
 	if err != nil || cmd.Start() != nil {

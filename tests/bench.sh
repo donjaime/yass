@@ -12,7 +12,7 @@ if [ -z "${YASS_BIN:-}" ]; then
   mkdir -p "$W/bin"; (cd "$ROOT" && go build -o "$W/bin/yass" ./cmd/yass) || { echo "build failed"; exit 1; }
   YASS_BIN="$W/bin/yass"
 fi
-FOLDERS="${BENCH_FOLDERS:-200}" CHANGES="${BENCH_CHANGES:-2000}" ARCHIVED="${BENCH_ARCHIVED:-10000}" FILES="${BENCH_FILES:-100000}" RUNS="${BENCH_RUNS:-5}"
+FOLDERS="${BENCH_FOLDERS:-200}" CHANGES="${BENCH_CHANGES:-2000}" ARCHIVED="${BENCH_ARCHIVED:-10000}" BRANCHES="${BENCH_BRANCHES:-100}" REMOTES="${BENCH_REMOTES:-1000}" FILES="${BENCH_FILES:-100000}" RUNS="${BENCH_RUNS:-5}"
 fail=0
 
 # median wall time of RUNS runs of a command, in milliseconds, after one untimed warm-up run
@@ -62,12 +62,27 @@ FOLDERS=$FOLDERS ARCHIVED=$ARCHIVED perl -MFile::Path=make_path -e '
       print $o "\n## Decisions\n- chose a - because b (bench)\n\n## Log\n### 2025-01-01 (bench)\n- Did: things\n";
     }
     my $first = sprintf("%s/changes/2026-02-02-change-1/change.md", $y);
-    if (-f $first) { local @ARGV = ($first); local $^I = ""; while (<>) { s/^follows:\s*$/follows: 2025-02-02-done-1/; print } }
+    if (-f $first) { local @ARGV = ($first); local $^I = ""; while (<>) { s/^follows:[ \t]*$/follows: 2025-02-02-done-1/; print } }
   }'
 mkdir -p yass/changes yass/archive; touch yass/changes/.gitkeep
 git add -A >/dev/null; git commit -q -m "bench: plans"
 echo "  $(git ls-files | wc -l | tr -d ' ') files, $("$YASS_BIN" status | grep -c ' not started\| in progress\|  [0-9]*/[0-9]*') status lines"
+# branches <prefix> <count>: that many branches off main, each with a commit to one change's
+# change.md dated now, written by one git fast-import (so 1,000 take a second, not minutes)
+branches() { PREFIX=$1 COUNT=$2 FOLDERS=$FOLDERS perl -e '
+  my ($p, $n, $f, $t) = ($ENV{PREFIX}, $ENV{COUNT}, $ENV{FOLDERS}, time);
+  for my $i (1..$n) {
+    my $file = sprintf("teams/t%03d/yass/changes/2026-02-02-change-1/change.md", ($i % $f) + 1);
+    my $body = "# Change\n\n- [x] Step one\n- [/] Step two\n\n## Log\n### 2026-10-01 (bench)\n- Next: branch $i\n";
+    printf "commit %s%d\ncommitter Bench <b\@b> %d +0000\ndata 7\nbranch\nfrom refs/heads/main^0\nM 100644 inline %s\ndata %d\n%s\n", $p, $i, $t, $file, length($body), $body;
+  }' | git fast-import --quiet; }
 check "yass status" "$(ms "$YASS_BIN" status)" 1000
+branches refs/heads/local- "$BRANCHES"
+echo "  + $BRANCHES local branches with recent work"
+check "yass status, with $BRANCHES branches" "$(ms "$YASS_BIN" status)" 1000
+branches refs/remotes/origin/remote- "$REMOTES"
+echo "  + $REMOTES remote branches with recent work"
+check "yass status, with $REMOTES remote branches more" "$(ms "$YASS_BIN" status)" 2000
 
 echo "hook: $FILES files, one-file commit"
 newrepo "$W/bench/hook"
