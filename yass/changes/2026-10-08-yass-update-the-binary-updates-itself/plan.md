@@ -34,7 +34,7 @@ Source builds stop after stage 1 with the command for their install method. The 
 - [x] AC14 (R9) Given the binary's folder isn't writable, then it says so before downloading anything, with what to do — verify: e2e (`chmod -w`)
 - [x] AC15 (R9) Given the release source unreachable, or `--version` naming a release that doesn't exist, then it says which and changes nothing — verify: e2e (server stopped; a missing version)
 - [x] AC16 (R10) Given each platform releases are built for, then `yass update` picks that platform's archive (`.zip` on Windows) — verify: go test (asset name per GOOS/GOARCH)
-- [ ] AC17 (R1–R10) Given the real 0.4.0-or-later release on GitHub, when a release binary runs `yass update --check` and `yass update`, then both behave as above against github.com — verify: manual: after the next release, on macOS and Linux
+- [/] AC17 (R1–R10) Given the real 0.4.0-or-later release on GitHub, when a release binary runs `yass update --check` and `yass update`, then both behave as above against github.com — verify: manual: after the next release, on macOS and Linux
 
 ### M2
 - [x] AC18 (R11) Given a binary older than the repo, then `yass status`'s note and `yass upgrade`'s refusal name `yass update` — verify: e2e

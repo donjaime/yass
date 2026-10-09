@@ -2,7 +2,7 @@
 name: yass-work
 description: Work on a YASS change you've been pointed at. Create it if it's new and small, resume from its Log, build against its acceptance criteria, keep progress (boxes marked in progress or done, Log, Decisions) up to date alongside the code, put needed plan changes on their own branch underneath the code instead of giving up, verify, and archive it when every box is checked. Use for "work on X", "keep going" on the change at hand, "fix this bug", and unattended runs that name a change.
 metadata:
-  yass-version: "0.3.0"
+  yass-version: "0.4.0"
 ---
 
 # yass-work
@@ -11,7 +11,7 @@ metadata:
 
 **Work only on the change you've been pointed at.** Picking what to build next is a decision, and it belongs to whoever is directing the work, not to this playbook. Being in progress isn't a reason to pick a change: several can be, and a freshly planned one (`not started` in `yass status`) may still be waiting for someone to approve its plan.
 
-**Git is up to whoever is driving.** Don't commit, branch or rebase unless the human or your harness has given you that latitude. If you have it, do it yourself (plain `git`, or a stacking tool like `gh stack` if the repo uses one). If you don't, and someone's watching, give them the exact commands to run. Either way, keep the work shaped so that intent and code can land separately.
+**Git is up to whoever is driving.** Don't commit, branch, rebase, push or open a pull request unless the human or your harness has given you that latitude; pushing and pull requests are public. If you have it, do it yourself (plain `git`, or a stacking tool like `gh stack` if the repo uses one). If you don't, and someone's watching, give them the exact commands to run. Either way, keep the work shaped so that intent and code can land separately. "Separately" means apart from code: if the team squash-merges, that's a pull request with no code in it, which can still hold other intent, progress or an archive move.
 
 1. **Orient.** Find the change you were pointed at: named in the request (names can be shortened: `yass status queue`), or the one this session is already working on. Nothing else counts.
    - **Not pointed at one?** Show `yass status` and ask which. Unattended, stop and say so.
@@ -20,7 +20,7 @@ metadata:
 2. **Load.** `yass status <change>` lists its files and open boxes. Read `change.md` and resume from the last **Next:** in its Log. For a piece, also read the parent's `prd.md` and `plan.md`. Read the code and docs you'll touch.
 3. **Build.** Alongside the code:
    - mark a box `[/]` when you start on it, and `[x]` once it's finished (Steps, Acceptance, and plan criteria the work delivers). If you stop partway, leave it `[/]` so the next session sees where you were.
-   - append real choices to `## Decisions`: `- <decision> - <why> (<who>)`
+   - append real choices to `## Decisions`: `- <decision> - <why> (<who>, <YYYY-MM-DD>)`
    - keep `## Steps` current; it's your checklist
    - if `yass root` is outside this repo, cite the code commits; see **Plans in another folder** below
 4. **Don't move the goalposts.** `prd.md`, `design.md`, plan text, a Goal and acceptance criteria (including dropping one) never change alongside code. If they're wrong, see **Intent changes mid-build** below.
@@ -33,7 +33,7 @@ metadata:
    - Did: …
    - Next: …
    ```
-8. **Finish.** Merging a branch doesn't finish a change; a large change spans many branches. When every box is done or dropped (`yass status` says `done`), run `yass archive <change>` (it prints how to commit the move). Pieces are archived with their change.
+8. **Finish.** Merging a branch doesn't finish a change; a large change spans many branches. When every box is done or dropped (`yass status` says `done`), run `yass archive <change>` (it prints how to commit the move). Commit it apart from code; with squash merges, in a pull request with no code, which can carry the change's last progress too. Pieces are archived with their change.
    - A Step you no longer need can be dropped (`[-]`) any time, with a reason in Decisions.
 
 ## Intent changes mid-build

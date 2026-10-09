@@ -28,3 +28,6 @@ Getting a newer `yass` is one command, and agents can do the whole upgrade. `yas
 ### YYYY-MM-DD (<who>)
 - Did: …
 - Next: … -->
+### 2026-10-09 (claude)
+- Did: 0.4.0 released (the first tagged run failed in e2e on the tag itself; fixed in #56 and the tag moved, nothing had been published). AC17 on macOS against github.com: the published 0.4.0 binary's `yass update --check` in this repo reports itself up to date, exit 0; a release-marked 0.3.9 build ran `yass update`, installed the latest with checksum and provenance (the real `gh`) verified, and ended up byte-identical to the published binary. This repo upgraded to 0.4.0 with it.
+- Next: AC17 on Linux, and AC12 on Windows (Jaime); then archive.
