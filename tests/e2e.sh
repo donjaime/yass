@@ -1326,5 +1326,19 @@ has   "a change citing another repo archives from here" "^archived .*2026-01-03-
 has   "…listing what it couldn't check, and where to" "couldn't check 1 citation\(s\) from here \(this is api\)" echo "$OUT"
 has   "…each one" "web@$W7 in 'Web thing' \(2026-01-03-web-only/change.md\): from web, yass status" echo "$OUT"
 
+echo "44. one line of progress, for commits and pull requests"
+newrepo "$W/e2e/brief"; y init >/dev/null
+L=$(y new "Offline sync" --large); printf '### M1\n- [ ] AC1 (R1) Given a — verify: e2e\n' >> "$L/plan.md"
+Q=$(y new "Offline queue" --in offline-sync); B=$(y new "Sync badge" --in offline-sync)
+sub "$Q/change.md" '^- \[ \] $' '- [x] Delivers AC1\n- [x] Queue table'; sub "$B/change.md" '^- \[ \] $' '- [/] Badge'
+S=$(y new "Fix double tap"); sub "$S/change.md" '^- \[ \] $' '- [x] Disable Save\n- [ ] Unit test'
+has   "a piece: its parent's pieces and boxes, then its own" "^offline-sync: 1/2 pieces done, 3/4 boxes · offline-queue: 2/2 boxes, done$" y status offline-queue --brief
+has   "a large change: its pieces and boxes" "^offline-sync: 1/2 pieces done, 3/4 boxes$" y status offline-sync --brief
+has   "a small change: its boxes" "^fix-double-tap: 1/2 boxes$" y status double-tap --brief
+sub "$S/change.md" '^- \[ \] Unit test' '- [x] Unit test'
+has   "…and done when it is" "^fix-double-tap: 2/2 boxes, done$" y status double-tap --brief
+run_fail "--brief needs a change" y status --brief
+has   "…and says so" "--brief needs a change" y status --brief
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

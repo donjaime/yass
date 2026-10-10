@@ -128,6 +128,7 @@ yass new "<title>"              a small change
          [--source gh#41] [--follows <archived>] [--platforms "ios, android"] [--goal "…"]
 yass status [<change>]          what's in flight, progress, next steps, what's blocked, not started or done,
                                 and the unmerged branches working on each
+            [--brief]           …or one change's progress in a line, for commits and pull requests
             [--archived] [--strict] [--since 14d|DATE] [--no-branches]
 yass archive <change>           move a finished change to archive/<YYYY>/<MM>/ (refuses while boxes are open)
 yass evict                      move the oldest archived months into git history, when past keep:
