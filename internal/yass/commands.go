@@ -265,16 +265,56 @@ func statusLine(c *Change) string {
 	return fmt.Sprintf("%5s  ", first) + strings.Join(bits, "  ")
 }
 
+// brief is a change's progress in one line, for commit messages and pull requests: a piece also
+// gets its parent's, so a reader sees where the whole change stands.
+func brief(c *Change) string {
+	short := func(c *Change) string {
+		if nameRE.MatchString(c.Name) {
+			return c.Name[11:] // without the date
+		}
+		return c.Name
+	}
+	one := func(c *Change, pieces bool) string {
+		done, total := c.progress()
+		var bits []string
+		if pieces && len(c.Pieces) > 0 {
+			n := 0
+			for _, p := range c.Pieces {
+				if p.state() == "done" {
+					n++
+				}
+			}
+			bits = append(bits, fmt.Sprintf("%d/%d pieces done", n, len(c.Pieces)))
+		}
+		bits = append(bits, fmt.Sprintf("%d/%d boxes", done, total))
+		if c.state() == "done" {
+			bits = append(bits, "done")
+		}
+		return short(c) + ": " + strings.Join(bits, ", ")
+	}
+	if c.Parent != nil {
+		return one(c.Parent, true) + " · " + one(c, false)
+	}
+	return one(c, true)
+}
+
 func cmdStatus(a *args) (int, error) {
 	r := loadRepo()
 	if a.b["archived"] {
 		r.readArchived()
 	}
 	r.pastKeep()
+	if a.b["brief"] && len(a.pos) == 0 {
+		return 0, fmt.Errorf("--brief needs a change: yass status <change> --brief")
+	}
 	if len(a.pos) > 0 {
 		c, err := r.resolve(a.pos[0], nil, a.b["archived"])
 		if err != nil {
 			return 0, err
+		}
+		if a.b["brief"] {
+			fmt.Println(brief(c))
+			return 0, nil
 		}
 		showChange(r, c)
 		return 0, nil
