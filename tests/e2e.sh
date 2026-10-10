@@ -1429,5 +1429,28 @@ has   "an ac: the plan doesn't have warns" "warning: $M4's trailer names AC9, wh
 has   "a piece lists only its own" "^  $M2 feat: cart ui$" y status 2026-04-02-ui
 hasnt "…not its change's" "cart model" y status 2026-04-02-ui
 
+echo "47. a plans repo checks its citations against the code"
+PH="$W/e2e/ph"; rm -rf "$PH"; mkdir -p "$PH"
+for n in api web; do newrepo "$PH/$n"; echo "$n" > app.txt; git add -A; git commit -q -m "$n: start"; done
+AM=$(git -C "$PH/api" rev-parse --short=7 HEAD)
+git -C "$PH/web" switch -q -c feature; echo w >> "$PH/web/app.txt"; git -C "$PH/web" commit -qam "web: unmerged"; WU=$(git -C "$PH/web" rev-parse --short=7 HEAD); git -C "$PH/web" switch -q main
+newrepo "$PH/plans"; mkdir -p changes/2026-05-01-thing
+printf 'path: .\nrepos:\n  api: ../api\n  web: ${CODE_HOME:-..}/web\n' > yass.yaml
+printf '# Thing\n\n- [x] Api — code: api@%s\n- [x] Web — code: web@%s\n- [x] Wrong — code: api@deadbee\n- [x] Bare — code: %s\n' "$AM" "$WU" "$AM" > changes/2026-05-01-thing/change.md
+git add -A; git commit -q -m plans
+OUT="$(y status 2>&1)"
+hasnt "a merged citation in its repo checks out" "Api' " echo "$OUT"
+has   "an unmerged one is flagged against its repo's main" "'Web' is marked done, but $WU isn't on main yet" echo "$OUT"
+has   "a missing one too" "'Wrong' cites api@deadbee, which isn't a commit here" echo "$OUT"
+has   "an unqualified one, with two repos, is listed as unchecked" "1 citation\(s\) don't name their repo, and repos: lists more than one" echo "$OUT"
+printf 'path: .\nrepos:\n  api: ../api\n' > yass.yaml; printf '# Thing\n\n- [x] Bare — code: %s\n- [x] Gone — code: 0badc0d\n' "$AM" > changes/2026-05-01-thing/change.md
+has   "with one repo, an unqualified citation is checked against it" "'Gone' cites 0badc0d, which isn't a commit here" y status
+hasnt "…and passes when it's there" "'Bare'" y status
+printf 'path: .\nrepos:\n  api: ../api\n  web: ../nowhere\n  ios: ${NO_SUCH_VAR_YASS}/ios\n' > yass.yaml
+printf '# Thing\n\n- [x] Web — code: web@%s\n- [x] Ios — code: ios@1234567\n' "$WU" > changes/2026-05-01-thing/change.md
+has   "a checkout that isn't there: its citations are noted as unchecked" "1 citation\(s\) name web, whose checkout isn't here" y status
+has   "…as are those of a repo whose variable is unset" "1 citation\(s\) name ios, whose checkout isn't here" y status
+run_ok "…and --strict still passes" y status --strict
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

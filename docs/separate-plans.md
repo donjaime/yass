@@ -58,6 +58,19 @@ criteria:
 
 Because it reads trailers, not commit hashes cited in the plans, it still works after a squash merge. Unmerged commits aren't listed, and an `ac:` naming a criterion the plan doesn't have is a warning. It shows ten commits per list and says how many more there are.
 
+## Checking from the plans repo
+
+Citations in the plans (`code: web@a1b2c3d`) are checked from each code repo. To check them from the plans repo itself, locally or in its own CI, map repo names to checkouts in its `yass.yaml`:
+
+```yaml
+path: .
+repos:
+  api: ../api                 # resolved like path:, relative to this file
+  web: ${CODE_HOME:-..}/web   # side by side by default; set CODE_HOME to put them elsewhere
+```
+
+`yass status` there checks each citation against its repo: that the commit exists, and that a done box's commit is on that repo's main branch (`origin/HEAD`, else `main` or `master`). A citation that doesn't name its repo is checked against the only one listed, and noted as unchecked when there are several. A repo whose checkout isn't there, or whose variable is unset with no default, has its citations noted as unchecked, not as errors. It never fetches or clones: in CI, check out the code repos next to the plans repo first.
+
 ## With a hook manager
 
 If your repo already runs hooks through a manager, call YASS from it rather than pointing `core.hooksPath` at YASS's folder.
