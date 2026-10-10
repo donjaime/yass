@@ -17,9 +17,9 @@ Commits and pull requests can say where their change stands as a whole: yass sta
 - [x] Given a piece, when you run `yass status <piece> --brief`, then it prints one line: its parent's name, pieces done of all, boxes done of all, then the piece's name and its own boxes — verify: e2e
 - [x] Given a large change, or a small one, then `--brief` prints the same line without the piece part (a small change: just its boxes), and marks a change that's done — verify: e2e
 - [x] Given `--brief` without a change, then it says it needs one — verify: e2e
-- [/] Given `yass-work`, then it suggests the line for commit message bodies and pull request descriptions, and a short form for titles, as advice that doesn't impose a process — verify: manual: review
-- [/] Given the README's CLI list, then it shows `--brief` — verify: manual: review
-- [/] Given this repo's pull requests from this one on, then their descriptions start with the line — verify: manual: the next pull requests
+- [x] Given `yass-work`, then it suggests the line for commit message bodies and pull request descriptions, and a short form for titles, as advice that doesn't impose a process — verify: manual: review
+- [x] Given the README's CLI list, then it shows `--brief` — verify: manual: review
+- [x] Given this repo's pull requests from this one on, then their descriptions start with the line — verify: manual: the next pull requests
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -41,3 +41,6 @@ Commits and pull requests can say where their change stands as a whole: yass sta
 ### 2026-10-10 (claude)
 - Did: `--brief`, the advice in `yass-work`, README, e2e. `go test`, `tests/e2e.sh` (642 ok), `tests/examples.sh`, `tests/site.sh` pass.
 - Next: Jaime reviews the advice and README (boxes 4, 5); the line opens this pull request and the next ones (box 6).
+### 2026-10-10 (claude)
+- Did: Jaime reviewed and merged it (#68), whose description, title and commit body used the line; this pull request does too, and so will the next ones. Done.
+- Next: archive it.
