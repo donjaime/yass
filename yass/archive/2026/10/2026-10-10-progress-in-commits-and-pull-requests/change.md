@@ -4,6 +4,7 @@ source: Jaime, 2026-10-10: PR descriptions, titles and commits should give a sen
 follows: 
 blocked:
 created: 2026-10-10T12:09:18Z
+archived: 2026-10-10T20:22:19Z
 ---
 # Progress in commits and pull requests
 
