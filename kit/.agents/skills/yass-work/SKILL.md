@@ -55,10 +55,15 @@ Building often shows the plan is wrong. Don't quietly fix it next to the code, a
 5. **Who runs it:** if you're allowed to drive git, run it yourself. If someone's watching but you aren't allowed, make the edits, then show them the commands. If nobody's watching and you can't commit, leave the edits in place, put the commands in the Log's **Next:**, and stop.
 
 ## Plans in another folder
-When `yass root` prints a folder outside this repo (a `yass.yaml` points there), plans and code are committed separately, often in different repos. Nothing can carry progress in the same commit as the code, so link them by commit instead:
+When `yass root -v` says `separate` (a `yass.yaml` points outside this repo), plans and code are committed separately, often in different repos. Nothing can carry progress in the same commit as the code, so the routine changes:
 
-- **Cite the code.** When you mark a box, end it with the code commits it rests on: `- [/] Disable Save while saving — code: a1b2c3d`. Name them in the Log entry too.
+- **Start by updating the plans.** Pull them (`git -C <plans folder> pull --ff-only`) before reading the change; `yass status` notes when they have uncommitted files or are behind. Then resume from the Log as usual.
+- **If the plans folder isn't there, stop and say so.** Never run `yass init` to fix it: it would create an empty plans folder that only this checkout sees. The fix is the human's: clone the plans where `yass.yaml` expects them, or set the variable its `path:` uses. From a linked worktree, YASS already looks in the clone's other checkouts.
+- **Name the change in every code commit.** Run `yass use <change>` when you start (`--ac ac2,ac5` adds the criteria you're working toward); the hooks then add a `yass: <change>` trailer to each commit. It's per worktree, so parallel worktrees can work on different changes. Without the hooks, write the trailer yourself. A commit that belongs to no change gets `yass: none`.
+- **Commit the code first, then the plans.** The code commit carries the trailer; the plans commit marks boxes and cites the code commits they rest on: `- [/] Disable Save while saving — code: a1b2c3d`, or `web@a1b2c3d` when several code repos share the plans. Name them in the Log entry too.
 - **`[x]` waits for the merge.** A box is done when its code is on the main branch: cite the commit there (after a squash merge, the squash commit). Until then it's `[/]`, citing the branch commits. `yass status` warns about a cited commit it can't find, and about a done box whose code isn't merged (`branch:` in `yass.yaml` says which branch counts).
 - **Boxes with no code** (a decision, a manual check) need no citation.
+- **Cross-link them.** The code pull request names the change and its progress (`yass status <change> --brief`) and carries the `yass:` trailer line in its description, so a squash merge keeps it; the plans commit or pull request names the code's.
+- **Latitude is per repo.** Being allowed to commit, push or open pull requests in the code repo says nothing about the plans repo, and the other way round; without it in one, show the human that repo's commands.
 - **Intent changes go where the plans live,** as their own commit or pull request in that folder's repo, linked from the code's pull request. There's nothing to stack under the code; keep building against the revised plan once you're confident, as above.
-- **The plans stay on one branch** there, usually main. Git in that folder follows the same rule as here: only with latitude, otherwise show the human the commands.
+- **The plans stay on one branch** there, usually main.
