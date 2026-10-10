@@ -1340,5 +1340,71 @@ has   "…and done when it is" "^fix-double-tap: 2/2 boxes, done$" y status doub
 run_fail "--brief needs a change" y status --brief
 has   "…and says so" "--brief needs a change" y status --brief
 
+echo "45. yass: trailers, with plans kept apart"
+PL="$W/e2e/trail-plans"; newrepo "$PL"; mkdir -p changes archive; touch changes/.gitkeep
+mkt() { mkdir -p "$PL/$1"; printf '# %s\n\n- [ ] Do it\n' "$(basename "$1")" > "$PL/$1/change.md"; }
+mkt changes/2026-02-01-login; mkt changes/2026-02-01-login/2026-02-02-form; mkt changes/2026-02-01-login/2026-02-03-api
+mkt changes/2026-02-05-signup; mkt changes/2026-02-05-signup/2026-02-02-form; mkt archive/2026-01-01-old
+git add -A; git commit -q -m plans
+CODE="$W/e2e/trail-code"; newrepo "$CODE"; y init --path "$PL" --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS" 2>/dev/null
+[ -x tools/yass/githooks/prepare-commit-msg ] && [ -x tools/yass/githooks/commit-msg ] && ok "init installs the trailer hooks beside pre-commit" || bad "trailer hooks missing"
+trailer() { git log -1 --format='%(trailers:key=yass,valueonly)' | head -1; }
+c() { echo "$RANDOM" >> code.txt; git add code.txt; git commit -q "$@" 2>&1; }
+has   "no change to name: the commit goes through with a heads-up and how to add one" "heads-up: this commit should name its change.*|yass use <change>" c -m "feat: nameless"
+[ -z "$(trailer)" ] && ok "…and nothing is added" || bad "a trailer was invented"
+y use login >/dev/null
+has   "yass use names this worktree's change" "^2026-02-01-login$" y use
+hasnt "with it, commits go through quietly" "." c -m "feat: with use"
+has   "…carrying the trailer, in lower case" "^2026-02-01-login$" trailer
+git worktree add -q "$W/e2e/trail-wt" -b other 2>/dev/null
+(cd "$W/e2e/trail-wt" && yass use SIGNUP >/dev/null && echo x >> wt.txt && git add wt.txt && git commit -q -m "feat: other worktree")
+has   "another worktree uses its own change" "^2026-02-05-signup$" git -C "$W/e2e/trail-wt" log -1 --format='%(trailers:key=yass,valueonly)'
+has   "…while this one keeps its" "^2026-02-01-login$" bash -c 'echo y >> code.txt; git add code.txt; git commit -q -m "feat: again"; git log -1 --format="%(trailers:key=yass,valueonly)" | head -1'
+y use --clear >/dev/null; has "--clear clears it" "none set" y use
+git switch -q -c jaime/2026-02-01-login
+c -m "feat: on a branch" >/dev/null; has "a branch named after a change (after a prefix) gives the trailer" "^2026-02-01-login$" trailer
+git switch -q main; git switch -q -c 2026-02-03-api
+c -m "feat: piece branch" >/dev/null; has "…a piece's name gives <change>/<piece>" "^2026-02-01-login/2026-02-03-api$" trailer
+git switch -q main; git switch -q -c feature-x
+c -m "feat: first" -m "yass: 2026-02-05-signup" >/dev/null; c -m "feat: second" >/dev/null
+has   "otherwise an earlier commit's trailer on the branch carries over" "^2026-02-05-signup$" trailer
+c -m "feat: mine" -m "yass: none" >/dev/null; has "a trailer you wrote is left alone" "^none$" trailer
+git switch -q main; git merge -q --no-ff feature-x -m "Merge feature-x" 2>/dev/null
+[ -z "$(git log -1 --format='%(trailers:key=yass,valueonly)')" ] && ok "a merge commit gets none" || bad "a merge got a trailer"
+for t in "2026-02-01-login" "2026-01-01-old" "2026-02-01-login/2026-02-02-form" "2026-02-03-api" "none" "2026-02-01-LOGIN ac:ac1,AC2"; do
+  hasnt "\`yass: $t\` is accepted" "heads-up|refusing" c -m "feat: t" -m "yass: $t"; done
+has   "a malformed trailer is invalid" "is malformed" c -m "feat: bad" -m "yass: 2026-02-01-login ac"
+has   "a piece name in two changes is ambiguous" "pieces in more than one change; give it as <change>/<piece>" c -m "feat: amb" -m "yass: 2026-02-02-form"
+has   "an unknown key is only a warning" "doesn't know the key 'foo'" c -m "feat: k" -m "yass: 2026-02-01-login foo:bar"
+hasnt "…not a heads-up" "heads-up" c -m "feat: k2" -m "yass: 2026-02-01-login foo:bar"
+printf 'path: %s\ntrailers: require\n' "$PL" > yass.yaml; git add yass.yaml; git commit -q -m "chore: require" -m "yass: none"
+N0=$(git rev-list --count HEAD)
+has   "trailers: require refuses a commit with none" "refusing the commit \(trailers: require\)" c -m "feat: none at all"
+[ "$(git rev-list --count HEAD)" = "$N0" ] && ok "…and it isn't made" || bad "a refused commit was made"
+has   "…and a name that isn't a change, suggesting the closest" "'2026-02-01-logn' isn't a change or piece; did you mean 2026-02-01-login" c -m "feat: typo" -m "yass: 2026-02-01-logn"
+git reset -q; git checkout -q -- code.txt 2>/dev/null
+printf 'path: %s\n' "$PL" > yass.yaml; git add yass.yaml; git commit -q -m "chore: warn again" -m "yass: none"
+BASE=$(git rev-parse HEAD); c -m "feat: unnamed" >/dev/null; c -m "feat: named" -m "yass: 2026-02-01-login" >/dev/null
+has   "hook --range reports a commit without a trailer" "feat: unnamed: no \`yass:\` trailer" yass hook --range "$BASE..HEAD"
+run_ok "…as a warning" yass hook --range "$BASE..HEAD"
+run_fail "…and fails with --strict" yass hook --range "$BASE..HEAD" --strict
+B2=$(git rev-parse HEAD); c -m "Login form (#12)" -m "* feat: a" -m "yass: 2026-02-01-login ac:ac1" >/dev/null
+run_ok "a squash commit carrying the trailers passes" yass hook --range "$B2..HEAD" --strict
+CI="$W/e2e/trail-ci"; rm -rf "$CI"; git clone -q "file://$CODE" "$CI"; cd "$CI"; printf 'path: %s/nowhere\n' "$W" > yass.yaml
+has   "in CI without the plans, only the form is checked, and it says so" "change names weren't checked" yass hook --range "$BASE..HEAD"
+has   "…still reporting a missing trailer" "feat: unnamed: no \`yass:\` trailer" yass hook --range "$BASE..HEAD"
+cd "$CODE"; printf 'path: %s\ntrailers: off\n' "$PL" > yass.yaml; git add yass.yaml; git commit -q -m "chore: off" -m "yass: none"
+hasnt "trailers: off: nothing is added, checked or printed" "." c -m "feat: off"
+[ -z "$(trailer)" ] && ok "…and no trailer" || bad "trailer added with trailers: off"
+newrepo "$W/e2e/trail-inline"; y init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+rm tools/yass/githooks/prepare-commit-msg tools/yass/githooks/commit-msg; git add -A; git commit -q -m "older install: pre-commit only"
+sub tools/yass/githooks/pre-commit '^# yass-version: .*$' '# yass-version: 0.1.0'
+has   "yass upgrade adds the trailer hooks to an older install" "wrote tools/yass/githooks/commit-msg" "$(vbin 0.9.0)" upgrade
+[ -x tools/yass/githooks/prepare-commit-msg ] && ok "…executable" || bad "prepare-commit-msg missing or not executable"
+git checkout -q -- . 2>/dev/null; git clean -qfd tools 2>/dev/null
+y use --clear >/dev/null 2>&1
+hasnt "plans in the repo: nothing about trailers" "." bash -c 'echo a >> a.txt; git add a.txt; git commit -q -m "feat: inline" 2>&1'
+[ -z "$(git log -1 --format='%(trailers:key=yass,valueonly)')" ] && ok "…and no trailer" || bad "inline commit got a trailer"
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

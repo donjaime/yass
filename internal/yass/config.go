@@ -28,6 +28,9 @@ type Config struct {
 	// Repo names this code repo in citations (code: web@a1b2c3d), when its origin URL's last
 	// segment, or its main worktree's folder name, isn't the name the plans use.
 	Repo string `yaml:"repo"`
+	// Trailers is how a code repo with separate plans treats commits' yass: trailers: warn (the
+	// default), require, or off. With plans in the repo, trailers aren't used.
+	Trailers string `yaml:"trailers"`
 	// Archive holds the archive's settings.
 	Archive struct {
 		// Keep is how many archived changes (pieces count with their change) the yass folder's working
@@ -39,7 +42,7 @@ type Config struct {
 // DefaultKeep is how many archived changes a yass folder keeps when its yass.yaml doesn't say.
 const DefaultKeep = 2000
 
-var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true, "archive": true, "repo": true}
+var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true, "archive": true, "repo": true, "trailers": true}
 
 var knownArchiveSettings = map[string]bool{"keep": true}
 

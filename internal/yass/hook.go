@@ -366,8 +366,25 @@ func cmdHook(a *args) int {
 		return 0
 	}
 	strict := a.b["strict"] || (os.Getenv("YASS_STRICT") != "" && os.Getenv("YASS_STRICT") != "0")
+	switch {
+	case a.b["prepare-msg"]:
+		if len(a.pos) > 0 {
+			source := ""
+			if len(a.pos) > 1 {
+				source = a.pos[1]
+			}
+			prepareMsg(a.pos[0], source)
+		}
+		return 0
+	case a.b["commit-msg"]:
+		if len(a.pos) == 0 {
+			return 0
+		}
+		return commitMsg(a.pos[0])
+	}
 	h := newHook()
-	var found []string
+	var found, trailers []string
+	trailerFail, namesChecked := false, true
 	if rng, ok := a.v["range"]; ok {
 		shas, ok := git("", "rev-list", "--reverse", "--no-merges", rng)
 		if rng == "" || !ok {
@@ -388,6 +405,10 @@ func cmdHook(a *args) int {
 				}
 			}
 		}
+		if r := loadRepo(); r.trailerMode() != "off" {
+			trailers, namesChecked = r.rangeTrailers(strings.Fields(shas))
+			trailerFail = len(trailers) > 0 && (strict || r.trailerMode() == "require")
+		}
 	} else {
 		if _, merging := git("", "rev-parse", "-q", "--verify", "MERGE_HEAD"); merging {
 			return 0
@@ -402,7 +423,23 @@ func cmdHook(a *args) int {
 		}
 		found = h.check(nameStatus("--cached", base), head, "")
 	}
+	if len(trailers) > 0 {
+		verb := "heads-up"
+		if trailerFail {
+			verb = "failing"
+		}
+		fmt.Fprintf(os.Stderr, "yass: %s: commits that don't name their change (the plans are kept apart from the code)\n", verb)
+		for _, t := range trailers {
+			fmt.Fprintf(os.Stderr, "  - %s\n", t)
+		}
+	}
+	if !namesChecked {
+		fmt.Fprintln(os.Stderr, "yass: the plans folder isn't here, so trailers were checked for form only; change names weren't checked")
+	}
 	if len(found) == 0 {
+		if trailerFail {
+			return 1
+		}
 		return 0
 	}
 	verb := "heads-up"
@@ -415,6 +452,9 @@ func cmdHook(a *args) int {
 	}
 	if !strict {
 		fmt.Fprintln(os.Stderr, "  (a warning only; YASS_STRICT=1 makes it an error, YASS_HOOK=off skips it)")
+		if trailerFail {
+			return 1
+		}
 		return 0
 	}
 	return 1

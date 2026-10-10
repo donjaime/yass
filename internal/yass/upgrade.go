@@ -72,7 +72,10 @@ func findYassFiles(r *Repo) []upgradeTarget {
 		case repoAgentRE.MatchString(rel) && strings.Contains(read(p), "<!-- yass:begin"):
 			found = append(found, upgradeTarget{path: p, kind: "agents"})
 		case rel == HookPath+"/pre-commit":
-			found = append(found, upgradeTarget{path: p, kind: "hook"})
+			// the folder holds YASS's hooks: upgrade them all, adding any a newer version ships
+			for _, name := range hookScripts {
+				found = append(found, upgradeTarget{path: filepath.Join(filepath.Dir(p), name), kind: "hook"})
+			}
 		}
 	}
 	for _, d := range []string{userSkillsDir(), userClaudeSkillsDir()} {
@@ -103,7 +106,7 @@ func newText(t upgradeTarget) string {
 		block := stampAgents(strings.TrimSpace(render("agents.md", nil)), v)
 		return agentsRE.ReplaceAllLiteralString(read(t.path), block)
 	case "hook":
-		b, _ := kitFile(HookPath + "/pre-commit")
+		b, _ := kitFile(HookPath + "/" + filepath.Base(t.path))
 		return stampHook(b, v)
 	}
 	_, text := kitSkills()

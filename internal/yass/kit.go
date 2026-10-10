@@ -155,10 +155,19 @@ func (w *kitWriter) agentFiles(dir string, claude, global bool) error {
 	return nil
 }
 
-// hook writes the hook script, which belongs to the repo root: git hooks are per repo.
+// hookScripts are the git hooks YASS ships: the intent check, and the trailer hooks that only act
+// when plans are kept apart from the code.
+var hookScripts = []string{"pre-commit", "prepare-commit-msg", "commit-msg"}
+
+// hook writes the hook scripts, which belong to the repo root: git hooks are per repo.
 func (w *kitWriter) hook(top string) error {
-	b, _ := kit.FS.ReadFile(HookPath + "/pre-commit")
-	return w.place(filepath.Join(top, filepath.FromSlash(HookPath), "pre-commit"), stampHook(string(b), stampVersion()), 0o755)
+	for _, name := range hookScripts {
+		b, _ := kit.FS.ReadFile(HookPath + "/" + name)
+		if err := w.place(filepath.Join(top, filepath.FromSlash(HookPath), name), stampHook(string(b), stampVersion()), 0o755); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 var (
