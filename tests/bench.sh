@@ -12,7 +12,7 @@ if [ -z "${YASS_BIN:-}" ]; then
   mkdir -p "$W/bin"; (cd "$ROOT" && go build -o "$W/bin/yass" ./cmd/yass) || { echo "build failed"; exit 1; }
   YASS_BIN="$W/bin/yass"
 fi
-FOLDERS="${BENCH_FOLDERS:-200}" CHANGES="${BENCH_CHANGES:-2000}" ARCHIVED="${BENCH_ARCHIVED:-10000}" BRANCHES="${BENCH_BRANCHES:-100}" REMOTES="${BENCH_REMOTES:-1000}" FILES="${BENCH_FILES:-100000}" RUNS="${BENCH_RUNS:-5}"
+FOLDERS="${BENCH_FOLDERS:-200}" CHANGES="${BENCH_CHANGES:-2000}" ARCHIVED="${BENCH_ARCHIVED:-10000}" BRANCHES="${BENCH_BRANCHES:-100}" REMOTES="${BENCH_REMOTES:-1000}" COMMITS="${BENCH_COMMITS:-50000}" FILES="${BENCH_FILES:-100000}" RUNS="${BENCH_RUNS:-5}"
 fail=0
 
 # median wall time of RUNS runs of a command, in milliseconds, after one untimed warm-up run
@@ -83,6 +83,21 @@ check "yass status, with $BRANCHES branches" "$(ms "$YASS_BIN" status)" 1000
 branches refs/remotes/origin/remote- "$REMOTES"
 echo "  + $REMOTES remote branches with recent work"
 check "yass status, with $REMOTES remote branches more" "$(ms "$YASS_BIN" status)" 2000
+
+echo "trailers: a code repo with $COMMITS commits, its plans kept apart"
+newrepo "$W/bench/trailers"; printf 'path: %s\n' "$W/bench/status/teams/t001/yass" > yass.yaml
+git add -A; git commit -q -m "chore: adopt YASS" -m "yass: none"
+COMMITS=$COMMITS perl -e '
+  my ($n, $t) = ($ENV{COMMITS}, time - $ENV{COMMITS});
+  for my $i (1..$n) {
+    my $msg = "feat: change $i\n" . ($i % 10 == 0 ? "\nyass: 2026-02-02-change-1 ac:ac1\n" : "");
+    printf "commit refs/heads/main\ncommitter Bench <b\@b> %d +0000\ndata %d\n%s", $t + $i, length($msg), $msg;
+    print "from refs/heads/main^0\n" if $i == 1;
+    printf "M 100644 inline src/f%d.txt\ndata 2\n%d\n", $i % 500, $i % 10;
+  }' | git fast-import --quiet; git reset -q --hard
+echo "  $(git rev-list --count HEAD) commits, $(git log --oneline -i --grep='^yass:' | wc -l | tr -d ' ') with trailers"
+check "yass status" "$(ms "$YASS_BIN" status)" 1000
+check "yass status <change> (its code from trailers)" "$(ms "$YASS_BIN" status 2026-02-02-change-1)" 1000
 
 echo "hook: $FILES files, one-file commit"
 newrepo "$W/bench/hook"

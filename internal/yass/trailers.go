@@ -372,3 +372,63 @@ func cmdUse(a *args) error {
 	}
 	return nil
 }
+
+// trailerCommit is a merged commit whose trailer names a change.
+type trailerCommit struct{ sha, subject string }
+
+// changeCode is a change's merged code, found by trailers (R16, R21): the commits naming it or one
+// of its pieces, those commits by the criteria their ac: names, and warnings for an ac: naming a
+// criterion the plan doesn't have. One git log over the merged branch, filtered by git.
+func (r *Repo) changeCode(c *Change) (commits []trailerCommit, byAC map[string][]trailerCommit, branch string, warnings []string) {
+	if r.trailerMode() == "off" {
+		return nil, nil, "", nil
+	}
+	if branch = r.mergedBranch(c.Root); branch == "" {
+		return nil, nil, "", nil
+	}
+	named, _ := r.targets()
+	me := strings.ToLower(c.label())
+	top := c
+	if c.Parent != nil {
+		top = c.Parent
+	}
+	criteria := map[string]bool{}
+	for _, b := range top.ownBoxes() {
+		if m := criterionRE.FindStringSubmatch(b.text); m != nil && b.file == "plan.md" {
+			criteria["AC"+m[1]] = true
+		}
+	}
+	out, _ := git(r.Top, "log", branch, "-i", "--grep=^yass:", "--format=%h%x1f%s%x1f%(trailers:key=yass,valueonly,separator=%x1e)%x00")
+	byAC = map[string][]trailerCommit{}
+	for _, rec := range strings.Split(out, "\x00") {
+		f := strings.SplitN(strings.TrimLeft(rec, "\n"), "\x1f", 3)
+		if len(f) < 3 {
+			continue
+		}
+		tc := trailerCommit{f[0], f[1]}
+		matched := false
+		for _, v := range strings.Split(strings.TrimSpace(f[2]), "\x1e") {
+			t, err := parseTrailer(v)
+			if err != nil {
+				continue
+			}
+			label := named[t.target]
+			if label != me && !(c.Parent == nil && strings.HasPrefix(label, me+"/")) {
+				continue
+			}
+			matched = true
+			for _, ac := range t.ac {
+				id := strings.ToUpper(ac)
+				if len(criteria) > 0 && !criteria[id] {
+					warnings = append(warnings, fmt.Sprintf("%s's trailer names %s, which %s's plan doesn't have", tc.sha, id, top.Name))
+					continue
+				}
+				byAC[id] = append(byAC[id], tc)
+			}
+		}
+		if matched {
+			commits = append(commits, tc)
+		}
+	}
+	return commits, byAC, branch, warnings
+}

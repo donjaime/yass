@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -477,6 +478,44 @@ func showChange(r *Repo, c *Change) {
 	}
 	if n := c.nextStep(); n != "" {
 		fmt.Printf("next: %s\n", n)
+	}
+	if commits, byAC, branch, warns := r.changeCode(c); len(commits) > 0 || len(warns) > 0 {
+		if len(commits) > 0 {
+			fmt.Printf("code on %s (from yass: trailers):\n", branch)
+			for i, tc := range commits {
+				if i == 10 {
+					fmt.Printf("  … and %d more (git log %s -i --grep='^yass: %s')\n", len(commits)-10, branch, strings.ToLower(c.label()))
+					break
+				}
+				fmt.Printf("  %s %s\n", tc.sha, trunc(tc.subject, 80))
+			}
+		}
+		if len(byAC) > 0 {
+			ids := make([]string, 0, len(byAC))
+			for id := range byAC {
+				ids = append(ids, id)
+			}
+			sort.Slice(ids, func(i, j int) bool {
+				a, _ := strconv.Atoi(ids[i][2:])
+				b, _ := strconv.Atoi(ids[j][2:])
+				return a < b
+			})
+			fmt.Println("criteria:")
+			for _, id := range ids {
+				var shas []string
+				for i, tc := range byAC[id] {
+					if i == 10 {
+						shas = append(shas, fmt.Sprintf("… %d more", len(byAC[id])-10))
+						break
+					}
+					shas = append(shas, tc.sha)
+				}
+				fmt.Printf("  %s: %s\n", id, strings.Join(shas, ", "))
+			}
+		}
+		for _, w := range warns {
+			fmt.Printf("warning: %s\n", w)
+		}
 	}
 	for _, w := range r.Warnings {
 		if strings.HasPrefix(w, r.disp(c.Path)+string(filepath.Separator)) || strings.HasPrefix(w, r.disp(c.Path)+":") {

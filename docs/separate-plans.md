@@ -43,6 +43,21 @@ trailers: warn      # the default: a commit without a valid trailer goes through
 
 In CI, `yass hook --range <base>..<head>` checks every non-merge commit in the range, alongside its usual check; `--strict`, or `trailers: require`, makes a missing or invalid trailer fail the job. A squash commit whose message carries the trailers passes. Where CI doesn't check out the plans, it checks only the trailers' form and says the change names weren't checked.
 
+## Finding a change's code
+
+`yass status <change>`, run in the code repo, lists the commits on the main branch whose trailers name that change or one of its pieces, and, when they name criteria with `ac:`, which commits worked toward each one:
+
+```
+code on origin/main (from yass: trailers):
+  9f2c1aa Cart totals (#7)
+  4e1b2c3 feat: cart ui
+criteria:
+  AC1: 4e1b2c3
+  AC3: 9f2c1aa, 4e1b2c3
+```
+
+Because it reads trailers, not commit hashes cited in the plans, it still works after a squash merge. Unmerged commits aren't listed, and an `ac:` naming a criterion the plan doesn't have is a warning. It shows ten commits per list and says how many more there are.
+
 ## With a hook manager
 
 If your repo already runs hooks through a manager, call YASS from it rather than pointing `core.hooksPath` at YASS's folder.

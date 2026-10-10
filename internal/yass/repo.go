@@ -493,6 +493,7 @@ type Repo struct {
 	absent           map[string]string // changes git has that aren't on disk (sparse checkouts), by name
 	merged           map[*Root]string  // the merged branch per yass folder, once looked up
 	name             string            // this code repo's name in citations
+	codeDir          *string           // this code repo's git common dir, once looked up
 }
 
 // findRepo finds the repo and its yass folders, without reading any changes.
