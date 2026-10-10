@@ -1292,5 +1292,39 @@ newrepo "$W/e2e/sep-plain"; printf 'path: %s\n' "$PN" > yass.yaml; git add -A; g
 has   "plans in no repo are separate too" "^plans: separate \(.*plans-plain\)$" bash -c 'yass status | tail -1'
 hasnt "…with nothing to say about commits" "uncommitted|behind" y status
 
+echo "43. citations that name their repo"
+OR="$W/e2e/origins"; rm -rf "$OR"; mkdir -p "$OR"; git init -q --bare -b main "$OR/api.git"; git init -q --bare -b main "$OR/web.git"
+SP="$W/e2e/shared-plans"; newrepo "$SP"; mkdir -p changes archive; touch changes/.gitkeep; git add -A; git commit -q -m plans
+for n in api web; do rm -rf "$W/e2e/$n"; git clone -q "file://$OR/$n.git" "$W/e2e/$n" 2>/dev/null; cd "$W/e2e/$n"; git config user.email t@t; git config user.name T
+  echo "$n" > app.txt; printf 'path: %s\n' "$SP" > yass.yaml; git add -A; git commit -q -m "$n: start"; git push -q origin main 2>/dev/null; git remote set-head origin -a >/dev/null; done
+A7=$(git -C "$W/e2e/api" rev-parse --short=7 HEAD); WSHA=$(git -C "$W/e2e/web" rev-parse HEAD); W7=${WSHA:0:7}
+mkdir -p "$SP/changes/2026-01-01-shared"; printf '# Shared\n\n## Steps\n- [x] Api part — code: api@%s\n- [x] Web part — code: web@%s\n- [x] Wrong — code: web@deadbee\n' "$A7" "$W7" > "$SP/changes/2026-01-01-shared/change.md"
+cd "$W/e2e/api"
+hasnt "in api, citations of web draw no warning" "warning" y status
+has   "…it checks its own" "2 citation\(s\) name web, so they're checked from there, not here \(this is api\)" y status
+cd "$W/e2e/web"
+has   "in web, a wrong web citation warns" "cites web@deadbee, which isn't a commit here" y status
+has   "…and it leaves api's to api" "1 citation\(s\) name api" y status
+printf 'path: %s\nrepo: frontend\n' "$SP" > yass.yaml
+has   "repo: in yass.yaml overrides the origin's name" "name web, so they're checked from there, not here \(this is frontend\)" y status
+git checkout -q yass.yaml
+NO="$W/e2e/no-origin-name"; newrepo "$NO"; printf 'path: %s\n' "$SP" > yass.yaml; git add -A; git commit -q -m start
+has   "without an origin, the name is the main worktree's folder" "\(this is no-origin-name\)" y status
+git worktree add -q "$W/e2e/elsewhere-wt" -b wt 2>/dev/null
+has   "…the same from a linked worktree" "\(this is no-origin-name\)" bash -c "cd '$W/e2e/elsewhere-wt' && yass status"
+cd "$W/e2e/api"; git switch -q -c feature; echo more >> app.txt; git commit -qam "api: unmerged"; U7=$(git rev-parse --short=7 HEAD); git switch -q main
+mkdir -p "$SP/changes/2026-01-02-unmerged"; printf '# Unmerged\n\n## Steps\n- [x] Thing — code: api@%s\n- [x] Gone — code: 0badc0d\n' "$U7" > "$SP/changes/2026-01-02-unmerged/change.md"
+git -C "$SP" add -A; git -C "$SP" commit -q -m "yass: unmerged"
+run_fail "archive refuses a done box citing an unmerged commit here" y archive unmerged
+has   "…naming the box and the commit" "'Thing' \(2026-01-02-unmerged/change.md\) cites api@$U7, which isn't on origin/main yet" y archive unmerged
+has   "…and a missing one" "'Gone' \(2026-01-02-unmerged/change.md\) cites 0badc0d, which isn't a commit here" y archive unmerged
+run_ok "--force archives it anyway" y archive unmerged --force
+mkdir -p "$SP/changes/2026-01-03-web-only"; printf '# Web only\n\n## Steps\n- [x] Web thing — code: web@%s\n' "$W7" > "$SP/changes/2026-01-03-web-only/change.md"
+git -C "$SP" add -A; git -C "$SP" commit -q -m "yass: web only"
+OUT="$(y archive web-only)"
+has   "a change citing another repo archives from here" "^archived .*2026-01-03-web-only" echo "$OUT"
+has   "…listing what it couldn't check, and where to" "couldn't check 1 citation\(s\) from here \(this is api\)" echo "$OUT"
+has   "…each one" "web@$W7 in 'Web thing' \(2026-01-03-web-only/change.md\): from web, yass status" echo "$OUT"
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]
