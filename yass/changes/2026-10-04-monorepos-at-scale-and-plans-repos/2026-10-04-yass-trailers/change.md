@@ -13,7 +13,7 @@ With separate plans, every code commit names its change in a `yass:` trailer tha
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC40–AC52 in [plan.md](../plan.md)
+- [x] Delivers AC40–AC52 in [plan.md](../plan.md)
 - [x] `yass init` (with `--hooks` to turn them on) installs and upgrades the new `prepare-commit-msg` and `commit-msg` scripts beside `pre-commit`
 
 ## Steps
@@ -24,11 +24,15 @@ With separate plans, every code commit names its change in a `yass:` trailer tha
 - [x] 9a: `prepare-commit-msg` and `commit-msg` scripts, installed by `yass init` and added by `yass upgrade`
 - [x] 9a: `git` calls for a particular folder drop the hook's `GIT_DIR` (and `GIT_INDEX_FILE`), so a hook in a linked worktree finds the plans repo rather than the code worktree
 - [x] 9a: go test (`TestParseTrailer`, `TestCheckTarget`); e2e §45 (681 ok); husky wired in a scratch repo; `docs/separate-plans.md`, README
-- [/] 9a: Jaime reviews the docs (AC49)
-- [ ] 9b: `yass status <change>` lists its merged commits from trailers (AC50), and each criterion's (AC51); the 50,000-commit bench (AC52)
+- [x] 9a: Jaime reviews the docs (AC49)
+- [x] 9b: `yass status <change>` lists its merged commits from trailers, its pieces' included (AC50), and each criterion's, warning about an `ac:` its plan doesn't have (AC51); ten per list, then a count; one `git log --grep` on the merged branch
+- [x] 9b: e2e §46 (691 ok); `tests/bench.sh` with 50,000 commits, 5,001 with trailers: `yass status` 77ms, `yass status <change>` 229ms (AC52, < 1s); `docs/separate-plans.md`
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
+- The commit lists are only in `yass status <change>`, not in plain `yass status`, so the overview pays nothing for them (claude, 2026-10-10)
+- 9b's bench caught a regression from piece 7 (#66): deciding inline or separate ran two git processes per yass folder, so `yass status` on the 200-folder bench went from ~0.9s to ~3.2s. A folder inside this repo's work tree (and not a private one) is now inline without asking git, and the code repo's own answer is cached: back to 858ms. Piece 7 and 8 weren't benchmarked when they landed; they should have been (claude, 2026-10-10)
+- Lists cap at ten with a count of the rest: the bench's change had 5,001 commits, all printed (claude, 2026-10-10)
 - Built in two pull requests: 9a, the trailer itself (AC40–AC49), and 9b, status listing code from trailers (AC50–AC52) - thirteen criteria and two new hooks are more than one reviewable pull request (claude, 2026-10-10)
 - Trailers apply only when every yass folder the code repo uses is outside it (or its `yass.yaml` points outside to a folder that isn't checked out, as in CI); a repo with inline plans and a private separate folder, like this one, treats them as off (claude, 2026-10-10)
 - The branch-name source matches the whole branch or the part after its last `/`, against change and piece folder names, not the slug without the date - names are what the trailer writes, and a loose match could pick the wrong change (claude, 2026-10-10)
@@ -44,3 +48,6 @@ With separate plans, every code commit names its change in a `yass:` trailer tha
 ### 2026-10-10 (claude)
 - Did: 9a, the `yass:` trailer: grammar, hooks, `yass use`, range checks, scripts, docs. `go test`, `tests/e2e.sh` (681 ok), `tests/examples.sh`, `tests/site.sh` pass.
 - Next: 9b: `yass status <change>` lists commits from trailers, per change and per criterion, and the 50,000-commit bench. Jaime reviews the docs (AC49).
+### 2026-10-10 (claude)
+- Did: 9b: code and criteria from trailers in `yass status <change>`, the 50,000-commit bench, docs; fixed the per-folder git lookup piece 7 added to every `yass status`. `go test`, `tests/e2e.sh` (691 ok), `tests/examples.sh`, `tests/bench.sh` (all targets) pass. Jaime reviewed 9a's docs (#70). The piece is done.
+- Next: none here; piece 10 (`check-from-the-plans-repo`) can start.

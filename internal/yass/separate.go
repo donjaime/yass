@@ -19,13 +19,21 @@ func gitCommonDir(dir string) string {
 	return canon(strings.TrimSpace(out))
 }
 
-// separate says whether a yass folder's plans live outside the code repo.
+// separate says whether a yass folder's plans live outside the code repo. A folder inside this
+// repo's work tree is inline without asking git, so this stays cheap with hundreds of team folders;
+// only folders elsewhere, or private ones git never sees, are looked up.
 func (r *Repo) separate(root *Root) bool {
-	code := gitCommonDir(r.Cwd)
-	if code == "" {
+	if r.codeDir == nil {
+		d := gitCommonDir(r.Cwd)
+		r.codeDir = &d
+	}
+	if *r.codeDir == "" {
 		return false // no code repo to be separate from
 	}
-	return gitCommonDir(root.Dir) != code
+	if within(root.Dir, r.Top) && !root.Included {
+		return false
+	}
+	return gitCommonDir(root.Dir) != *r.codeDir
 }
 
 // plansNotes notes, for each separate plans folder in git, uncommitted files there and how far it

@@ -1406,5 +1406,28 @@ y use --clear >/dev/null 2>&1
 hasnt "plans in the repo: nothing about trailers" "." bash -c 'echo a >> a.txt; git add a.txt; git commit -q -m "feat: inline" 2>&1'
 [ -z "$(git log -1 --format='%(trailers:key=yass,valueonly)')" ] && ok "…and no trailer" || bad "inline commit got a trailer"
 
+echo "46. a change's code, from its trailers"
+P3="$W/e2e/code-plans"; newrepo "$P3"; mkdir -p changes/2026-04-01-cart/2026-04-02-ui archive
+printf '# Cart\n\n## Log\n' > changes/2026-04-01-cart/change.md
+printf '# Cart: plan\n\n## Acceptance\n- [ ] AC1 (R1) Given a cart — verify: e2e\n- [ ] AC3 (R2) Given a total — verify: e2e\n' > changes/2026-04-01-cart/plan.md
+printf '# UI\n\n- [ ] Delivers AC3\n' > changes/2026-04-01-cart/2026-04-02-ui/change.md; git add -A; git commit -q -m plans
+newrepo "$W/e2e/code-repo"; printf 'path: %s\n' "$P3" > yass.yaml; git add -A; git commit -q -m "chore: adopt YASS" -m "yass: none"
+cc() { echo "$RANDOM" >> c.txt; git add c.txt; git commit -q -m "$1" -m "yass: $2"; }
+cc "feat: cart model" "2026-04-01-cart ac:ac1"; M1=$(git rev-parse --short=7 HEAD)
+cc "feat: cart ui" "2026-04-02-ui ac:ac1,ac3"; M2=$(git rev-parse --short=7 HEAD)
+cc "chore: bump deps" "none"; cc "feat: odd one" "2026-04-01-cart ac:ac9"; M4=$(git rev-parse --short=7 HEAD)
+git switch -q -c wip; cc "feat: not merged" "2026-04-01-cart"; git switch -q main
+git switch -q -c pr; echo s >> s.txt; git add s.txt; git commit -q -m "wip"; git switch -q main
+git merge -q --squash pr >/dev/null; git commit -q -m "Cart totals (#7)" -m "yass: 2026-04-01-cart ac:ac3"; M5=$(git rev-parse --short=7 HEAD)
+OUT="$(y status 2026-04-01-cart)"
+has   "status <change> lists its merged code, the pieces' included" "code on main \(from yass: trailers\)" echo "$OUT"
+for m in "$M1 feat: cart model" "$M2 feat: cart ui" "$M5 Cart totals \(#7\)"; do has "…$m" "^  $m$" echo "$OUT"; done
+hasnt "…not the unmerged, nor others" "not merged|bump deps" echo "$OUT"
+has   "each criterion lists its commits" "^  AC1: $M2, $M1$" echo "$OUT"
+has   "…AC3 once each" "^  AC3: $M5, $M2$" echo "$OUT"
+has   "an ac: the plan doesn't have warns" "warning: $M4's trailer names AC9, which 2026-04-01-cart's plan doesn't have" echo "$OUT"
+has   "a piece lists only its own" "^  $M2 feat: cart ui$" y status 2026-04-02-ui
+hasnt "…not its change's" "cart model" y status 2026-04-02-ui
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]
