@@ -489,11 +489,12 @@ type Repo struct {
 	Notes            []string // worth knowing, but not a problem: they don't fail --strict
 	Linked           bool     // a yass.yaml's folder wasn't found from this linked worktree
 	Active, Archived []*Change
-	piecesFound      bool              // whether archivedPieces has run
-	absent           map[string]string // changes git has that aren't on disk (sparse checkouts), by name
-	merged           map[*Root]string  // the merged branch per yass folder, once looked up
-	name             string            // this code repo's name in citations
-	codeDir          *string           // this code repo's git common dir, once looked up
+	piecesFound      bool                 // whether archivedPieces has run
+	absent           map[string]string    // changes git has that aren't on disk (sparse checkouts), by name
+	merged           map[*Root]string     // the merged branch per yass folder, once looked up
+	name             string               // this code repo's name in citations
+	codeDir          *string              // this code repo's git common dir, once looked up
+	repos            map[string]codeRepos // repos: per yass.yaml, once read
 }
 
 // findRepo finds the repo and its yass folders, without reading any changes.
@@ -1020,12 +1021,26 @@ func (r *Repo) checkCode() {
 	if _, ok := git(r.Top, "rev-parse", "--git-dir"); !ok {
 		return
 	}
-	left := map[string]int{} // citations for other code repos, by repo
+	left := map[string]int{}      // citations for other code repos, by repo
+	unchecked := map[string]int{} // a plans repo's citations whose checkout isn't here, by repo
 	for _, c := range r.everything() {
+		repos := r.reposOf(c.Root)
 		for _, b := range c.ownBoxes() {
 			where, what := r.disp(filepath.Join(c.Path, b.file)), trunc(strings.TrimSpace(codeRefRE.Split(b.text, 2)[0]), 50)
 			for _, ref := range codeRefs(b.text) {
-				switch state, branch := r.citation(c.Root, ref); state {
+				var state int
+				var branch string
+				if repos != nil {
+					name, dir := repos.pick(ref)
+					if dir == "" {
+						unchecked[name]++
+						continue
+					}
+					state, branch = citationIn(dir, ref.sha)
+				} else {
+					state, branch = r.citation(c.Root, ref)
+				}
+				switch state {
 				case citeElsewhere:
 					left[ref.repo]++
 				case citeMissing:
@@ -1042,6 +1057,83 @@ func (r *Repo) checkCode() {
 	for _, repo := range sortedKeys(boolKeys(left)) {
 		r.note("%d citation(s) name %s, so they're checked from there, not here (this is %s)", left[repo], repo, r.repoName())
 	}
+	for _, repo := range sortedKeys(boolKeys(unchecked)) {
+		switch repo {
+		case "":
+			r.note("%d citation(s) don't name their repo, and repos: lists more than one, so they weren't checked (write them as <repo>@<sha>)", unchecked[repo])
+		default:
+			r.note("%d citation(s) name %s, whose checkout isn't here (see repos: in yass.yaml), so they weren't checked", unchecked[repo], repo)
+		}
+	}
+}
+
+// codeRepos is a plans repo's repos: map, resolved: each name's checkout, or "" when it isn't here.
+type codeRepos map[string]string
+
+// reposOf reads repos: from the yass.yaml that points to a yass folder, or nil when there's none.
+func (r *Repo) reposOf(root *Root) codeRepos {
+	if root.Config == "" {
+		return nil
+	}
+	if r.repos == nil {
+		r.repos = map[string]codeRepos{}
+	}
+	if rs, ok := r.repos[root.Config]; ok {
+		return rs
+	}
+	c, _, err := loadConfig(root.Config)
+	if err != nil || len(c.Repos) == 0 {
+		r.repos[root.Config] = nil
+		return nil
+	}
+	rs := codeRepos{}
+	for name, p := range c.Repos {
+		dir, err := resolvePath(strings.TrimSpace(p), filepath.Dir(root.Config))
+		if err != nil || gitCommonDir(dir) == "" {
+			dir = "" // an unset ${VAR} with no default, or no git checkout there
+		}
+		rs[strings.ToLower(name)] = dir
+	}
+	r.repos[root.Config] = rs
+	return rs
+}
+
+// pick is the checkout a citation is checked against: its named repo's, or, unqualified, the only
+// repo listed. name is "" for an unqualified citation that can't be placed.
+func (rs codeRepos) pick(ref codeRef) (name, dir string) {
+	if ref.repo != "" {
+		return strings.ToLower(ref.repo), rs[strings.ToLower(ref.repo)]
+	}
+	if len(rs) == 1 {
+		for n, d := range rs {
+			return n, d
+		}
+	}
+	return "", ""
+}
+
+// citationIn checks a commit against a code checkout and its merged branch (origin/HEAD, main, master).
+func citationIn(dir, sha string) (state int, branch string) {
+	if _, ok := git(dir, "rev-parse", "-q", "--verify", sha+"^{commit}"); !ok {
+		return citeMissing, ""
+	}
+	if out, ok := git(dir, "rev-parse", "--abbrev-ref", "origin/HEAD"); ok && strings.TrimSpace(out) != "origin/HEAD" {
+		branch = strings.TrimSpace(out)
+	} else {
+		for _, b := range []string{"main", "master"} {
+			if _, ok := git(dir, "rev-parse", "-q", "--verify", "refs/heads/"+b); ok {
+				branch = b
+				break
+			}
+		}
+	}
+	if branch == "" {
+		return citeMerged, ""
+	}
+	if _, ok := git(dir, "merge-base", "--is-ancestor", sha, branch); !ok {
+		return citeUnmerged, branch
+	}
+	return citeMerged, branch
 }
 
 func boolKeys(m map[string]int) map[string]bool {

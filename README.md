@@ -295,7 +295,7 @@ path: ../my-project-plans        # relative to this file
 - **A path inside the repo works too,** under any name (`path: planning`), and the hook recognizes it.
 - **One team can plan privately in a shared repo.** `yass init private --path ~/plans/private --private` makes a team folder that git never sees: it's listed in the clone's `.git/info/exclude`, and named in the clone's git config (`yass.include`) so YASS still finds it, from the top of the repo and from every worktree. Nothing is written to the repo, so each clone sets it up for itself. `yass paths` leaves it out, since no commit can contain it. To stop: `git config --unset yass.include '^private$'`, then delete the folder.
 
-`yass.yaml` is also where YASS settings go as they're added (`path`, `branch`, `repo`, [`ignore`](#folders-that-arent-yours) and [`archive: keep:`](docs/monorepo.md#keeping-the-working-tree-small) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
+`yass.yaml` is also where YASS settings go as they're added (`path`, `branch`, `repo`, `trailers`, [`repos`](docs/separate-plans.md#checking-from-the-plans-repo), [`ignore`](#folders-that-arent-yours) and [`archive: keep:`](docs/monorepo.md#keeping-the-working-tree-small) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
 
 ## Monorepos
 
