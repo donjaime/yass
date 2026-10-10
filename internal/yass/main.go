@@ -46,7 +46,9 @@ usage: yass <command> [options]
   paths [--only RANGE]                  the repo paths that are YASS's, as globs (for CI filters);
                                         --only exits 0 if a commit range touches nothing else
   template <name>                       print a template: change, change-large, prd, plan, design
-  hook [--range A..B] [--strict]        the optional pre-commit check (also for CI)
+  hook [--range A..B] [--strict]        the optional pre-commit check (also for CI); with plans kept
+                                        apart, also commits' yass: trailers (--prepare-msg, --commit-msg)
+  use [<change>] [--ac ACs] [--clear]   the change this worktree's commits name in their yass: trailer
   version
 
 With no command, yass runs status.
@@ -70,7 +72,8 @@ var specs = map[string]spec{
 	"root":     {[]string{"v"}, nil, 0, 0, "yass root [-v]"},
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
 	"template": {nil, nil, 1, 1, "yass template <change|change-large|prd|plan|design|readme|agents>"},
-	"hook":     {[]string{"strict"}, []string{"range"}, 0, 0, "yass hook [--range A..B] [--strict]"},
+	"hook":     {[]string{"strict", "prepare-msg", "commit-msg"}, []string{"range"}, 0, 3, "yass hook [--range A..B] [--strict] | --prepare-msg <file> [source] | --commit-msg <file>"},
+	"use":      {[]string{"clear"}, []string{"ac"}, 0, 1, "yass use [<change>] [--ac ac1,ac2] [--clear]"},
 	"upgrade":  {nil, nil, 0, 0, "yass upgrade"},
 	"version":  {nil, nil, 0, 0, "yass version"},
 }
@@ -186,6 +189,8 @@ func run(argv []string) int {
 		err = cmdArchive(a)
 	case "update":
 		code, err = cmdUpdate(a)
+	case "use":
+		err = cmdUse(a)
 	case "evict":
 		err = cmdEvict(a)
 	case "decisions":

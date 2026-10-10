@@ -23,8 +23,28 @@ var yassDirRE = regexp.MustCompile(`^(?:(.*)/)?yass/(?:changes|archive)/`)
 func git(dir string, args ...string) (string, bool) {
 	cmd := exec.Command("git", args...)
 	cmd.Dir = dir
+	if dir != "" {
+		// Asked about a particular folder, git should find that folder's repo. Hooks in a linked
+		// worktree run with GIT_DIR set, which would point every git call at the code worktree,
+		// even one meant for a plans repo elsewhere. Calls with no folder keep it (and the
+		// hook's GIT_INDEX_FILE).
+		cmd.Env = gitEnvFree()
+	}
 	out, err := cmd.Output()
 	return string(out), err == nil
+}
+
+// gitEnvFree is the environment without the variables that pin git to a repo.
+func gitEnvFree() []string {
+	var out []string
+	for _, kv := range os.Environ() {
+		switch k, _, _ := strings.Cut(kv, "="); k {
+		case "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_PREFIX":
+			continue
+		}
+		out = append(out, kv)
+	}
+	return out
 }
 
 // canon makes a path absolute and resolves symlinks, so paths compare reliably. For a path that
