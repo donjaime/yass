@@ -13,9 +13,9 @@ yass status shows by default who is working on which change or piece on unmerged
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC18–AC22 in [plan.md](../plan.md)
-- [/] The README's `yass status` section documents the branch view, `--since` and `--no-branches`
-- [/] `docs/monorepo.md` recommends `git commit-graph write --changed-paths` (or `fetch.writeCommitGraph`) and a recent git for large repos, and explains what the branch view reads and how fresh it is
+- [x] Delivers AC18–AC22 in [plan.md](../plan.md)
+- [x] The README's `yass status` section documents the branch view, `--since` and `--no-branches`
+- [x] `docs/monorepo.md` recommends `git commit-graph write --changed-paths` (or `fetch.writeCommitGraph`) and a recent git for large repos, and explains what the branch view reads and how fresh it is
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -24,7 +24,7 @@ yass status shows by default who is working on which change or piece on unmerged
 - [x] e2e §41 against a remote that's a local folder (610 ok): local and pushed branches with author, progress and Next; code-only, merged and 40-day-old branches left out; `--since`; `--no-branches` running no lookup; no fetch, also in a blobless clone (shown without progress); no remote; no unmerged branches
 - [x] `tests/bench.sh` with 100 local and 1,000 remote branches made by `git fast-import`: 849–929ms with 100 (target < 1s, AC16), 1,480–1,579ms with 1,000 more (target < 2s, AC22)
 - [x] README and `docs/monorepo.md` (what it reads, freshness, commit-graph, partial clones, timings)
-- [ ] Jaime reviews the docs
+- [x] Jaime reviews the docs
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>)", appended as you go. -->
@@ -41,3 +41,6 @@ yass status shows by default who is working on which change or piece on unmerged
 ### 2026-10-09 (claude)
 - Did: the branch view in `yass status`, `--since`, `--no-branches`; e2e; the bench with 100 and 1,000 branches; docs. `go test`, `tests/e2e.sh` (610 ok), `tests/examples.sh`, `tests/site.sh`, `tests/bench.sh` pass.
 - Next: Jaime reviews the docs; then this piece is done.
+### 2026-10-09 (claude)
+- Did: Jaime reviewed the docs and merged it (#65). The piece is done.
+- Next: none here.
