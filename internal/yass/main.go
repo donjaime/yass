@@ -29,9 +29,10 @@ usage: yass <command> [options]
                                         the hook) and your user folder's playbooks up to this version
   new "<title>" [--large] [--design]    a change: a dated folder from a template
       [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]
-  status [<change>] [--archived] [--strict] [--since 14d|DATE] [--no-branches]
+  status [<change>] [--brief] [--archived] [--strict] [--since 14d|DATE] [--no-branches]
                                         what's in flight, or one change in detail, with the
                                         unmerged branches working on each (the last 30 days)
+                                        --brief: one change's progress in a line, for commits and PRs
   archive <change> [--force]            move a finished change to the archive
   update [--check] [--latest] [--version V] [--require-provenance]
                                         get a newer yass binary: the repo's version when the repo is
@@ -60,7 +61,7 @@ type spec struct {
 var specs = map[string]spec{
 	"init":    {[]string{"no-agents", "private", "claude", "global", "hooks", "agents"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--agents] [--claude] [--global] [--hooks] [--no-agents] [--private]"},
 	"new":     {[]string{"large", "design"}, []string{"in", "goal", "platforms", "source", "follows"}, 1, 1, `yass new "<title>" [--large] [--design] [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]`},
-	"status":  {[]string{"archived", "strict", "no-branches"}, []string{"since"}, 0, 1, "yass status [<change>] [--archived] [--strict] [--since 14d|DATE] [--no-branches]"},
+	"status":  {[]string{"archived", "strict", "no-branches", "brief"}, []string{"since"}, 0, 1, "yass status [<change>] [--brief] [--archived] [--strict] [--since 14d|DATE] [--no-branches]"},
 	"archive": {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
 	"decisions": {[]string{"json"}, []string{"since", "until", "about", "change", "limit", "cites"}, 0, 0,
 		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]"},
