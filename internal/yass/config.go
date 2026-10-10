@@ -25,6 +25,9 @@ type Config struct {
 	// Ignore lists folders, relative to the yass.yaml, whose yass folders and yass.yaml files belong
 	// to something else (examples, fixtures, vendored projects). From inside one, it's a project of its own.
 	Ignore []string `yaml:"ignore"`
+	// Repo names this code repo in citations (code: web@a1b2c3d), when its origin URL's last
+	// segment, or its main worktree's folder name, isn't the name the plans use.
+	Repo string `yaml:"repo"`
 	// Archive holds the archive's settings.
 	Archive struct {
 		// Keep is how many archived changes (pieces count with their change) the yass folder's working
@@ -36,7 +39,7 @@ type Config struct {
 // DefaultKeep is how many archived changes a yass folder keeps when its yass.yaml doesn't say.
 const DefaultKeep = 2000
 
-var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true, "archive": true}
+var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true, "archive": true, "repo": true}
 
 var knownArchiveSettings = map[string]bool{"keep": true}
 

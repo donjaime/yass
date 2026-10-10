@@ -353,7 +353,7 @@ func citations(a *args, all []*Change, sha string, limit int, missing []string) 
 	for _, c := range all {
 		for _, b := range c.ownBoxes() {
 			for _, ref := range codeRefs(b.text) {
-				if strings.HasPrefix(ref, sha) || strings.HasPrefix(sha, ref) {
+				if strings.HasPrefix(ref.sha, sha) || strings.HasPrefix(sha, ref.sha) {
 					found = append(found, citation{c.label(), c.Title, b.file, b.mark, b.text})
 					break
 				}

@@ -97,14 +97,35 @@ func TestNormIgnoresProgressMarks(t *testing.T) {
 
 func TestCodeRefs(t *testing.T) {
 	for in, want := range map[string][]string{
-		"Disable Save — code: a1b2c3d":                 {"a1b2c3d"},
-		"Queue table - code: A1B2C3D, e4f5a6b7c":       {"a1b2c3d", "e4f5a6b7c"},
-		"Given x, then y — verify: unit code: 1234567": {"1234567"},
-		"Explain the code: it's fine":                  nil,
-		"No refs here":                                 nil,
+		"Disable Save — code: a1b2c3d":                  {"a1b2c3d"},
+		"Queue table - code: A1B2C3D, e4f5a6b7c":        {"a1b2c3d", "e4f5a6b7c"},
+		"Given x, then y — verify: unit code: 1234567":  {"1234567"},
+		"Explain the code: it's fine":                   nil,
+		"No refs here":                                  nil,
+		"Two repos — code: web@a1b2c3d, api@E4F5A6B":    {"web@a1b2c3d", "api@e4f5a6b"},
+		"Mixed — code: a1b2c3d, web.app_2@1234567":      {"a1b2c3d", "web.app_2@1234567"},
+		"Not a repo name — code: w*b@a1b2c3d, @1234567": {"1234567"},
 	} {
-		if got := codeRefs(in); !reflect.DeepEqual(got, want) {
+		var got []string
+		for _, r := range codeRefs(in) {
+			got = append(got, r.String())
+		}
+		if !reflect.DeepEqual(got, want) {
 			t.Errorf("codeRefs(%q) = %v, want %v", in, got, want)
+		}
+	}
+}
+
+func TestRepoFromURL(t *testing.T) {
+	for u, want := range map[string]string{
+		"https://github.com/acme/web.git": "web",
+		"git@github.com:acme/web.git":     "web",
+		"ssh://git@host:22/acme/api":      "api",
+		"file:///srv/git/api.git/":        "api",
+		"/home/sam/repos/web":             "web",
+	} {
+		if got := repoFromURL(u); got != want {
+			t.Errorf("repoFromURL(%q) = %q, want %q", u, got, want)
 		}
 	}
 }
