@@ -39,6 +39,7 @@ With separate plans, every code commit names its change in a `yass:` trailer tha
 - Found by e2e: hooks in a linked worktree run with `GIT_DIR` set, so every `git -C <plans repo>` call was answered by the code worktree; `git` now drops the repo-pinning variables when it's given a folder, which fixes it for every hook, not just trailers (claude, 2026-10-10)
 - AC49's manual check used husky (installed with npm in a scratch repo): `yass use` gave the commit its trailer through `.husky/prepare-commit-msg`, and without it `.husky/commit-msg` gave the heads-up. lefthook and pre-commit weren't available; their configs follow those tools' documented formats, and the doc says husky is the one tested (claude, 2026-10-10)
 - Waits for 2026-10-04-the-binary-carries-the-playbooks and ships its hook scripts through `yass init`, which installs and upgrades everything a repo gets once that change lands; this criterion said `install.sh` before (Jaime)
+- The trailer hooks skip a `yass` that doesn't know them (`yass hook --help` without the option) - setting up AC56 showed that once `yass upgrade` installs them, anyone with an older `yass` on PATH couldn't commit: it rejected `--prepare-msg` and git aborted (claude, 2026-10-11)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
@@ -51,3 +52,6 @@ With separate plans, every code commit names its change in a `yass:` trailer tha
 ### 2026-10-10 (claude)
 - Did: 9b: code and criteria from trailers in `yass status <change>`, the 50,000-commit bench, docs; fixed the per-folder git lookup piece 7 added to every `yass status`. `go test`, `tests/e2e.sh` (691 ok), `tests/examples.sh`, `tests/bench.sh` (all targets) pass. Jaime reviewed 9a's docs (#70). The piece is done.
 - Next: none here; piece 10 (`check-from-the-plans-repo`) can start.
+### 2026-10-11 (claude)
+- Did: fixed the trailer hooks blocking commits under an older `yass` (found setting up AC56); e2e §48 with a stand-in older binary, and a manual check under the real 0.4.0 release (702 ok).
+- Next: none here.
