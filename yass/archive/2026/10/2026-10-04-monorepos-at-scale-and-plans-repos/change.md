@@ -3,6 +3,7 @@ platforms: [all]
 source: 
 follows: 
 blocked:
+archived: 2026-10-11T20:57:58Z
 ---
 # Large monorepos first, separate plans repo done right
 
