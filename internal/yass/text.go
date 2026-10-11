@@ -181,33 +181,17 @@ func boxes(text string) []box {
 	return out
 }
 
-// codeRef is a commit a box cites, and the code repo it names, if any: web@a1b2c3d.
-type codeRef struct{ repo, sha string }
-
-func (c codeRef) String() string {
-	if c.repo == "" {
-		return c.sha
-	}
-	return c.repo + "@" + c.sha
-}
-
-var repoNameRE = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
-
-// codeRefs are the commits a box cites at its end: "… — code: a1b2c3d", "code: a1b2c3d, e4f5a6b",
-// or with the code repo named, "code: web@a1b2c3d".
-func codeRefs(text string) []codeRef {
+// codeRefs are the commits a box cites at its end: "… — code: a1b2c3d" or "code: a1b2c3d, e4f5a6b".
+// A token naming a repo (web@a1b2c3d) isn't a citation YASS reads.
+func codeRefs(text string) []string {
 	parts := codeRefRE.Split(text, -1)
 	if len(parts) < 2 {
 		return nil
 	}
-	var out []codeRef
+	var out []string
 	for _, f := range strings.FieldsFunc(parts[len(parts)-1], func(r rune) bool { return r == ',' || r == ' ' }) {
-		repo, sha, qualified := strings.Cut(f, "@")
-		if !qualified {
-			repo, sha = "", f
-		}
-		if shaRE.MatchString(sha) && (repo == "" || repoNameRE.MatchString(repo)) {
-			out = append(out, codeRef{repo, strings.ToLower(sha)})
+		if shaRE.MatchString(f) {
+			out = append(out, strings.ToLower(f))
 		}
 	}
 	return out

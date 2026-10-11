@@ -552,8 +552,7 @@ func cmdArchive(a *args) error {
 	} else if _, done, dropped := c.tally(); done+dropped == 0 {
 		problems = append(problems, "it has no checkboxes at all, so nothing says it's done")
 	}
-	bad, elsewhere := r.archiveCitations(c)
-	problems = append(problems, bad...)
+	citeWarnings := r.archiveWarnings(c)
 	if len(problems) > 0 && !a.b["force"] {
 		return fmt.Errorf("%s isn't finished: %s\n  (--force archives it anyway)", c.Name, strings.Join(problems, "\n  "))
 	}
@@ -591,11 +590,8 @@ func cmdArchive(a *args) error {
 	}
 	git(c.Root.Dir, "add", "-A", "--", dest)
 	fmt.Printf("archived %s\n", r.disp(dest))
-	if len(elsewhere) > 0 {
-		fmt.Printf("couldn't check %d citation(s) from here (this is %s); check them from their repos:\n", len(elsewhere), r.repoName())
-		for _, e := range elsewhere {
-			fmt.Printf("  %s\n", e)
-		}
+	for _, w := range citeWarnings {
+		fmt.Printf("warning: %s\n", w)
 	}
 	if n, k := r.kept(c.Root)+1, c.Root.keep(); n > k {
 		fmt.Printf("note: %s holds %d archived changes, %d past its keep of %d; `yass evict` moves its oldest months to git history\n",

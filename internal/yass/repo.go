@@ -489,12 +489,10 @@ type Repo struct {
 	Notes            []string // worth knowing, but not a problem: they don't fail --strict
 	Linked           bool     // a yass.yaml's folder wasn't found from this linked worktree
 	Active, Archived []*Change
-	piecesFound      bool                 // whether archivedPieces has run
-	absent           map[string]string    // changes git has that aren't on disk (sparse checkouts), by name
-	merged           map[*Root]string     // the merged branch per yass folder, once looked up
-	name             string               // this code repo's name in citations
-	codeDir          *string              // this code repo's git common dir, once looked up
-	repos            map[string]codeRepos // repos: per yass.yaml, once read
+	piecesFound      bool              // whether archivedPieces has run
+	absent           map[string]string // changes git has that aren't on disk (sparse checkouts), by name
+	merged           map[*Root]string  // the merged branch per yass folder, once looked up
+	codeDir          *string           // this code repo's git common dir, once looked up
 }
 
 // findRepo finds the repo and its yass folders, without reading any changes.
@@ -1021,136 +1019,31 @@ func (r *Repo) checkCode() {
 	if _, ok := git(r.Top, "rev-parse", "--git-dir"); !ok {
 		return
 	}
-	left := map[string]int{}      // citations for other code repos, by repo
-	unchecked := map[string]int{} // a plans repo's citations whose checkout isn't here, by repo
 	for _, c := range r.everything() {
-		repos := r.reposOf(c.Root)
 		for _, b := range c.ownBoxes() {
 			where, what := r.disp(filepath.Join(c.Path, b.file)), trunc(strings.TrimSpace(codeRefRE.Split(b.text, 2)[0]), 50)
-			for _, ref := range codeRefs(b.text) {
-				var state int
-				var branch string
-				if repos != nil {
-					name, dir := repos.pick(ref)
-					if dir == "" {
-						unchecked[name]++
-						continue
-					}
-					state, branch = citationIn(dir, ref.sha)
-				} else {
-					state, branch = r.citation(c.Root, ref)
-				}
-				switch state {
-				case citeElsewhere:
-					left[ref.repo]++
+			for _, sha := range codeRefs(b.text) {
+				switch state, branch := r.citation(c.Root, sha); state {
 				case citeMissing:
-					r.warn("%s: '%s' cites %s, which isn't a commit here (fetch, or fix the ref)", where, what, ref)
+					r.warn("%s: '%s' cites %s, which isn't a commit here (fetch, or fix the ref)", where, what, sha)
 				case citeUnmerged:
 					if b.mark == markDone {
 						r.warn("%s: '%s' is marked done, but %s isn't on %s yet (mark it [/] until it's merged, or cite the merged commit)",
-							where, what, ref.sha, branch)
+							where, what, sha, branch)
 					}
 				}
 			}
 		}
 	}
-	for _, repo := range sortedKeys(boolKeys(left)) {
-		r.note("%d citation(s) name %s, so they're checked from there, not here (this is %s)", left[repo], repo, r.repoName())
-	}
-	for _, repo := range sortedKeys(boolKeys(unchecked)) {
-		switch repo {
-		case "":
-			r.note("%d citation(s) don't name their repo, and repos: lists more than one, so they weren't checked (write them as <repo>@<sha>)", unchecked[repo])
-		default:
-			r.note("%d citation(s) name %s, whose checkout isn't here (see repos: in yass.yaml), so they weren't checked", unchecked[repo], repo)
-		}
-	}
 }
 
-// codeRepos is a plans repo's repos: map, resolved: each name's checkout, or "" when it isn't here.
-type codeRepos map[string]string
-
-// reposOf reads repos: from the yass.yaml that points to a yass folder, or nil when there's none.
-func (r *Repo) reposOf(root *Root) codeRepos {
-	if root.Config == "" {
-		return nil
-	}
-	if r.repos == nil {
-		r.repos = map[string]codeRepos{}
-	}
-	if rs, ok := r.repos[root.Config]; ok {
-		return rs
-	}
-	c, _, err := loadConfig(root.Config)
-	if err != nil || len(c.Repos) == 0 {
-		r.repos[root.Config] = nil
-		return nil
-	}
-	rs := codeRepos{}
-	for name, p := range c.Repos {
-		dir, err := resolvePath(strings.TrimSpace(p), filepath.Dir(root.Config))
-		if err != nil || gitCommonDir(dir) == "" {
-			dir = "" // an unset ${VAR} with no default, or no git checkout there
-		}
-		rs[strings.ToLower(name)] = dir
-	}
-	r.repos[root.Config] = rs
-	return rs
-}
-
-// pick is the checkout a citation is checked against: its named repo's, or, unqualified, the only
-// repo listed. name is "" for an unqualified citation that can't be placed.
-func (rs codeRepos) pick(ref codeRef) (name, dir string) {
-	if ref.repo != "" {
-		return strings.ToLower(ref.repo), rs[strings.ToLower(ref.repo)]
-	}
-	if len(rs) == 1 {
-		for n, d := range rs {
-			return n, d
-		}
-	}
-	return "", ""
-}
-
-// citationIn checks a commit against a code checkout and its merged branch (origin/HEAD, main, master).
-func citationIn(dir, sha string) (state int, branch string) {
-	if _, ok := git(dir, "rev-parse", "-q", "--verify", sha+"^{commit}"); !ok {
-		return citeMissing, ""
-	}
-	if out, ok := git(dir, "rev-parse", "--abbrev-ref", "origin/HEAD"); ok && strings.TrimSpace(out) != "origin/HEAD" {
-		branch = strings.TrimSpace(out)
-	} else {
-		for _, b := range []string{"main", "master"} {
-			if _, ok := git(dir, "rev-parse", "-q", "--verify", "refs/heads/"+b); ok {
-				branch = b
-				break
-			}
-		}
-	}
-	if branch == "" {
-		return citeMerged, ""
-	}
-	if _, ok := git(dir, "merge-base", "--is-ancestor", sha, branch); !ok {
-		return citeUnmerged, branch
-	}
-	return citeMerged, branch
-}
-
-func boolKeys(m map[string]int) map[string]bool {
-	out := map[string]bool{}
-	for k := range m {
-		out[k] = true
-	}
-	return out
-}
-
-// archiveCitations checks the citations in a change's done boxes, its pieces' included, before it's
-// archived: the ones whose commit is missing here or unmerged (problems), and the ones that name
-// another code repo, which can't be checked from here (elsewhere).
-func (r *Repo) archiveCitations(c *Change) (problems, elsewhere []string) {
+// archiveWarnings are a change's done boxes, its pieces' included, citing a commit that's missing
+// here or not merged: yass archive says so as it archives.
+func (r *Repo) archiveWarnings(c *Change) []string {
 	if _, ok := git(r.Top, "rev-parse", "--git-dir"); !ok {
-		return nil, nil
+		return nil
 	}
+	var out []string
 	for _, x := range flatten([]*Change{c}) {
 		for _, b := range x.ownBoxes() {
 			if b.mark != markDone {
@@ -1158,35 +1051,29 @@ func (r *Repo) archiveCitations(c *Change) (problems, elsewhere []string) {
 			}
 			what := trunc(strings.TrimSpace(codeRefRE.Split(b.text, 2)[0]), 50)
 			where := filepath.ToSlash(filepath.Join(x.label(), b.file))
-			for _, ref := range codeRefs(b.text) {
-				switch state, branch := r.citation(c.Root, ref); state {
+			for _, sha := range codeRefs(b.text) {
+				switch state, branch := r.citation(c.Root, sha); state {
 				case citeMissing:
-					problems = append(problems, fmt.Sprintf("'%s' (%s) cites %s, which isn't a commit here", what, where, ref))
+					out = append(out, fmt.Sprintf("'%s' (%s) cites %s, which isn't a commit here", what, where, sha))
 				case citeUnmerged:
-					problems = append(problems, fmt.Sprintf("'%s' (%s) cites %s, which isn't on %s yet", what, where, ref, branch))
-				case citeElsewhere:
-					elsewhere = append(elsewhere, fmt.Sprintf("%s in '%s' (%s): from %s, yass status", ref, what, where, ref.repo))
+					out = append(out, fmt.Sprintf("'%s' (%s) cites %s, which isn't on %s yet", what, where, sha, branch))
 				}
 			}
 		}
 	}
-	return problems, elsewhere
+	return out
 }
 
-// What checking one citation from this code repo found.
+// What checking one citation found.
 const (
-	citeMerged    = iota // a commit here, on the merged branch (or no merged branch to compare with)
-	citeUnmerged         // a commit here, not merged yet
-	citeMissing          // not a commit here
-	citeElsewhere        // it names another code repo: not ours to check
+	citeMerged   = iota // a commit here, on the merged branch (or no merged branch to compare with)
+	citeUnmerged        // a commit here, not merged yet
+	citeMissing         // not a commit here
 )
 
-// citation checks one citation against this repo; branch is the merged branch it compared with.
-func (r *Repo) citation(root *Root, ref codeRef) (state int, branch string) {
-	if ref.repo != "" && ref.repo != r.repoName() {
-		return citeElsewhere, ""
-	}
-	if _, ok := git(r.Top, "rev-parse", "-q", "--verify", ref.sha+"^{commit}"); !ok {
+// citation checks one cited commit against this repo; branch is the merged branch it compared with.
+func (r *Repo) citation(root *Root, sha string) (state int, branch string) {
+	if _, ok := git(r.Top, "rev-parse", "-q", "--verify", sha+"^{commit}"); !ok {
 		return citeMissing, ""
 	}
 	if r.merged == nil {
@@ -1200,44 +1087,10 @@ func (r *Repo) citation(root *Root, ref codeRef) (state int, branch string) {
 	if branch == "" {
 		return citeMerged, ""
 	}
-	if _, ok := git(r.Top, "merge-base", "--is-ancestor", ref.sha, branch); !ok {
+	if _, ok := git(r.Top, "merge-base", "--is-ancestor", sha, branch); !ok {
 		return citeUnmerged, branch
 	}
 	return citeMerged, branch
-}
-
-// repoName is this code repo's name in citations: yass.yaml's repo:, else the last segment of the
-// origin URL (minus .git), else the main worktree's folder name, so it's the same from every
-// clone's worktrees (design §3).
-func (r *Repo) repoName() string {
-	if r.name != "" {
-		return r.name
-	}
-	if c, _, err := loadConfig(filepath.Join(r.Top, ConfigName)); err == nil && strings.TrimSpace(c.Repo) != "" {
-		r.name = strings.TrimSpace(c.Repo)
-		return r.name
-	}
-	if out, ok := git(r.Top, "remote", "get-url", "origin"); ok {
-		if n := repoFromURL(strings.TrimSpace(out)); n != "" {
-			r.name = n
-			return n
-		}
-	}
-	if common := gitCommonDir(r.Top); common != "" {
-		r.name = filepath.Base(filepath.Dir(common)) // <main worktree>/.git
-	} else {
-		r.name = filepath.Base(r.Top)
-	}
-	return r.name
-}
-
-// repoFromURL is a remote URL's last path segment, minus .git: github.com:acme/web.git is web.
-func repoFromURL(u string) string {
-	u = strings.TrimRight(u, "/")
-	if i := strings.LastIndexAny(u, "/:"); i >= 0 {
-		u = u[i+1:]
-	}
-	return strings.TrimSuffix(u, ".git")
 }
 
 // mergedBranch is the code branch that counts as merged: yass.yaml's branch, else origin/HEAD, main or master.
