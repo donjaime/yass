@@ -13,15 +13,15 @@ The skills give agents the whole routine for separate plans: state checks at ses
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC55, AC56 in [plan.md](../plan.md)
-- [/] The README's separate-plans section and `docs/skills.md` match the skills
+- [x] Delivers AC55, AC56 in [plan.md](../plan.md)
+- [x] The README's separate-plans section and `docs/skills.md` match the skills
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
 - [x] AC55: `yass-work`'s "Plans in another folder" is the whole routine: pull the plans first; stop, never `yass init`, when they're missing (worktrees already look in the clone's other checkouts); `yass use` so the hooks add the trailer; code first, then plans, citing (`repo@sha` too); `[x]` after the merge; cross-link with `--brief` and the trailer line; latitude per repo
 - [x] `yass-log` and `yass-status` find a change's code by trailers (`yass status <change>`, `%(trailers:key=yass)`)
 - [x] README bullet and `docs/skills.md` match; e2e (700 ok) still finds the installed skills
-- [ ] Jaime reviews the wording (AC55, README, docs/skills.md)
+- [x] Jaime reviews the wording (AC55, README, docs/skills.md)
 - [x] AC56: one fresh agent session in a linked worktree of a code repo with separate plans, told "keep going" on a change (run with Jaime, 2026-10-11; see Log)
 - [x] Its findings: the plans repo with no upstream gets a sentence in the routine; the trailer hooks no longer block commits under an older `yass` (#74); the mixed inline-and-separate case is for Jaime (see Log)
 
@@ -42,3 +42,6 @@ The skills give agents the whole routine for separate plans: state checks at ses
 - The run: it read AGENTS.md and the worktree's `yass-work`; ran `yass root -v` (separate), tried `git -C <plans> pull --ff-only` (failed: no upstream; it carried on), `yass status`, `yass use 2026-10-11-test-brief-output`; wrote `TestBrief` and broke `brief()` on purpose twice to see the test catch it; committed the code first (98fc050, with `yass: 2026-10-11-test-brief-output`), then the plans (2e055d9: both criteria `[/]` citing `code: 98fc050`, a Decision, a Log entry, Next: merge, then `[x]` and archive). It never ran `yass init`. All checked against both repos.
 - Findings: (1) in a repo with both inline and separate plans, trailers are off, so the hook added none and it wrote the trailer by hand - Jaime to decide whether a change in a separate folder should get one; (2) no upstream to pull - now a sentence in the routine; (3) the Skill tool served the main checkout's older `yass-work`; it noticed and read the worktree's; (4) setting up showed the trailer hooks blocking commits under an older `yass` - fixed in #74; (5) a dead guard in `brief()` - removed in #74.
 - Next: Jaime reviews the wording; the mixed-repo trailer question.
+### 2026-10-11 (claude)
+- Did: Jaime reviewed the wording and merged it (#73); the commit with the no-upstream sentence and the AC56 record missed that merge and is carried over here. The piece is done, and with it every piece of the change.
+- Next: archive `monorepos-at-scale-and-plans-repos` once #74 (which logs into piece 9's folder) has merged.
