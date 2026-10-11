@@ -20,6 +20,7 @@ created: 2026-10-11T15:55:12Z
 - Trailers follow one rule tied to where the change lives, not a repo-wide mode, and only CI requires them (`--require-trailers`), so a repo with both kinds of plans needs no special case (Jaime agreed to claude's proposal, 2026-10-11)
 - `yass archive` stops refusing a change over its citations, but warns about missing or unmerged ones as it archives (Jaime, 2026-10-11)
 - PRD approved (Jaime, 2026-10-11)
+- Plan: no pieces, three pull requests, one per milestone; no design.md, since removing unreleased surface is easy to undo from git (claude, 2026-10-11)
 - Measure before and after, so "simpler" can be checked (claude, 2026-10-11)
 - A change of its own, following monorepos-at-scale, rather than a revision of it: the archive keeps what was built, this records what was removed and why (claude, 2026-10-11)
 
