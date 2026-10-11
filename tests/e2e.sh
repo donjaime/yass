@@ -1452,5 +1452,13 @@ has   "a checkout that isn't there: its citations are noted as unchecked" "1 cit
 has   "…as are those of a repo whose variable is unset" "1 citation\(s\) name ios, whose checkout isn't here" y status
 run_ok "…and --strict still passes" y status --strict
 
+echo "48. the trailer hooks and an older yass"
+newrepo "$W/e2e/old-yass"; y init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+OLD="$W/old-yass-bin"; rm -rf "$OLD"; mkdir -p "$OLD"; ln -s "$(command -v git)" "$OLD/git"
+printf '#!/bin/sh\ncase "$*" in\n  "hook --help") echo "usage: yass hook [--range A..B] [--strict]";;\n  hook) exit 0;;\n  *) echo "yass: unknown option" >&2; exit 2;;\nesac\n' > "$OLD/yass"; chmod +x "$OLD/yass"
+echo x >> a.txt; git add a.txt
+run_ok "with a yass from before trailers on PATH, commits still go through" env PATH="$OLD:/usr/bin:/bin" git commit -q -m "feat: older yass"
+hasnt "…without its errors" "unknown option" env PATH="$OLD:/usr/bin:/bin" bash -c 'echo y >> a.txt; git add a.txt; git commit -q -m "feat: again" 2>&1'
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

@@ -275,10 +275,10 @@ func brief(c *Change) string {
 		}
 		return c.Name
 	}
-	one := func(c *Change, pieces bool) string {
+	one := func(c *Change) string {
 		done, total := c.progress()
 		var bits []string
-		if pieces && len(c.Pieces) > 0 {
+		if len(c.Pieces) > 0 { // a piece has none, so its part is just boxes
 			n := 0
 			for _, p := range c.Pieces {
 				if p.state() == "done" {
@@ -294,9 +294,9 @@ func brief(c *Change) string {
 		return short(c) + ": " + strings.Join(bits, ", ")
 	}
 	if c.Parent != nil {
-		return one(c.Parent, true) + " · " + one(c, false)
+		return one(c.Parent) + " · " + one(c)
 	}
-	return one(c, true)
+	return one(c)
 }
 
 func cmdStatus(a *args) (int, error) {
