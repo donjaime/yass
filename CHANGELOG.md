@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.0 (unreleased)
+Large changes and many teams in one repo, and plans kept outside it, with less ceremony: parent criteria close themselves, `yass status` shows who's working on what, and commits name a change kept elsewhere for you.
+- **Delivered criteria close themselves.** A parent criterion counts as done once every piece that names it in a `Delivers` box is done, and `yass archive` ticks it in the archived `plan.md`. No closing commit per piece.
+- **Pieces own their files.** A branch working on a piece changes only that piece's folder, so parallel branches never conflict over progress; the hook gives a heads-up when a commit with code reaches into the parent's files or a second piece.
+- **The branch view:** under each change and piece, `yass status` lists the unmerged local and pushed branches with recent commits to it, who touched them last, their progress and latest **Next:**, as of your last fetch. It never fetches. `--since 14d` sets the window; `--no-branches` leaves it out.
+- **`yass status <change> --brief`:** a change's progress in one line (a piece's after its parent's), for commit messages and pull requests. `yass-work` suggests it.
+- **Plans kept outside the repo:** `yass root -v` says whether each yass folder is inline or separate, and `yass status` notes a separate plans repo with uncommitted files or behind its upstream. A code commit for a change kept outside carries a `yass:` trailer naming it (`yass: <change> [ac:ac1,ac2]`), added by a new `prepare-commit-msg` hook from `yass use <change>` (per worktree), the branch name or earlier commits, and checked by a new `commit-msg` hook. `yass hook --range [--require-trailers] [--strict]` checks them in CI, and `yass status <change>` lists a change's merged code and each criterion's from the trailers, squash merges included. [docs/separate-plans.md](docs/separate-plans.md) has the details and hook managers.
+- **Many teams:** `yass status` in a sparse checkout notes a `blocked:` or `follows:` naming a change outside it instead of warning. [docs/monorepo.md](docs/monorepo.md) covers CODEOWNERS per yass folder, Git LFS for mockups and PDFs, and history views without the plans.
+- **`yass archive` warns** about a done box citing a commit that's missing or not merged.
+- Fixes: hooks in a linked worktree find a plans repo elsewhere (git calls no longer inherit the hook's `GIT_DIR`); `yass update --version` is the command's own option; the agent playbooks follow the routine for plans kept elsewhere (pull first, never `yass init` a missing plans folder, latitude per repo).
+
+Migrating:
+- **Run `yass upgrade`** to install the two new hooks beside `pre-commit` (and the updated playbooks). They do nothing in a repo whose plans are all inline, and skip themselves under an older `yass`, so teammates who haven't updated can still commit.
+- **`yass status` output** has a line per unmerged branch under its change, and a closing `branches:` line when there are any; `--no-branches` restores the old output for scripts.
+
 ## 0.4.0 (2026-10-08)
 The archive scales: finished changes go into month folders, YASS reads only their names unless it needs more, and a yass folder can move its oldest months into git history. Past decisions are one command away for people and agents.
 - **`yass update` gets a newer binary.** Inside a repo whose YASS files are newer than the binary, it installs exactly that version, so you match your team; otherwise the latest release. It says when a newer release exists (`--latest` gets it) and that `yass upgrade` and a commit follow; `--check` only looks. It verifies before installing: the release's `checksums.txt` always, and its signed build provenance when the GitHub CLI is installed (`--require-provenance` to insist), then checks the new binary runs before swapping it in. Binaries from `go install` or a clone aren't replaced; it prints the command for those.
