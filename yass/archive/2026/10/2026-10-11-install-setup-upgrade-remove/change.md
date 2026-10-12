@@ -4,6 +4,7 @@ source: Jaime, 2026-10-11: before 0.5.0, the install instructions mix the binary
 follows: 2026-10-04-the-binary-carries-the-playbooks
 blocked:
 created: 2026-10-12T02:51:45Z
+archived: 2026-10-12T03:09:24Z
 ---
 # Install, set up, upgrade and remove, each on its own
 
