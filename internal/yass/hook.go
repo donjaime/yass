@@ -405,9 +405,9 @@ func cmdHook(a *args) int {
 				}
 			}
 		}
-		if r := loadRepo(); r.trailerMode() != "off" {
-			trailers, namesChecked = r.rangeTrailers(strings.Fields(shas))
-			trailerFail = len(trailers) > 0 && (strict || r.trailerMode() == "require")
+		if r := loadRepo(); r.usesSeparatePlans() {
+			trailers, namesChecked = r.rangeTrailers(strings.Fields(shas), a.b["require-trailers"])
+			trailerFail = len(trailers) > 0 && strict
 		}
 	} else {
 		if _, merging := git("", "rev-parse", "-q", "--verify", "MERGE_HEAD"); merging {
@@ -428,7 +428,7 @@ func cmdHook(a *args) int {
 		if trailerFail {
 			verb = "failing"
 		}
-		fmt.Fprintf(os.Stderr, "yass: %s: commits that don't name their change (the plans are kept apart from the code)\n", verb)
+		fmt.Fprintf(os.Stderr, "yass: %s: commits whose `yass:` trailers need a look (the plans are kept apart from the code)\n", verb)
 		for _, t := range trailers {
 			fmt.Fprintf(os.Stderr, "  - %s\n", t)
 		}

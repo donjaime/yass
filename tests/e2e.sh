@@ -1334,7 +1334,7 @@ CODE="$W/e2e/trail-code"; newrepo "$CODE"; y init --path "$PL" --hooks >/dev/nul
 [ -x tools/yass/githooks/prepare-commit-msg ] && [ -x tools/yass/githooks/commit-msg ] && ok "init installs the trailer hooks beside pre-commit" || bad "trailer hooks missing"
 trailer() { git log -1 --format='%(trailers:key=yass,valueonly)' | head -1; }
 c() { echo "$RANDOM" >> code.txt; git add code.txt; git commit -q "$@" 2>&1; }
-has   "no change to name: the commit goes through with a heads-up and how to add one" "heads-up: this commit should name its change.*|yass use <change>" c -m "feat: nameless"
+hasnt "no change to name: the commit goes through, and nothing asks for a trailer" "." c -m "feat: nameless"
 [ -z "$(trailer)" ] && ok "…and nothing is added" || bad "a trailer was invented"
 y use login >/dev/null
 has   "yass use names this worktree's change" "^2026-02-01-login$" y use
@@ -1357,29 +1357,36 @@ git switch -q main; git merge -q --no-ff feature-x -m "Merge feature-x" 2>/dev/n
 [ -z "$(git log -1 --format='%(trailers:key=yass,valueonly)')" ] && ok "a merge commit gets none" || bad "a merge got a trailer"
 for t in "2026-02-01-login" "2026-01-01-old" "2026-02-01-login/2026-02-02-form" "2026-02-03-api" "none" "2026-02-01-LOGIN ac:ac1,AC2"; do
   hasnt "\`yass: $t\` is accepted" "heads-up|refusing" c -m "feat: t" -m "yass: $t"; done
-has   "a malformed trailer is invalid" "is malformed" c -m "feat: bad" -m "yass: 2026-02-01-login ac"
+N0=$(git rev-list --count HEAD)
+has   "a malformed trailer gets a heads-up" "is malformed" c -m "feat: bad" -m "yass: 2026-02-01-login ac"
+[ "$(git rev-list --count HEAD)" -gt "$N0" ] && ok "…and the commit is made" || bad "a commit with a bad trailer was refused"
 has   "a piece name in two changes is ambiguous" "pieces in more than one change; give it as <change>/<piece>" c -m "feat: amb" -m "yass: 2026-02-02-form"
 has   "an unknown key is only a warning" "doesn't know the key 'foo'" c -m "feat: k" -m "yass: 2026-02-01-login foo:bar"
 hasnt "…not a heads-up" "heads-up" c -m "feat: k2" -m "yass: 2026-02-01-login foo:bar"
-printf 'path: %s\ntrailers: require\n' "$PL" > yass.yaml; git add yass.yaml; git commit -q -m "chore: require" -m "yass: none"
-N0=$(git rev-list --count HEAD)
-has   "trailers: require refuses a commit with none" "refusing the commit \(trailers: require\)" c -m "feat: none at all"
-[ "$(git rev-list --count HEAD)" = "$N0" ] && ok "…and it isn't made" || bad "a refused commit was made"
-has   "…and a name that isn't a change, suggesting the closest" "'2026-02-01-logn' isn't a change or piece; did you mean 2026-02-01-login" c -m "feat: typo" -m "yass: 2026-02-01-logn"
-git reset -q; git checkout -q -- code.txt 2>/dev/null
-printf 'path: %s\n' "$PL" > yass.yaml; git add yass.yaml; git commit -q -m "chore: warn again" -m "yass: none"
+has   "a name that isn't a change gets a heads-up, suggesting the closest" "'2026-02-01-logn' isn't a change or piece; did you mean 2026-02-01-login" c -m "feat: typo" -m "yass: 2026-02-01-logn"
+printf 'path: %s\ntrailers: require\n' "$PL" > yass.yaml
+has   "trailers: is an unknown setting now" "unknown setting 'trailers'" y status
+git checkout -q yass.yaml
 BASE=$(git rev-parse HEAD); c -m "feat: unnamed" >/dev/null; c -m "feat: named" -m "yass: 2026-02-01-login" >/dev/null
-has   "hook --range reports a commit without a trailer" "feat: unnamed: no \`yass:\` trailer" yass hook --range "$BASE..HEAD"
-run_ok "…as a warning" yass hook --range "$BASE..HEAD"
-run_fail "…and fails with --strict" yass hook --range "$BASE..HEAD" --strict
+c -m "feat: wrongly named" -m "yass: 2026-09-09-nope" >/dev/null
+hasnt "hook --range leaves a commit without a trailer alone" "feat: unnamed" yass hook --range "$BASE..HEAD"
+has   "…but reports one naming no change" "feat: wrongly named: .*isn't a change or piece" yass hook --range "$BASE..HEAD"
+has   "--require-trailers reports a commit without one" "feat: unnamed: no \`yass:\` trailer" yass hook --range "$BASE..HEAD" --require-trailers
+run_ok "…as a warning" yass hook --range "$BASE..HEAD" --require-trailers
+run_fail "…and fails with --strict" yass hook --range "$BASE..HEAD" --require-trailers --strict
 B2=$(git rev-parse HEAD); c -m "Login form (#12)" -m "* feat: a" -m "yass: 2026-02-01-login ac:ac1" >/dev/null
 run_ok "a squash commit carrying the trailers passes" yass hook --range "$B2..HEAD" --strict
 CI="$W/e2e/trail-ci"; rm -rf "$CI"; git clone -q "file://$CODE" "$CI"; cd "$CI"; printf 'path: %s/nowhere\n' "$W" > yass.yaml
 has   "in CI without the plans, only the form is checked, and it says so" "change names weren't checked" yass hook --range "$BASE..HEAD"
-has   "…still reporting a missing trailer" "feat: unnamed: no \`yass:\` trailer" yass hook --range "$BASE..HEAD"
-cd "$CODE"; printf 'path: %s\ntrailers: off\n' "$PL" > yass.yaml; git add yass.yaml; git commit -q -m "chore: off" -m "yass: none"
-hasnt "trailers: off: nothing is added, checked or printed" "." c -m "feat: off"
-[ -z "$(trailer)" ] && ok "…and no trailer" || bad "trailer added with trailers: off"
+has   "…still reporting a missing trailer when asked" "feat: unnamed: no \`yass:\` trailer" yass hook --range "$BASE..HEAD" --require-trailers
+MX="$W/e2e/trail-mixed"; newrepo "$MX"; y init --hooks >/dev/null; mkdir -p team; printf 'path: %s\n' "$PL" > team/yass.yaml
+mkdir -p yass/changes/2026-06-01-local; printf '# Local\n\n- [ ] Do it\n' > yass/changes/2026-06-01-local/change.md
+git add -A; git commit -q -m "chore: adopt YASS"
+y use 2026-02-01-login >/dev/null
+c -m "feat: for the separate plans" >/dev/null; has "a repo with both kinds of plans: a change kept outside gets its trailer" "^2026-02-01-login$" trailer
+has   "yass use on a change in this repo says its commits carry no trailer" "2026-06-01-local's plans are in this repo, so its commits don't carry a trailer" y use 2026-06-01-local
+c -m "feat: for the local plans" >/dev/null; [ -z "$(trailer)" ] && ok "…and none is added" || bad "an inline change got a trailer"
+y use --clear >/dev/null
 newrepo "$W/e2e/trail-inline"; y init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
 rm tools/yass/githooks/prepare-commit-msg tools/yass/githooks/commit-msg; git add -A; git commit -q -m "older install: pre-commit only"
 sub tools/yass/githooks/pre-commit '^# yass-version: .*$' '# yass-version: 0.1.0'

@@ -25,15 +25,15 @@ The e2e sections for multi-repo citations and `repos:` are removed; the trailer 
 - [x] AC4 (R4) Given a finished change whose done box cites a missing or unmerged commit, when you run `yass archive`, then it archives it and warns, naming the box and the commit — verify: e2e
 
 ### M2
-- [ ] AC5 (R5) Given a repo with an inline `yass/` and a separate plans folder, and `yass use` naming a change in the separate one, when you commit, then the commit gets `yass: <change>` — verify: e2e
-- [ ] AC6 (R5) Given `yass use` naming a change in the inline `yass/`, when you commit, then no trailer is added, and `yass use` said so when it was set — verify: e2e
-- [ ] AC7 (R5) Given a branch named after a change in a separate folder, or an earlier commit's trailer on the branch, then the trailer comes from them, as now — verify: e2e
-- [ ] AC8 (R6) Given a commit without a trailer, then the commit-msg hook says nothing and the commit goes through, whatever the repo holds — verify: e2e
-- [ ] AC9 (R6) Given a malformed trailer, or one naming no change, then the commit goes through with a heads-up naming it and the closest change names — verify: e2e
-- [ ] AC10 (R7) Given `yass hook --range` over commits with a bad trailer and commits without one, then it reports the bad one; with `--require-trailers` it also reports the ones without; with `--strict` either exits 1 — verify: e2e
-- [ ] AC11 (R7) Given `--range` where the plans aren't checked out, then it checks only the trailers' form and says so, as now — verify: e2e
-- [ ] AC12 (R8) Given a `yass.yaml` with `trailers:`, then it warns that the setting is unknown — verify: e2e
-- [ ] AC13 (R9) Given commits naming a change in a separate folder with `ac:`, then `yass status <change>` lists them and each criterion's, as now — verify: e2e (the existing section)
+- [x] AC5 (R5) Given a repo with an inline `yass/` and a separate plans folder, and `yass use` naming a change in the separate one, when you commit, then the commit gets `yass: <change>` — verify: e2e
+- [x] AC6 (R5) Given `yass use` naming a change in the inline `yass/`, when you commit, then no trailer is added, and `yass use` said so when it was set — verify: e2e
+- [x] AC7 (R5) Given a branch named after a change in a separate folder, or an earlier commit's trailer on the branch, then the trailer comes from them, as now — verify: e2e
+- [x] AC8 (R6) Given a commit without a trailer, then the commit-msg hook says nothing and the commit goes through, whatever the repo holds — verify: e2e
+- [x] AC9 (R6) Given a malformed trailer, or one naming no change, then the commit goes through with a heads-up naming it and the closest change names — verify: e2e
+- [x] AC10 (R7) Given `yass hook --range` over commits with a bad trailer and commits without one, then it reports the bad one; with `--require-trailers` it also reports the ones without; with `--strict` either exits 1 — verify: e2e
+- [x] AC11 (R7) Given `--range` where the plans aren't checked out, then it checks only the trailers' form and says so, as now — verify: e2e
+- [x] AC12 (R8) Given a `yass.yaml` with `trailers:`, then it warns that the setting is unknown — verify: e2e
+- [x] AC13 (R9) Given commits naming a change in a separate folder with `ac:`, then `yass status <change>` lists them and each criterion's, as now — verify: e2e (the existing section)
 
 ### M3
 - [ ] AC14 (R10) Given the README, `docs/`, the playbooks and `yass --help`, then none mentions `repo@sha`, `repo:`, `repos:`, `trailers:` or refusing commits, and `docs/separate-plans.md` describes one link and one rule — verify: `grep` for each; manual: review
