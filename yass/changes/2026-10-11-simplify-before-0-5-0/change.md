@@ -29,3 +29,6 @@ created: 2026-10-11T15:55:12Z
 ### YYYY-MM-DD (<who>)
 - Did: …
 - Next: … -->
+### 2026-10-11 (claude)
+- Did: M1. `codeRefs` reads plain hashes only; `checkCode` checks this repo only, as in 0.4.0; repo naming, `repos:` and their checks are gone; `yass archive` warns about missing or unmerged citations instead of refusing; `repo` and `repos` settings removed. Tests: `TestCodeRefs` updated, `TestRepoFromURL` and e2e §47 removed, §43 rewritten (686 ok).
+- Next: M2, the one rule for trailers.

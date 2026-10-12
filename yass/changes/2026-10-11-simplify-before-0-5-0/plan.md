@@ -19,10 +19,10 @@ The e2e sections for multi-repo citations and `repos:` are removed; the trailer 
 ### M1
 - [ ] AC1 (R1) Given …, when …, then … — verify: <test, flow, or manual steps> -->
 ### M1
-- [ ] AC1 (R1) Given a done box citing a commit that isn't in this repo, or isn't merged, when you run `yass status`, then it warns as 0.4.0 did; a merged citation draws nothing — verify: e2e (the existing citation checks)
-- [ ] AC2 (R2) Given a box ending `— code: web@a1b2c3d`, then YASS reads no citation from it: no check, no warning, and `yass decisions --cites a1b2c3d` doesn't list it — verify: go test (`codeRefs`); e2e
-- [ ] AC3 (R3) Given a `yass.yaml` with `repo:` or `repos:`, when you run `yass status`, then it warns that the setting is unknown, and nothing else uses it — verify: e2e
-- [ ] AC4 (R4) Given a finished change whose done box cites a missing or unmerged commit, when you run `yass archive`, then it archives it and warns, naming the box and the commit — verify: e2e
+- [x] AC1 (R1) Given a done box citing a commit that isn't in this repo, or isn't merged, when you run `yass status`, then it warns as 0.4.0 did; a merged citation draws nothing — verify: e2e (the existing citation checks)
+- [x] AC2 (R2) Given a box ending `— code: web@a1b2c3d`, then YASS reads no citation from it: no check, no warning, and `yass decisions --cites a1b2c3d` doesn't list it — verify: go test (`codeRefs`); e2e
+- [x] AC3 (R3) Given a `yass.yaml` with `repo:` or `repos:`, when you run `yass status`, then it warns that the setting is unknown, and nothing else uses it — verify: e2e
+- [x] AC4 (R4) Given a finished change whose done box cites a missing or unmerged commit, when you run `yass archive`, then it archives it and warns, naming the box and the commit — verify: e2e
 
 ### M2
 - [ ] AC5 (R5) Given a repo with an inline `yass/` and a separate plans folder, and `yass use` naming a change in the separate one, when you commit, then the commit gets `yass: <change>` — verify: e2e
