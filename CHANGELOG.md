@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0 (unreleased)
+## 0.5.0 (2026-10-11)
 Large changes and many teams in one repo, and plans kept outside it, with less ceremony: parent criteria close themselves, `yass status` shows who's working on what, and commits name a change kept elsewhere for you.
 - **Delivered criteria close themselves.** A parent criterion counts as done once every piece that names it in a `Delivers` box is done, and `yass archive` ticks it in the archived `plan.md`. No closing commit per piece.
 - **Pieces own their files.** A branch working on a piece changes only that piece's folder, so parallel branches never conflict over progress; the hook gives a heads-up when a commit with code reaches into the parent's files or a second piece.
