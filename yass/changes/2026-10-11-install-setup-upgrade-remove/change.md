@@ -56,3 +56,6 @@ Getting YASS reads like other tools: **install** puts the `yass` binary on your 
 ### 2026-10-11 (claude)
 - Did: built it. `install.sh` defaults to `~/.local/bin`; `yass deinit` (e2e section 49, and tried on a clone of this repo and on one with plans outside it); README, docs/install.md and the YASS page rewritten as install (binary and PATH), set up a repo, upgrading, removing YASS; `yass --help`, the CLI list and the 0.5.0 changelog. e2e, go test, examples and site checks pass.
 - Next: Jaime reviews the docs and the page; then archive it, and 0.5.0 is ready to tag.
+
+### 2026-10-12 (claude)
+- Did: Jaime merged the intent (#82) and the build (#83). Done.
