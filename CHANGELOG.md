@@ -8,11 +8,14 @@ Large changes and many teams in one repo, and plans kept outside it, with less c
 - **`yass status <change> --brief`:** a change's progress in one line (a piece's after its parent's), for commit messages and pull requests. `yass-work` suggests it.
 - **Plans kept outside the repo:** `yass root -v` says whether each yass folder is inline or separate, and `yass status` notes a separate plans repo with uncommitted files or behind its upstream. A code commit for a change kept outside carries a `yass:` trailer naming it (`yass: <change> [ac:ac1,ac2]`), added by a new `prepare-commit-msg` hook from `yass use <change>` (per worktree), the branch name or earlier commits, and checked by a new `commit-msg` hook. `yass hook --range [--require-trailers] [--strict]` checks them in CI, and `yass status <change>` lists a change's merged code and each criterion's from the trailers, squash merges included. [docs/separate-plans.md](docs/separate-plans.md) has the details and hook managers.
 - **Many teams:** `yass status` in a sparse checkout notes a `blocked:` or `follows:` naming a change outside it instead of warning. [docs/monorepo.md](docs/monorepo.md) covers CODEOWNERS per yass folder, Git LFS for mockups and PDFs, and history views without the plans.
+- **`yass deinit` takes YASS back out of a repo:** the playbooks, the YASS section of each `AGENTS.md` (and the `CLAUDE.md` import, when nothing else is left), the hook and `core.hooksPath`, listing what it removed. Your `yass/` folders and `yass.yaml` stay; it says how to remove them. `--global` removes your user folder's playbooks too. It never commits, so trying YASS is low risk.
+- **Installing is one plain step:** `curl -fsSL …/install.sh | bash` puts the binary in `~/.local/bin` (`--bin-dir` picks another folder). The README, docs/install.md and the YASS page now show installing the binary and putting it on your PATH, setting up a repo, upgrading, and removing YASS as separate steps.
 - **`yass archive` warns** about a done box citing a commit that's missing or not merged.
 - Fixes: hooks in a linked worktree find a plans repo elsewhere (git calls no longer inherit the hook's `GIT_DIR`); `yass update --version` is the command's own option; the agent playbooks follow the routine for plans kept elsewhere (pull first, never `yass init` a missing plans folder, latitude per repo).
 
 Migrating:
 - **Run `yass upgrade`** to install the two new hooks beside `pre-commit` (and the updated playbooks). They do nothing in a repo whose plans are all inline, and skip themselves under an older `yass`, so teammates who haven't updated can still commit.
+- **`install.sh` no longer needs `--bin-dir`,** and the documented one-liner no longer runs `yass init`: run it yourself in each repo.
 - **`yass status` output** has a line per unmerged branch under its change, and a closing `branches:` line when there are any; `--no-branches` restores the old output for scripts.
 
 ## 0.4.0 (2026-10-08)
