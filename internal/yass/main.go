@@ -72,7 +72,7 @@ var specs = map[string]spec{
 	"root":     {[]string{"v"}, nil, 0, 0, "yass root [-v]"},
 	"paths":    {nil, []string{"only"}, 0, 0, "yass paths [--only RANGE]"},
 	"template": {nil, nil, 1, 1, "yass template <change|change-large|prd|plan|design|readme|agents>"},
-	"hook":     {[]string{"strict", "prepare-msg", "commit-msg"}, []string{"range"}, 0, 3, "yass hook [--range A..B] [--strict] | --prepare-msg <file> [source] | --commit-msg <file>"},
+	"hook":     {[]string{"strict", "prepare-msg", "commit-msg", "require-trailers"}, []string{"range"}, 0, 3, "yass hook [--range A..B [--require-trailers]] [--strict] | --prepare-msg <file> [source] | --commit-msg <file>"},
 	"use":      {[]string{"clear"}, []string{"ac"}, 0, 1, "yass use [<change>] [--ac ac1,ac2] [--clear]"},
 	"upgrade":  {nil, nil, 0, 0, "yass upgrade"},
 	"version":  {nil, nil, 0, 0, "yass version"},

@@ -50,43 +50,39 @@ func parseTrailer(value string) (trailer, error) {
 	return t, nil
 }
 
-// trailerMode is how this code repo treats trailers: "off" unless its plans are separate, else
-// yass.yaml's trailers: (warn by default, require, or off).
-func (r *Repo) trailerMode() string {
-	if !r.plansSeparate() {
-		return "off"
-	}
-	if c, _, err := loadConfig(filepath.Join(r.Top, ConfigName)); err == nil {
-		switch strings.ToLower(strings.TrimSpace(c.Trailers)) {
-		case "off":
-			return "off"
-		case "require":
-			return "require"
-		}
-	}
-	return "warn"
-}
-
-// plansSeparate: every yass folder this repo uses is outside it, or its yass.yaml points outside
-// it to a folder that isn't here (CI without the plans checked out).
-func (r *Repo) plansSeparate() bool {
+// usesSeparatePlans: a yass folder this repo uses is outside it, or its yass.yaml points outside
+// it to a folder that isn't here (CI without the plans checked out). Only then can a commit's
+// change live elsewhere, so only then do the trailer hooks do anything.
+func (r *Repo) usesSeparatePlans() bool {
 	if gitCommonDir(r.Top) == "" {
 		return false
 	}
-	if len(r.Roots) == 0 {
-		c, _, err := loadConfig(filepath.Join(r.Top, ConfigName))
-		if err != nil || strings.TrimSpace(c.Path) == "" {
-			return false
-		}
-		dir, err := resolvePath(strings.TrimSpace(c.Path), r.Top)
-		return err == nil && !within(dir, r.Top)
-	}
 	for _, root := range r.Roots {
-		if !r.separate(root) {
-			return false
+		if r.separate(root) {
+			return true
 		}
 	}
-	return true
+	c, _, err := loadConfig(filepath.Join(r.Top, ConfigName))
+	if err != nil || strings.TrimSpace(c.Path) == "" {
+		return false
+	}
+	dir, err := resolvePath(strings.TrimSpace(c.Path), r.Top)
+	return err == nil && !within(dir, r.Top) && !isDir(dir)
+}
+
+// targetSeparate says whether a trailer's target (a label, maybe followed by keys) names a change
+// kept outside this repo; none counts, since it's a deliberate trailer.
+func (r *Repo) targetSeparate(target string) bool {
+	label := strings.ToLower(strings.Fields(target + " x")[0])
+	if label == "none" {
+		return true
+	}
+	for _, c := range append(r.everything(), flatten(r.Archived)...) {
+		if strings.ToLower(c.label()) == label {
+			return r.separate(c.Root)
+		}
+	}
+	return false
 }
 
 // targets maps every name a trailer can use, lower-cased, to the change it means: change folders
@@ -193,11 +189,15 @@ func messageTrailers(msg string) []string {
 	return vals
 }
 
-// trailerProblems checks a message's trailers: problems fail under trailers: require, notes never do.
-func trailerProblems(msg string, named map[string]string, ambiguous map[string]bool) (problems, notes []string) {
+// trailerProblems checks a message's trailers: malformed ones and ones naming no change, and, when
+// asked (CI's --require-trailers), a message with none. Notes are only ever notes.
+func trailerProblems(msg string, named map[string]string, ambiguous map[string]bool, requireOne bool) (problems, notes []string) {
 	vals := messageTrailers(msg)
 	if len(vals) == 0 {
-		return []string{"no `yass:` trailer naming its change (`yass use <change>` adds one to every commit here; `yass: none` for a commit that belongs to no change)"}, nil
+		if requireOne {
+			return []string{"no `yass:` trailer naming its change (`yass use <change>` adds one to every commit here; `yass: none` for a commit that belongs to no change)"}, nil
+		}
+		return nil, nil
 	}
 	for _, v := range vals {
 		t, err := parseTrailer(v)
@@ -255,8 +255,8 @@ func (r *Repo) inferTarget(named map[string]string) string {
 	return ""
 }
 
-// prepareMsg is the prepare-commit-msg hook: add the trailer, unless there's one already, it's a
-// merge, or trailers are off. It never fails a commit.
+// prepareMsg is the prepare-commit-msg hook: when the change this commit is for lives outside the
+// repo, add its trailer, unless there's one already or it's a merge. It never fails a commit.
 func prepareMsg(file, source string) {
 	if source == "merge" {
 		return
@@ -264,58 +264,50 @@ func prepareMsg(file, source string) {
 	if _, merging := git("", "rev-parse", "-q", "--verify", "MERGE_HEAD"); merging {
 		return
 	}
-	r := loadRepo()
-	if r.trailerMode() == "off" || len(messageTrailers(read(file))) > 0 {
-		return
+	if !findRepo().usesSeparatePlans() || len(messageTrailers(read(file))) > 0 {
+		return // cheap checks first: most repos never read their changes here
 	}
+	r := loadRepo()
 	var named map[string]string
 	if len(r.Roots) > 0 {
 		named, _ = r.targets()
 	}
-	if t := r.inferTarget(named); t != "" {
+	if t := r.inferTarget(named); t != "" && r.targetSeparate(t) {
 		git("", "interpret-trailers", "--in-place", "--trailer", "yass: "+t, file)
 	}
 }
 
-// commitMsg is the commit-msg hook: check the trailers; under trailers: require, refuse.
+// commitMsg is the commit-msg hook: point out a trailer that's malformed or names no change. It
+// never asks for a missing one and never refuses a commit; CI can require them (--require-trailers).
 func commitMsg(file string) int {
 	if _, merging := git("", "rev-parse", "-q", "--verify", "MERGE_HEAD"); merging {
 		return 0
 	}
-	r := loadRepo()
-	mode := r.trailerMode()
-	if mode == "off" {
+	if !findRepo().usesSeparatePlans() || len(messageTrailers(read(file))) == 0 {
 		return 0
 	}
+	r := loadRepo()
 	var named map[string]string
 	var ambiguous map[string]bool
 	if len(r.Roots) > 0 {
 		named, ambiguous = r.targets()
 	}
-	problems, notes := trailerProblems(read(file), named, ambiguous)
+	problems, notes := trailerProblems(read(file), named, ambiguous, false)
 	for _, n := range notes {
 		fmt.Fprintf(os.Stderr, "yass: %s\n", n)
 	}
-	if len(problems) == 0 {
-		return 0
-	}
-	verb := "heads-up"
-	if mode == "require" {
-		verb = "refusing the commit (trailers: require)"
-	}
-	fmt.Fprintf(os.Stderr, "yass: %s: this commit should name its change, since the plans are kept apart from the code\n", verb)
-	for _, p := range problems {
-		fmt.Fprintf(os.Stderr, "  - %s\n", p)
-	}
-	if mode == "require" {
-		return 1
+	if len(problems) > 0 {
+		fmt.Fprintln(os.Stderr, "yass: heads-up: this commit's `yass:` trailer doesn't name a change")
+		for _, p := range problems {
+			fmt.Fprintf(os.Stderr, "  - %s\n", p)
+		}
 	}
 	return 0
 }
 
 // rangeTrailers checks the trailers of every non-merge commit in a range, for CI. names is false
 // when the plans aren't here, so only the grammar is checked.
-func (r *Repo) rangeTrailers(shas []string) (found []string, names bool) {
+func (r *Repo) rangeTrailers(shas []string, requireOne bool) (found []string, names bool) {
 	var named map[string]string
 	var ambiguous map[string]bool
 	if len(r.Roots) > 0 {
@@ -323,7 +315,7 @@ func (r *Repo) rangeTrailers(shas []string) (found []string, names bool) {
 	}
 	for _, sha := range shas {
 		msg, _ := git("", "log", "-1", "--format=%B", sha)
-		problems, _ := trailerProblems(msg, named, ambiguous)
+		problems, _ := trailerProblems(msg, named, ambiguous, requireOne)
 		if len(problems) == 0 {
 			continue
 		}
@@ -367,8 +359,8 @@ func cmdUse(a *args) error {
 		return err
 	}
 	fmt.Printf("yass use: commits in this worktree now carry `yass: %s`\n", v)
-	if r.trailerMode() == "off" {
-		fmt.Println("(the plans are in this repo, so commits don't need trailers; it's kept, and used if that changes)")
+	if !r.separate(c.Root) {
+		fmt.Printf("(%s's plans are in this repo, so its commits don't carry a trailer)\n", c.Name)
 	}
 	return nil
 }
@@ -380,7 +372,7 @@ type trailerCommit struct{ sha, subject string }
 // of its pieces, those commits by the criteria their ac: names, and warnings for an ac: naming a
 // criterion the plan doesn't have. One git log over the merged branch, filtered by git.
 func (r *Repo) changeCode(c *Change) (commits []trailerCommit, byAC map[string][]trailerCommit, branch string, warnings []string) {
-	if r.trailerMode() == "off" {
+	if !r.separate(c.Root) {
 		return nil, nil, "", nil
 	}
 	if branch = r.mergedBranch(c.Root); branch == "" {
