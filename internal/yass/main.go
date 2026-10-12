@@ -27,6 +27,9 @@ usage: yass <command> [options]
                                         hook; --private keeps dir out of git, for this clone only
   upgrade                               bring every YASS file in the repo (playbooks, AGENTS.md sections,
                                         the hook) and your user folder's playbooks up to this version
+  deinit [--global]                     take YASS out of this repo: its playbooks, AGENTS.md sections
+                                        and hook; the yass folders stay. --global: your user folder's
+                                        playbooks too
   new "<title>" [--large] [--design]    a change: a dated folder from a template
       [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]
   status [<change>] [--brief] [--archived] [--strict] [--since 14d|DATE] [--no-branches]
@@ -75,6 +78,7 @@ var specs = map[string]spec{
 	"hook":     {[]string{"strict", "prepare-msg", "commit-msg", "require-trailers"}, []string{"range"}, 0, 3, "yass hook [--range A..B [--require-trailers]] [--strict] | --prepare-msg <file> [source] | --commit-msg <file>"},
 	"use":      {[]string{"clear"}, []string{"ac"}, 0, 1, "yass use [<change>] [--ac ac1,ac2] [--clear]"},
 	"upgrade":  {nil, nil, 0, 0, "yass upgrade"},
+	"deinit":   {[]string{"global"}, nil, 0, 0, "yass deinit [--global]"},
 	"version":  {nil, nil, 0, 0, "yass version"},
 }
 
@@ -181,6 +185,8 @@ func run(argv []string) int {
 	switch cmd {
 	case "init":
 		err = cmdInit(a)
+	case "deinit":
+		err = cmdDeinit(a)
 	case "new":
 		err = cmdNew(a)
 	case "status":

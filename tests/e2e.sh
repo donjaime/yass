@@ -282,7 +282,7 @@ IOUT="$(bash "$ROOT/install.sh" --bin-dir "$BD")"
 has   "--bin-dir copies the binary" "installed yass .* to .*/bindir/yass" echo "$IOUT"
 [ -x "$BD/yass" ] && ok "…and it runs" || bad "no binary in --bin-dir"
 [ -z "$(git status --porcelain)" ] && ok "…and, run in a repo that uses YASS, changes nothing there (joining a repo)" || bad "install.sh changed the repo: $(git status --porcelain)"
-has   "…and says yass init sets up a repo" "yass init .*set it up" echo "$IOUT"
+has   "…and says yass init sets up a repo" "set up a repo: .*yass init" echo "$IOUT"
 mkdir -p "$W/e2e/plain"; rm -rf "$W/e2e/plain/"*
 run_ok "…run outside a repo too" bash -c 'cd "$1" && bash "$2" --bin-dir "$3"' _ "$W/e2e/plain" "$ROOT/install.sh" "$W/e2e/bindir3"
 [ -z "$(ls -A "$W/e2e/plain")" ] && ok "…writing nothing where it's run" || bad "install.sh wrote into the folder it ran in"
@@ -298,11 +298,13 @@ run_fail "an old-style install (a repo and setup options) refuses" bash "$ROOT/i
 has   "…printing the commands to use, options carried over" "^  yass init --claude$" bash "$ROOT/install.sh" . --claude --bin-dir "$W/e2e/nobin"
 has   "…a repo path becoming a cd" "^  cd apps/web && yass init --hooks --path \.\./p$" bash "$ROOT/install.sh" apps/web --hooks --path ../p
 has   "…and --upgrade pointing at yass upgrade" "^  yass upgrade$" bash "$ROOT/install.sh" --upgrade
-has   "…after the binary install" "^  install.sh --bin-dir ~/.local/bin$" bash "$ROOT/install.sh" --global
-run_fail "without --bin-dir it refuses" bash "$ROOT/install.sh"
-has   "…and says what to pass" "pass --bin-dir" bash "$ROOT/install.sh"
-has   "a piped install without --bin-dir stops before downloading" "pass --bin-dir" \
-      bash -c 'env -u YASS_BIN PATH=/usr/bin:/bin bash -s < "$1"' _ "$ROOT/install.sh"
+has   "…after the binary install" "^  install.sh$" bash "$ROOT/install.sh" --global
+has   "…keeping a --bin-dir given" "^  install.sh --bin-dir /opt/bin$" bash "$ROOT/install.sh" --global --bin-dir /opt/bin
+H="$W/e2e/home"; rm -rf "$H"; mkdir -p "$H"
+has   "without --bin-dir it installs to ~/.local/bin" "installed yass .* to $H/.local/bin/yass" env HOME="$H" bash "$ROOT/install.sh"
+rm -rf "$H/.local"
+has   "…piped too, like the one-liner" "installed yass .* to $H/.local/bin/yass" \
+      bash -c 'env HOME="$2" PATH=/usr/bin:/bin bash -s < "$1"' _ "$ROOT/install.sh" "$H"
 U="$W/e2e/unpacked"; rm -rf "$U"; mkdir -p "$U"; cp "$ROOT/install.sh" "$U/"; cp "$YASS_BIN" "$U/yass"
 has   "an unpacked release with no kit/ installs its binary" "installed yass .* to .*/bindir4/yass" \
       env -u YASS_BIN PATH=/usr/bin:/bin bash "$U/install.sh" --bin-dir "$W/e2e/bindir4"
@@ -1427,6 +1429,40 @@ printf '#!/bin/sh\ncase "$*" in\n  "hook --help") echo "usage: yass hook [--rang
 echo x >> a.txt; git add a.txt
 run_ok "with a yass from before trailers on PATH, commits still go through" env PATH="$OLD:/usr/bin:/bin" git commit -q -m "feat: older yass"
 hasnt "…without its errors" "unknown option" env PATH="$OLD:/usr/bin:/bin" bash -c 'echo y >> a.txt; git add a.txt; git commit -q -m "feat: again" 2>&1'
+
+echo "49. yass deinit takes YASS back out of a repo"
+newrepo "$W/e2e/deinit"; printf '# Mine\n\nOur own notes.\n' > AGENTS.md
+y init --claude --hooks >/dev/null; y init apps/web --agents --claude >/dev/null
+mkdir -p .agents/skills/yass-mine .husky; printf -- '---\nname: yass-mine\n---\nnot YASS'"'"'s\n' > .agents/skills/yass-mine/SKILL.md
+printf 'yass hook\n' > .husky/pre-commit; git add -A; git commit -q -m "chore: adopt YASS"; HEAD0=$(git rev-parse HEAD)
+H="$W/e2e/deinit-home"; US="$W/e2e/deinit-user"; rm -rf "$H" "$US"; mkdir -p "$H" "$US"; cp -R .agents/skills/yass-work "$US/"
+OUT="$(env HOME="$H" YASS_SKILLS_DIR="$US" yass deinit)"
+for p in .agents/skills/yass-work .claude/skills/yass-work apps/web/.agents/skills/yass-plan tools/yass/githooks/pre-commit tools/yass/githooks/commit-msg; do
+  [ ! -e "$p" ] && ok "removes $p" || bad "$p is still there"
+done
+has   "…listing what it removed" "^removed \.agents/skills/yass-work$" echo "$OUT"
+[ ! -e tools ] && [ ! -e .claude ] && ok "…and the folders it leaves empty" || bad "empty folders left: $(ls -d tools .claude 2>/dev/null)"
+[ -f .agents/skills/yass-mine/SKILL.md ] && ok "a yass-* skill that isn't YASS's stays" || bad "removed a skill that isn't YASS's"
+has   "the root AGENTS.md keeps its own text" "Our own notes" cat AGENTS.md
+hasnt "…without the YASS section" "yass:begin" cat AGENTS.md
+has   "…and says so" "^removed the YASS section of AGENTS.md$" echo "$OUT"
+has   "…and CLAUDE.md keeps its import, AGENTS.md being there" "^@AGENTS.md" cat CLAUDE.md
+[ ! -e apps/web/AGENTS.md ] && [ ! -e apps/web/CLAUDE.md ] && ok "an AGENTS.md that was only YASS's goes, with the CLAUDE.md that imported it" || bad "apps/web's AGENTS.md or CLAUDE.md is still there"
+hasnt "core.hooksPath is unset" "githooks" git config --get core.hooksPath
+has   "…and says so" "unset core.hooksPath" echo "$OUT"
+[ -d yass/changes ] && [ -d apps/web/yass ] && ok "the yass folders stay" || bad "a yass folder was removed"
+has   "…and it says how to remove them, or keep them" "Kept your plans: .*yass/.*keep them, or remove them" echo "$OUT"
+has   "…with the commands" "git rm -r -q yass" echo "$OUT"
+has   "it says how to commit it" 'chore: remove YASS' echo "$OUT"
+[ "$(git rev-parse HEAD)" = "$HEAD0" ] && ok "…and commits nothing" || bad "yass deinit committed"
+[ -f "$US/yass-work/SKILL.md" ] && ok "the user folder's playbooks stay" || bad "removed the user folder's playbooks without --global"
+has   "…with a note on --global" "yass deinit --global" echo "$OUT"
+has   "a husky hook still running yass hook gets a note" "\.husky/pre-commit still runs .yass hook." echo "$OUT"
+run_ok "--global removes the user folder's playbooks too" env HOME="$H" YASS_SKILLS_DIR="$US" yass deinit --global
+[ ! -e "$US/yass-work" ] && ok "…gone" || bad "the user folder's playbook is still there"
+has   "run again, there's nothing left to remove" "no YASS playbooks, AGENTS.md section or hook here" env HOME="$H" YASS_SKILLS_DIR="$US" yass deinit
+y init >/dev/null
+[ -f .agents/skills/yass-work/SKILL.md ] && [ -x tools/yass/githooks/pre-commit ] && grep -q "yass:begin" AGENTS.md && ok "yass init sets it up again" || bad "yass init didn't set the repo up again"
 
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

@@ -101,6 +101,7 @@ h2::before {
   background: var(--brand-gradient); margin-bottom: 18px;
 }
 h3 { font-size: 1.1rem; margin: 0 0 8px; }
+h3.step { margin-top: 28px; }
 section > p { max-width: 42em; }
 .big { font-size: 1.2rem; }
 .note { color: var(--muted); font-size: 0.95rem; }

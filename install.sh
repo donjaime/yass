@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Install the yass binary. Setting up a repo is `yass init`; upgrading one is `yass upgrade`.
 #
-#   From a release:  tar -xzf yass_<os>_<arch>.tar.gz && yass_<os>_<arch>/install.sh --bin-dir ~/.local/bin
-#   From a clone:    go build -o bin/yass ./cmd/yass && ./install.sh --bin-dir ~/.local/bin
-#   From the web:    curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin
+#   From the web:    curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash
 #                    (downloads the latest release for this machine and checks it against the release's checksums;
 #                    YASS_VERSION=v0.3.0 picks a version)
+#   From a release:  tar -xzf yass_<os>_<arch>.tar.gz && yass_<os>_<arch>/install.sh
+#   From a clone:    go build -o bin/yass ./cmd/yass && ./install.sh
 #
 # Options:
-#   --bin-dir DIR  copy the yass binary into DIR (e.g. ~/.local/bin), which should be on your PATH
+#   --bin-dir DIR  copy the yass binary into DIR, which should be on your PATH (default: ~/.local/bin)
 #
 # Then, in a repo:  yass init [--claude] [--hooks] [--global] [--path P]   (yass init --help)
 # Uses the yass binary from $YASS_BIN, next to this script (a release folder), or bin/ (a clone).
@@ -17,10 +17,10 @@ REPO_SLUG="${YASS_REPO:-donjaime/yass}"
 VERSION="${YASS_VERSION:-latest}"
 die() { echo "yass: $*" >&2; exit 1; }
 
-BIN_DIR=""; OLD=0; INIT=(); UPGRADE=0; REPO=""
+BIN_DIR="$HOME/.local/bin"; BIN_ARG=""; OLD=0; INIT=(); UPGRADE=0; REPO=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --bin-dir) BIN_DIR="${2:?--bin-dir needs a folder}"; shift 2 ;;
+    --bin-dir) BIN_DIR="${2:?--bin-dir needs a folder}"; BIN_ARG=" --bin-dir $2"; shift 2 ;;
     -h|--help) sed -n '2,14p' "$0" 2>/dev/null || true; exit 0 ;;
     # What earlier versions took for setting up a repo: now yass init's and yass upgrade's job.
     --claude|--hooks|--global) OLD=1; INIT+=("$1"); shift ;;
@@ -36,14 +36,13 @@ done
 if [ "$OLD" = 1 ]; then
   {
     echo "install.sh only installs the yass binary now; yass sets up and upgrades repos itself. Run:"
-    echo "  install.sh --bin-dir ${BIN_DIR:-~/.local/bin}"
+    echo "  install.sh$BIN_ARG"
     cd_part=""; [ -n "$REPO" ] && [ "$REPO" != "." ] && cd_part="cd $REPO && "
     if [ "$UPGRADE" = 1 ]; then echo "  ${cd_part}yass upgrade"
     else echo "  ${cd_part}yass init${INIT[*]+ ${INIT[*]}}"; fi
   } >&2
   exit 2
 fi
-[ -n "$BIN_DIR" ] || die "pass --bin-dir (e.g. --bin-dir ~/.local/bin): the folder to put the yass binary in"
 
 sha256() { if command -v sha256sum >/dev/null; then sha256sum "$1"; else shasum -a 256 "$1"; fi | awk '{print $1}'; }
 
@@ -106,8 +105,6 @@ fi
 
 cat <<'EOF'
 
-Next, in a repo:
-  yass init         set it up (yass init --help for --claude, --hooks and the rest)
-  yass upgrade      bring a repo's YASS files up to this version
-A repo that already uses YASS needs nothing more: you're ready.
+Next, set up a repo:  cd your-repo && yass init   (yass init --help for --claude, --hooks and the rest)
+A repo that already uses YASS needs nothing more. Later, `yass update` gets a newer binary.
 EOF

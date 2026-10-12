@@ -6,7 +6,7 @@ YASS keeps the plan, progress and decisions for every change in plain files next
 
 **Describe the change, not the whole system.** Your code, docs and READMEs are the source of truth for what exists. YASS doesn't write it down a second time: it specs only what needs to change, keeps that next to the code, in plain markdown that agents and humans both read. It's lightweight project management for people and coding agents.
 
-**[Install it](#install)** in two steps, or see [the YASS page](https://donjaime.github.io/yass/) for the tour.
+**[Install it](#install)**, then [set up a repo](#set-up-a-repo), or see [the YASS page](https://donjaime.github.io/yass/) for the tour.
 
 Each piece of work is a **change**: a folder that carries as much ceremony as its scope needs, from a one-file bug fix to a feature with a PRD, a plan and a dozen pull requests. Progress, decisions and notes live in the folder, so any person or agent, on any harness, can pick up where the last one stopped.
 
@@ -25,7 +25,7 @@ yass/
 └── archive/2026/10/                        finished changes, moved here as they were, by the month they were archived
 ```
 
-That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`, `evict`), six playbooks your agent follows, and an optional git hook.
+That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`, `evict`, `deinit`), six playbooks your agent follows, and an optional git hook.
 
 YASS doesn't commit for you. The CLI never commits (archiving only stages the move), and the playbooks only commit, branch or rebase when you or your harness have given the agent that latitude; otherwise they hand you the commands. The rules below are about what lands on your main branch, and the hook checks them.
 
@@ -40,47 +40,34 @@ YASS doesn't commit for you. The CLI never commits (archiving only stages the mo
 
 ## Install
 
-Two steps: get the `yass` binary, once per machine, then run `yass init` in each repo, once, and commit what it writes so teammates get it. [docs/install.md](docs/install.md) has the details, including monorepo folders and [joining a repo that already uses YASS](docs/install.md#joining-a-repo-that-already-uses-yass), which needs only the binary.
-
-**1. Get the binary.** `install.sh` puts it in the folder you name and does nothing else; it's short enough to read first.
-
-From a release, prebuilt for macOS, Linux and Windows, with checksums and signed build provenance:
+Like most developer tools, YASS takes two steps: install the `yass` binary, once per machine, then [set up each repo](#set-up-a-repo) you use it in. [docs/install.md](docs/install.md) has every way in, with the details.
 
 ```bash
-curl -fsSLO https://github.com/donjaime/yass/releases/latest/download/yass_darwin_arm64.tar.gz   # your OS and CPU
-curl -fsSLO https://github.com/donjaime/yass/releases/latest/download/checksums.txt
-grep yass_darwin_arm64.tar.gz checksums.txt | shasum -a 256 -c
-tar -xzf yass_darwin_arm64.tar.gz && less yass_darwin_arm64/install.sh
-yass_darwin_arm64/install.sh --bin-dir ~/.local/bin
+curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash
 ```
 
-From source, with Go 1.24 or later:
+That downloads the latest release for your machine, checks its checksum, and puts `yass` in `~/.local/bin`; it does nothing else, and it's short enough to [read first](install.sh). Rather check each step yourself? Install [from a release](docs/install.md#from-a-release), with checksums and signed build provenance, or from source with Go 1.24 or later: `go install github.com/donjaime/yass/cmd/yass@latest`.
+
+**Then put it on your PATH,** so you, your agents and the hook can run `yass`. `install.sh` says whether `~/.local/bin` is on it (macOS doesn't put it there by default) and, if not, prints the line that adds it for your shell; for zsh:
 
 ```bash
-git clone https://github.com/donjaime/yass && cd yass
-go build -o bin/yass ./cmd/yass
-./install.sh --bin-dir ~/.local/bin
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshenv
 ```
 
-Or `go install github.com/donjaime/yass/cmd/yass@latest`. `~/.local/bin` has to be on your PATH so you, your agents and the hook can run `yass` (macOS doesn't put it there by default); if it isn't, `install.sh` ends with the line that adds it.
+Open a new terminal, and `yass --version` should answer.
 
-**2. Set up your repo.** From inside it:
+## Set up a repo
+
+From inside the repo:
 
 ```bash
 yass init
+git add -A && git commit -m "chore: adopt YASS"
 ```
 
-It writes the playbooks in `.agents/skills/`, a short section in `AGENTS.md`, an empty `yass/` folder (or a [`yass.yaml`](#keeping-plans-out-of-the-repo) pointing elsewhere, with `--path`) and the optional hook in `tools/yass/githooks/`, and lists them. Add `--claude` for Claude Code, `--hooks` to turn on the hook, and `--global` to put the playbooks in your user folder instead of the repo. Then commit it: `git add -A && git commit -m "chore: adopt YASS"`.
+`yass init` writes the playbooks in `.agents/skills/`, a short section in `AGENTS.md`, an empty `yass/` folder (or a [`yass.yaml`](#keeping-plans-out-of-the-repo) pointing elsewhere, with `--path`) and the optional hook in `tools/yass/githooks/`, and lists them. Add `--claude` for Claude Code, `--hooks` to turn on the hook, and `--global` to put the playbooks in your user folder instead of the repo ([all the options](docs/install.md#set-up-a-repo)). Committing it means teammates get it: joining a repo that already uses YASS needs only the binary.
 
-**With your agent.** Paste [the install prompt](docs/install.md#with-your-agent) into your coding agent. It downloads a release (or builds from source), verifies it, reads `install.sh`, asks you for options, and runs both steps.
-
-**In one line,** from inside your repo, if you've read the script and trust it:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash -s -- --bin-dir ~/.local/bin && ~/.local/bin/yass init
-```
-
-It downloads the latest release for your machine and checks its checksum, but runs a script you haven't looked at. To update later, see [Upgrading](#upgrading).
+Rather your agent did both steps? Paste [the install prompt](docs/install.md#with-your-agent) into it. It downloads a release (or builds from source), verifies it, reads `install.sh`, asks you for options, and doesn't commit.
 
 Then talk to your agent:
 
@@ -97,14 +84,32 @@ Then talk to your agent:
 | "Why does sync.go merge like this?" | `yass-log` | from the file's commits back to the change and decision that cite them |
 | "Update YASS" | `yass-update` | checks the binary against the repo and the latest release, gets a verified one (asking first), then upgrades the repo and hands you the diff |
 
-### Upgrading
+## Upgrading
 
-Like installing, upgrading has two parts: the binary, once per machine, then each repo you use YASS in.
-1. **Get the newer binary:** `yass update`. It installs the version your repo's YASS files are at when the repo is ahead of your binary, else the latest release (`--latest` to go past the repo, `--check` to only look), verifies it first, and says when a newer release exists. It replaces release builds only; a binary from `go install` or a clone gets the command to update it that way. Or ask your agent to "update YASS" (`yass-update` does both steps, asking before it downloads).
-2. **Run `yass upgrade` in each repo,** from anywhere in it. It finds every YASS file from the repo root down (the playbooks wherever they are, each `AGENTS.md` section, the hook) and your user folder's playbooks, and brings them to the binary's version. It lists what it wrote, says when everything is already up to date, and won't downgrade: if the repo is newer than your binary, it tells you to upgrade the binary instead. Then it brings each yass folder's layout up to date (moving an older flat `archive/` into month folders, for one), and says how to commit that on its own. Your changes, `yass.yaml` and your own parts of `AGENTS.md` are never touched; hand edits to YASS's own files are replaced, so check the diff.
-3. **Commit it** (`chore: upgrade YASS`), so teammates get the new playbooks. They run `yass update` when the repo moves ahead; `yass status` and `yass upgrade` tell anyone whose binary is older.
+The same two steps: the binary, once per machine, then each repo.
 
-Read the [release notes](https://github.com/donjaime/yass/releases) first: before 1.0, a minor version can change the file format or the CLI. [docs/install.md](docs/install.md#upgrading) has the details.
+```bash
+yass update                                          # 1. a newer binary, verified
+yass upgrade                                         # 2. in each repo: its YASS files, to the binary's version
+git add -A && git commit -m "chore: upgrade YASS"    # 3. so teammates get them
+```
+
+1. **`yass update`** installs the version your repo's YASS files are at when the repo is ahead of your binary, so you match your team, else the latest release, and says when a newer release exists (`--latest` gets it). It checks the release's checksums, and its signed build provenance when the GitHub CLI is installed, before swapping the binary in. `--check` only looks. A binary from `go install` or a clone isn't replaced; it prints the command to update that way.
+2. **`yass upgrade`** brings every YASS file in the repo (the playbooks wherever they are, each `AGENTS.md` section, the hook) and your user folder's playbooks up to the binary's version, then brings each yass folder's layout up to date, printing how to commit that part on its own. Your changes, `yass.yaml` and your own parts of `AGENTS.md` are never touched; hand edits to YASS's own files are replaced, so check the diff. It never downgrades: when the repo is newer than your binary, it says to run `yass update` first.
+3. **Commit it.** Teammates run `yass update` when the repo moves ahead; `yass status` tells anyone whose binary and repo are out of step.
+
+Or ask your agent to "update YASS": `yass-update` does all three, asking before it downloads. Read the [release notes](https://github.com/donjaime/yass/releases) first: before 1.0, a minor version can change the file format or the CLI. [docs/install.md](docs/install.md#upgrading) has the details.
+
+## Removing YASS
+
+Trying YASS is low risk. To take it back out of a repo:
+
+```bash
+yass deinit
+git add -A && git commit -m "chore: remove YASS"
+```
+
+`yass deinit` removes the playbooks, the YASS section of each `AGENTS.md` and the hook, and lists them. Your plans stay: it ends by saying how to remove the `yass/` folder (`git rm -r yass`), or you can keep it as the record of what you changed and why. It never commits, so `git restore .` undoes it, and `--global` removes your user folder's playbooks too. [docs/install.md](docs/install.md#removing-yass) has the details.
 
 ## The CLI
 
@@ -117,6 +122,8 @@ yass init [dir]                 set up YASS: yass/, and for the repo itself the 
           [--global]            …with the playbooks in your user folder instead of the repo
           [--hooks]             …and turn the hook on for this clone
           [--no-agents]         …leaving AGENTS.md, the playbooks and the hook alone
+yass deinit [--global]          take YASS out of the repo: the playbooks, AGENTS.md sections and hook;
+                                your plans stay (--global: your user folder's playbooks too)
 yass update                     get a newer yass binary, verified: the repo's version if the repo is
                                 ahead, else the latest release
             [--check] [--latest] [--version vX.Y.Z] [--require-provenance]
