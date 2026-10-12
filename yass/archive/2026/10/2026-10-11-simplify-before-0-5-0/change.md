@@ -4,6 +4,7 @@ source: Jaime, 2026-10-11: a critical look at the growing complexity before 0.5.
 follows: 2026-10-04-monorepos-at-scale-and-plans-repos
 blocked:
 created: 2026-10-11T15:55:12Z
+archived: 2026-10-12T02:42:54Z
 ---
 # Simplify before 0.5.0
 
