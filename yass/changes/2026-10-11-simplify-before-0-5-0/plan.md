@@ -36,10 +36,10 @@ The e2e sections for multi-repo citations and `repos:` are removed; the trailer 
 - [x] AC13 (R9) Given commits naming a change in a separate folder with `ac:`, then `yass status <change>` lists them and each criterion's, as now — verify: e2e (the existing section)
 
 ### M3
-- [ ] AC14 (R10) Given the README, `docs/`, the playbooks and `yass --help`, then none mentions `repo@sha`, `repo:`, `repos:`, `trailers:` or refusing commits, and `docs/separate-plans.md` describes one link and one rule — verify: `grep` for each; manual: review
-- [ ] AC15 (R11) Given the change's Log, then it records non-test Go lines, test lines, playbook words, docs words and settings at 2026-10-11 main and after; non-test Go, playbook words and docs words are each smaller, and settings are 5 — verify: manual: the numbers, from the commands in the Log
-- [ ] AC16 (R12) Given `CHANGELOG.md`, then a 0.5.0 section describes what ships since 0.4.0 and says nothing of what was removed before release — verify: manual: review
-- [ ] AC17 (all) Given the change done, then `go test`, `tests/e2e.sh`, `tests/examples.sh`, `tests/site.sh` and `tests/bench.sh` pass, every bench target met — verify: run them; record the bench numbers in the Log
+- [/] AC14 (R10) Given the README, `docs/`, the playbooks and `yass --help`, then none mentions `repo@sha`, `repo:`, `repos:`, `trailers:` or refusing commits, and `docs/separate-plans.md` describes one link and one rule — verify: `grep` for each; manual: review
+- [x] AC15 (R11) Given the change's Log, then it records non-test Go lines, test lines, playbook words, docs words and settings at 2026-10-11 main and after; non-test Go, playbook words and docs words are each smaller, and settings are 5 — verify: manual: the numbers, from the commands in the Log
+- [/] AC16 (R12) Given `CHANGELOG.md`, then a 0.5.0 section describes what ships since 0.4.0 and says nothing of what was removed before release — verify: manual: review
+- [x] AC17 (all) Given the change done, then `go test`, `tests/e2e.sh`, `tests/examples.sh`, `tests/site.sh` and `tests/bench.sh` pass, every bench target met — verify: run them; record the bench numbers in the Log
 
 ## Pieces
 <!-- PR-sized pieces, each its own folder in here: `yass new "<title>" --in <this change>`.
