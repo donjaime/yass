@@ -43,3 +43,6 @@ created: 2026-10-11T15:55:12Z
 - Sizes, 2026-10-11 main → now (commands: `ls internal/yass/*.go | grep -v _test | xargs cat cmd/yass/main.go | wc -l`; `cat internal/yass/*_test.go | wc -l`; `cat kit/.agents/skills/*/SKILL.md | wc -w`; `cat docs/*.md | wc -w`; `wc -w README.md`; the `yaml:` tags in config.go): non-test Go 6,097 → 5,913; tests 785 → 766; playbook words 5,085 → 5,076; docs words 7,670 → 7,490; README words 4,932 → 4,822; settings 8 → 5 (path, branch, ignore, archive with keep).
 - Checks: `go test`, `tests/e2e.sh` (689 ok), `tests/examples.sh`, `tests/site.sh`, `go vet`, `tests/bench.sh`: status 915ms, 832ms with 100 branches, 1,439ms with 1,000 more, trailers 76ms and 221ms, hook 109ms; every target met.
 - Next: Jaime reviews the docs and the changelog (AC14, AC16); then archive this change and release 0.5.0.
+### 2026-10-11 (claude)
+- Did: Jaime reviewed the docs and changelog and merged them (#80). Done.
+- Next: archive it; then 0.5.0.
