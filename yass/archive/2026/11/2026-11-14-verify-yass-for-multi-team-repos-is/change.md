@@ -4,6 +4,7 @@ source: https://trello.com/c/7X5M8REf/8-verify-yass-for-multi-team-repos-is-desi
 follows: 
 blocked:
 created: 2026-11-14T19:39:57Z
+archived: 2026-11-14T22:46:31Z
 ---
 # Verify YASS for multi-team repos is designed properly
 

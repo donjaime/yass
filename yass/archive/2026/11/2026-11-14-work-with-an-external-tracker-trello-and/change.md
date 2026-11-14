@@ -4,6 +4,7 @@ source:
 follows: 2026-10-04-monorepos-at-scale-and-plans-repos
 blocked:
 created: 2026-11-14T15:43:58Z
+archived: 2026-11-14T23:07:28Z
 ---
 # Work with an external tracker: Trello and others
 
