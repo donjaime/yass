@@ -14,7 +14,7 @@ yass-shape, yass-plan, yass-work and yass-status each follow the Trello workflow
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC13–AC20, AC23 in plan.md
+- [x] Delivers AC13–AC20, AC23 in plan.md
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -24,7 +24,7 @@ yass-shape, yass-plan, yass-work and yass-status each follow the Trello workflow
 - [x] Claim check before every move, in each playbook
 - [x] A changed card on request: propose revisions
 - [x] No board or card links in a public code repo
-- [/] Manual end to end on a scratch board, inline and separate
+- [x] Manual end to end on a scratch board, inline and separate
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>, <YYYY-MM-DD>)", appended as you go. -->
@@ -59,4 +59,6 @@ yass-shape, yass-plan, yass-work and yass-status each follow the Trello workflow
   - AC19: a subagent commented a new requirement on that card; told the card changed, I read it and proposed two acceptance criteria for the piece through `yass-plan`, editing nothing. The comment ("Simulation … safe to delete") is still on the card.
   - AC13's `yass-status` half: run on this repo earlier, listing the Will Do cards with none out of step. AC14–AC16 passed live on card uH69ZiZB.
   - The throwaway change was deleted, never committed.
-- Next: AC23 (plans kept separate with a board) is all that's left; Jaime is taking it as its own card.
+### 2026-11-14 (claude)
+- Did, live: AC23. A small change kept in the private plans folder was worked from a card on a private board, through to a merged code pull request in this repo (#113): the card moved Will Do, Planning, Implementing, Done with its comments, and the code commit carried a `yass:` trailer naming the change. `trello.com` appears 0 times in #113's description, its diff and its commit messages, and this repo has no link to that board or card; the plans link the card.
+- Did: with AC23, every criterion this piece delivers has passed (AC13–AC16 live, AC17–AC20 simulated with Jaime's OK, AC23 live).
