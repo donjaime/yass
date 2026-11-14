@@ -120,19 +120,25 @@ func (root *Root) settings() Config {
 	}
 	if root.Own != "" {
 		if o, _, err := loadConfig(root.Own); err == nil {
-			if strings.TrimSpace(o.Branch) != "" {
-				s.Branch = o.Branch
-			}
-			if o.Archive.Keep > 0 {
-				s.Archive.Keep = o.Archive.Keep
-			}
-			if o.Tracker != nil {
-				s.Tracker = o.Tracker
-			}
+			s = overlay(s, o)
 		}
 	}
 	root.settled = &s
 	return s
+}
+
+// overlay is a pointer's settings with a yass folder's own on top: each one the folder sets wins.
+func overlay(pointer, own Config) Config {
+	if strings.TrimSpace(own.Branch) != "" {
+		pointer.Branch = own.Branch
+	}
+	if own.Archive.Keep > 0 {
+		pointer.Archive.Keep = own.Archive.Keep
+	}
+	if own.Tracker != nil {
+		pointer.Tracker = own.Tracker
+	}
+	return pointer
 }
 
 // keep is how many archived changes the yass folder should keep in its working tree (a soft limit).

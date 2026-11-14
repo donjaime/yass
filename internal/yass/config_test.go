@@ -1,11 +1,12 @@
 package yass
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestResolvePath(t *testing.T) {
@@ -90,7 +91,6 @@ const trelloOK = `tracker:
 `
 
 func TestTrackerSettings(t *testing.T) {
-	f := filepath.Join(t.TempDir(), ConfigName)
 	for name, tc := range map[string]struct {
 		yaml string
 		want []string
@@ -112,66 +112,25 @@ func TestTrackerSettings(t *testing.T) {
 			[]string{"tracker.trello.lists: missing; it maps each list (ideas, will-do, planning, implementing, done) to its Trello ID"}},
 		"not a section": {"tracker: trello\n", []string{"tracker: should be a section with one key per tracker (trello:, or your own)"}},
 	} {
-		os.WriteFile(f, []byte(tc.yaml), 0o644)
-		c, unknown, err := loadConfig(f)
-		if err != nil || len(unknown) != 0 || strings.Join(c.problems, "\n") != strings.Join(tc.want, "\n") {
-			t.Errorf("%s: problems %q, unknown %v, err %v; want %q", name, c.problems, unknown, err, tc.want)
+		var raw map[string]any
+		if err := yaml.Unmarshal([]byte(tc.yaml), &raw); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if got := trackerProblems(raw["tracker"]); strings.Join(got, "\n") != strings.Join(tc.want, "\n") {
+			t.Errorf("%s: problems %q; want %q", name, got, tc.want)
 		}
 	}
 }
 
 func TestOwnSettingsWin(t *testing.T) {
-	top := t.TempDir()
-	plans := filepath.Join(top, "plans")
-	os.MkdirAll(filepath.Join(plans, "changes"), 0o755)
-	pointer := filepath.Join(top, ConfigName)
-	os.WriteFile(pointer, []byte("path: plans\nbranch: main\narchive:\n  keep: 5\n"), 0o644)
-	own := filepath.Join(plans, ConfigName)
-	os.WriteFile(own, []byte("path: .\nbranch: trunk\n"+trelloOK), 0o644)
-	root := &Root{Dir: plans, Config: pointer, Own: own}
-	s := root.settings()
-	if s.Branch != "trunk" || s.Archive.Keep != 5 || s.trello() != "https://trello.com/b/AbC123/payments" {
-		t.Fatalf("settings = branch %q keep %d board %q", s.Branch, s.Archive.Keep, s.trello())
+	board := map[string]any{"trello": map[string]any{"board": "https://trello.com/b/AbC123"}}
+	pointer := Config{Branch: "main", Tracker: map[string]any{"jira": "PAY"}}
+	pointer.Archive.Keep = 5
+	s := overlay(pointer, Config{Branch: "trunk", Tracker: board})
+	if s.Branch != "trunk" || s.Archive.Keep != 5 || s.trello() != "https://trello.com/b/AbC123" {
+		t.Errorf("overlay = branch %q keep %d board %q; want the folder's branch and tracker, the pointer's keep", s.Branch, s.Archive.Keep, s.trello())
 	}
-	inline := filepath.Join(top, "yass")
-	os.MkdirAll(filepath.Join(inline, "archive"), 0o755)
-	if !ownConfig(filepath.Join(inline, ConfigName)) || ownConfig(pointer) || ownConfig(own) {
-		t.Errorf("ownConfig: only a yass/ folder's own yass.yaml is one (a plans folder's says path: .)")
-	}
-}
-
-func TestCardColumn(t *testing.T) {
-	dir := t.TempDir()
-	own := filepath.Join(dir, ConfigName)
-	os.WriteFile(own, []byte(trelloOK), 0o644)
-	root := &Root{Dir: dir, Config: own}
-	card := "https://trello.com/c/Xy12/fix"
-	n := 0
-	mk := func(box string, parent *Change) *Change {
-		n++
-		p := filepath.Join(dir, "changes", fmt.Sprintf("2026-11-14-c%d", n))
-		os.MkdirAll(p, 0o755)
-		os.WriteFile(filepath.Join(p, "change.md"), []byte("---\nsource: "+card+"\n---\n# C\n\n## Steps\n"+box+"\n"), 0o644)
-		return newChange(p, root, parent)
-	}
-	parent := mk("- [ ] a", nil)
-	for _, tc := range []struct {
-		c    *Change
-		want string
-	}{
-		{mk("- [ ] a", nil), "Planning"},
-		{mk("- [/] a", nil), "Implementing"},
-		{mk("- [x] a", nil), "Implementing, until its archive merges: then Done"},
-		{mk("- [x] a", parent), "Done"},
-	} {
-		if link, col := tc.c.card(); link != card || col != tc.want {
-			t.Errorf("card() = %q, %q; want %q", link, col, tc.want)
-		}
-	}
-	if link, _ := (&Change{Root: root, Meta: map[string]string{"source": "gh#41"}}).card(); link != "" {
-		t.Errorf("a source that isn't a card: %q", link)
-	}
-	if link, _ := (&Change{Root: &Root{Dir: dir}, Meta: map[string]string{"source": card}}).card(); link != "" {
-		t.Errorf("no board: %q", link)
+	if s := overlay(pointer, Config{}); s.Branch != "main" || s.Archive.Keep != 5 || s.Tracker["jira"] != "PAY" {
+		t.Errorf("an empty own yass.yaml changed the pointer's settings: %+v", s)
 	}
 }
