@@ -20,6 +20,8 @@ The usual flow is (plan mode →) shape → plan → work, with `yass-status` al
 
 **Git.** No playbook commits on its own initiative, and none pushes, merges or opens pull requests. `yass-work` touches git only to stack an intent fix under the code, and `yass-update` and `yass-init` only to commit what they upgraded or set up, each when the human or the harness has given it that latitude; otherwise they hand the human the commands. The CLI never touches git. What a good commit looks like (intent apart from code) is in the README rules, the `AGENTS.md` section and the optional hook.
 
+**Trackers.** When a yass folder names a Trello board, `yass-shape`, `yass-plan` and `yass-work` move the change's card and comment on it at the moments in `yass-init`'s Trello workflow (planning started, a pull request up, merged or closed, building started, archived), checking before each move that the card is where they expect, and stopping to ask if it isn't. `yass-status` only reads the board. Finer progress stays in the files.
+
 **Plan mode.** `yass-shape`, `yass-plan` and `yass-work` can each start from a plan the harness's plan mode produced, carrying over its decisions instead of asking again, and telling the human what they added beyond it.
 
 ## yass-init

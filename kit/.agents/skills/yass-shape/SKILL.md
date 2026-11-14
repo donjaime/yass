@@ -24,6 +24,13 @@ Shaping is a conversation. It's where a human decides what to build and why, so 
 5. **Show a human the PRD** and get their go-ahead before planning, unless your team has told you otherwise. If it came from an approved plan, say what you added or changed beyond that plan; the rest is already agreed. In a fully autonomous run, where you've been put in charge of approvals, approve it yourself and record that in `## Decisions`.
 6. Offer `yass-plan` next. If the harness plan also covered the approach, `yass-plan` can use it too.
 
+## With a tracker
+When the change's yass folder names a Trello board (`tracker:` in its `settings.yaml`, or its `yass.yaml`), follow the Trello workflow in the `yass-init` playbook. For shaping:
+- **From a card:** asked to shape one, create the change with the card's title and link (`yass new "<card title>" --large --source <card link>`). No card yet: offer to create one in Planning.
+- **Planning starts:** check the card is still in Will Do, then move it to Planning with a comment that planning has begun, naming the change folder. If it's anywhere else, someone may have claimed it: don't move it or comment; tell the human where it is, and ask.
+- **The PRD's pull request** gets a comment on the card when it's up for review, with the link, and another when it merges, saying the plan is accepted. Nothing else goes on the card.
+- **A card that changed:** when the human says so, read it and propose PRD revisions here.
+
 ## Plan mode
 Harness plan modes (Claude Code's, and others') usually can't write files. Research and draft there; once the human approves the plan and you can write again, create the change as above. The harness plan lives with the session, the change folder lives with the repo.
 

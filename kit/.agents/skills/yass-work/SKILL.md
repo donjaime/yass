@@ -37,6 +37,14 @@ description: Work on a YASS change you've been pointed at. Create it if it's new
 8. **Finish.** Merging a branch doesn't finish a change; a large change spans many branches. When every box is done or dropped (`yass status` says `done`), run `yass archive <change>` (it prints how to commit the move). Commit it apart from code; with squash merges, in a pull request with no code, which can carry the change's last progress too. Pieces are archived with their change.
    - A Step you no longer need can be dropped (`[-]`) any time, with a reason in Decisions.
 
+## With a tracker
+When the change's yass folder names a Trello board (`tracker:` in its `settings.yaml`, or its `yass.yaml`; `yass status <change>` then prints its `card:`), follow the Trello workflow in the `yass-init` playbook. The card hears only about these moments; boxes, the Log and decisions stay in the files.
+- **Building starts:** check the card is in Planning, then move it to Implementing. A piece with its own card moves the same way. If the card is anywhere else, someone may have claimed it: don't move it or comment; tell the human where it is and ask. Unattended, stop, and say so in the Log.
+- **A pull request** for the change: comment on its card with the link when it's up for review, and again when it merges or closes.
+- **Done:** a piece's card moves to Done when the piece is done and its pull request merged; a top-level change's, when its archive merges. Each time, check it's in Implementing first.
+- **A new small change, or a piece, with no card:** offer to create one in the column its state implies.
+- **Plans kept elsewhere:** never put a board or card link in the code repo (commits, pull request descriptions). The plans link the card.
+
 ## Intent changes mid-build
 Building often shows the plan is wrong. Don't quietly fix it next to the code, and don't give up either: stack it.
 
