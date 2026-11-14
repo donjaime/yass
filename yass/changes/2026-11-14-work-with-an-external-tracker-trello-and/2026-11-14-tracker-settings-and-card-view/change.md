@@ -9,7 +9,7 @@ created: 2026-11-14T16:01:44Z
 
 ## Goal
 <!-- Intent. What is true when this change is finished, in a paragraph. Edit it only in a commit without code. -->
-yass.yaml can name a yass folder's tracker: tracker.trello is validated and other trackers' keys are stored as-is; a yass folder kept outside the repo carries its own yass.yaml for every setting but the pointer; yass status <change> shows a change's card and the column its state implies; and an unignored tracker.local.md is a warning. The binary never calls a tracker.
+A yass folder can name its tracker: tracker.trello is validated and other trackers' keys are stored as-is. Settings can live in an optional settings.yaml inside the yass folder, merged with its yass.yaml (the folder's winning, differences warned), the same way inline or outside the repo, so private plans keep private settings in the private folder; a committed yass.yaml pointing outside the repo with settings beyond path: and ignore: gets a note. yass status <change> shows a change's card and the column its state implies, and an unignored tracker.local.md is a warning. The binary never calls a tracker.
 
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.

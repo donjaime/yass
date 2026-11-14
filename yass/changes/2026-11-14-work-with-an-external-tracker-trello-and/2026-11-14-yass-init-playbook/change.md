@@ -14,7 +14,7 @@ A new yass-init playbook sets a repo up through the agent, idempotently, by runn
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC1–AC8 in plan.md
+- [ ] Delivers AC1–AC8, AC30 in plan.md
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
