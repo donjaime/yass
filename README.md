@@ -309,7 +309,7 @@ A yass folder can also keep `branch:`, `archive:` and `tracker:` in an optional 
 
 ### The tracker that governs a yass folder
 
-YASS is files in the repo, and it doesn't replace your tracker. `tracker:`, in the yass folder's `settings.yaml` (or its `yass.yaml`), tells your agent which board or project the yass folder's work belongs to, so it can keep that tracker up to date as changes move. The `yass` binary never calls a tracker; your agent does, through whatever its harness can reach (MCP, an API, a CLI).
+YASS is files in the repo, and it doesn't replace your tracker ([docs/trackers.md](docs/trackers.md) has the workflows). `tracker:`, in the yass folder's `settings.yaml` (or its `yass.yaml`), tells your agent which board or project the yass folder's work belongs to, so it can keep that tracker up to date as changes move. The `yass` binary never calls a tracker; your agent does, through whatever its harness can reach (MCP, an API, a CLI).
 
 ```yaml
 tracker:
@@ -358,9 +358,11 @@ YASS is meant to sit next to your harness's plan mode (Claude Code's, or any oth
 - **Plan mode can't write files**, in most harnesses. The playbooks draft there and write once you've approved.
 - **Mid-build, plan mode is a good way to rethink.** Whatever it decides becomes an intent change, stacked under the code like any other.
 
-## What YASS leaves to you
+## YASS inside your workflow
 
-Guardrails, approvals, CI, verification gates, merge strategy, issue tracking and unattended agent loops differ from team to team, so YASS doesn't own them. It gives you places to record their results (acceptance criteria with `verify:`, Decisions with who made them, `source:` links to your tracker) and one optional hook for the rule it cares most about. See [docs/comparison.md](docs/comparison.md) for how YASS relates to OpenSpec, Spec Kit and others.
+YASS is files in the repo, and it covers the inner loop: shaping, planning and building one change. Your team's outer loop stays where it is. A backlog or idea board, and a tracker that people outside the repo watch (Trello, Jira, Linear), keep working: your agent updates the tracker at the moments that matter (planning started, a pull request up or merged, building started, done), and everything finer stays in the files. Trello has a built-in workflow; Jira and the rest get yours, from a one-time interview. The `yass` binary never calls a tracker. See [docs/trackers.md](docs/trackers.md).
+
+Guardrails, approvals, CI, verification gates, merge strategy and unattended agent loops differ from team to team too, so YASS doesn't own them either. It gives you places to record their results (acceptance criteria with `verify:`, Decisions with who made them, `source:` links to your tracker) and one optional hook for the rule it cares most about. See [docs/comparison.md](docs/comparison.md) for how YASS relates to OpenSpec, Spec Kit and others.
 
 ## Examples
 

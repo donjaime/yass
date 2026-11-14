@@ -11,7 +11,7 @@
 | **Kiro** | a spec: requirements (EARS) → design → tasks | per spec | per spec | IDE-guided | Kiro IDE / CLI |
 | **GSD** | phases from a project roadmap | project roadmap + state file | — | phase commands with verification | slash commands |
 | **BMAD** | PRD → architecture → stories, via agent personas | yes, heavy | documents | role-based | many agents and templates |
-| **YASS** | a change folder: one `change.md` for small work; `prd.md`, `plan.md`, `design.md` and PR-sized pieces for large work | the same folder, with pieces inside | no: the code and its docs are the current state | none imposed; five optional playbooks | small CLI (one Go binary), plain markdown, optional hook |
+| **YASS** | a change folder: one `change.md` for small work; `prd.md`, `plan.md`, `design.md` and PR-sized pieces for large work | the same folder, with pieces inside | no: the code and its docs are the current state | none imposed; seven optional playbooks | small CLI (one Go binary), plain markdown, optional hook |
 
 ## Against OpenSpec, specifically
 
@@ -21,7 +21,12 @@ OpenSpec is the closest neighbor and very good at what it does. The differences 
 - **Progress lives in the change.** Ticked boxes, decisions with who made them, and a log ending in **Next:** let any agent on any harness resume from the files alone.
 - **Finishing is separate from merging.** A change can span many pull requests and plan revisions before it's archived.
 
+## Alongside a tracker
+
+YASS isn't a tracker, and doesn't try to be one. Trello, Jira or Linear stay where the team, and people outside the repo, see what's being worked on. YASS is where a change is actually specified, planned and built, next to the code; your agent keeps the tracker in step at a handful of moments, through the tracker's own connector or CLI. See [trackers.md](trackers.md).
+
 ## When not to use YASS
 - A prototype you'll throw away. Use plan mode and tests.
 - You want a maintained, per-capability description of current behavior. Use OpenSpec or similar.
 - You want the tool to enforce approvals, verification or merge rules. YASS records them; your CI and review enforce them.
+- You want progress tracked in your tracker rather than in the repo. YASS keeps it in the files and tells the tracker only the big moments.
