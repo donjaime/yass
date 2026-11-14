@@ -14,24 +14,32 @@ A yass folder can name its tracker: tracker.trello is validated and other tracke
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC9–AC12, AC21, AC22, AC28 in plan.md
-- [ ] Given `tests/bench.sh`, when run before and after, then `yass status` stays within its targets, with timings quoted in the PR — verify: tests/bench.sh
+- [x] Delivers AC9–AC12, AC21, AC22, AC28 in plan.md
+- [x] Given `tests/bench.sh`, when run before and after, then `yass status` stays within its targets, with timings quoted in the PR — verify: tests/bench.sh
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
-- [ ] `tracker:` in `Config`: validate `trello` (board link, five list IDs, unknown keys), keep other keys as-is
-- [ ] A folder's own `yass.yaml`: found beside `changes/`/`archive/`, not a pointer; its settings win; `path:` there warns
-- [ ] Warn about non-pointer settings in the code repo's pointer when plans are separate
-- [ ] `card:` line in `yass status <change>` with the expected column
-- [ ] Warn about a `tracker.local.md` git doesn't ignore
-- [ ] Unit tests, e2e flows, bench
-- [ ] README `yass.yaml` settings and `docs/separate-plans.md`
+- [x] `tracker:` in `Config`: validate `trello` (board link, five list IDs, unknown keys), keep other keys as-is
+- [x] A folder's own `yass.yaml`: found beside `changes/`/`archive/`, not a pointer; its settings win; `path:` there warns
+- [x] Warn about non-pointer settings in the code repo's pointer when plans are separate
+- [x] `card:` line in `yass status <change>` with the expected column
+- [x] Warn about a `tracker.local.md` git doesn't ignore
+- [x] Unit tests, e2e flows, bench
+- [x] README `yass.yaml` settings and `docs/separate-plans.md`
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>, <YYYY-MM-DD>)", appended as you go. -->
+- A yass folder's own `yass.yaml` is `yass/yass.yaml` in an inline folder, or a plans folder's `yass.yaml` with `path: .` (the convention `yass paths` already knew); a `yass.yaml` beside some other `changes/` isn't one - a repo with an unrelated top-level `changes/` folder would otherwise have its pointer taken for a yass folder. A folder's own `path:` other than `.` warns and is ignored, rather than being an error as design §2 sketched (claude, 2026-11-14)
+- `tracker:` is read from the raw YAML, not the typed struct - a malformed tracker section is then a warning, not a `yass.yaml` that fails to parse and loses `path:` (claude, 2026-11-14)
+- The card's column follows the change's `yass status` state: a Log entry counts as started, as it does everywhere else (claude, 2026-11-14)
+- The checks for settings in the wrong place and for `tracker.local.md` run in `check()`, so every command that loads changes sees them, not only `yass status` (claude, 2026-11-14)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
 ### YYYY-MM-DD (<who>)
 - Did: …
 - Next: … -->
+### 2026-11-14 (claude)
+- Did: `tracker:` settings and Trello checks (config.go), a folder's own `yass.yaml` in discovery and `Root.settings()` (repo.go), pointer and `tracker.local.md` checks and the card view (tracker.go, commands.go); unit tests and e2e section 17 (740 e2e checks pass; unit, examples and site pass); README and docs/separate-plans.md.
+- Did: `tests/bench.sh`, main vs this branch: status 868 vs 795ms, with 100 branches 813 vs 813ms, with 1000 remote branches 1435 vs 1447ms, status <change> 216 vs 222ms, hook 103 vs 100ms; all targets met.
+- Next: piece done once its PR merges; then `2026-11-14-yass-init-playbook`.
