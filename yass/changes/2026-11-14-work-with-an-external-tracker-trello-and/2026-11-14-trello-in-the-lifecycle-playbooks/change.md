@@ -14,23 +14,30 @@ yass-shape, yass-plan, yass-work and yass-status each follow the Trello workflow
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] Delivers AC13–AC20, AC23 in plan.md
+- [/] Delivers AC13–AC20, AC23 in plan.md
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
-- [ ] `yass-shape` and `yass-plan`: start from a card, Planning, plan PR up, plan merged
-- [ ] `yass-work`: Implementing, PR up and merged or closed, archive merged moves to Done, pieces' cards, offering cards
-- [ ] `yass-status`: Will Do cards as waiting to start
-- [ ] Claim check before every move, in each playbook
-- [ ] A changed card on request: propose revisions
-- [ ] No board or card links in a public code repo
-- [ ] Manual end to end on a scratch board, inline and separate
+- [x] `yass-shape` and `yass-plan`: start from a card, Planning, plan PR up, plan merged
+- [x] `yass-work`: Implementing, PR up and merged or closed, archive merged moves to Done, pieces' cards, offering cards
+- [x] `yass-status`: Will Do cards as waiting to start
+- [x] Claim check before every move, in each playbook
+- [x] A changed card on request: propose revisions
+- [x] No board or card links in a public code repo
+- [/] Manual end to end on a scratch board, inline and separate
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>, <YYYY-MM-DD>)", appended as you go. -->
+- Each lifecycle playbook gets one "With a tracker" section holding only its own moments and the check before each move, pointing at `yass-init`'s Trello workflow for the rest - one source for the workflow, and each playbook stays short (claude, 2026-11-14)
+- `yass-status` reads the board (Will Do cards, cards out of step with their change) but never moves or comments - it's the read-only playbook (claude, 2026-11-14)
+- Unattended, a failed claim check stops the run and says so in the Log - with nobody to ask, building past a card someone else holds is the clash the check exists to catch (claude, 2026-11-14)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
 ### YYYY-MM-DD (<who>)
 - Did: …
 - Next: … -->
+### 2026-11-14 (claude)
+- Did: "With a tracker" in `yass-shape`, `yass-plan`, `yass-work` and `yass-status` (the moments, the claim check, pieces' cards, offering cards, a changed card, privacy with plans elsewhere); docs/skills.md says how the playbooks use a board. Unit, e2e, examples and site pass.
+- Tried, manually: on the scratch board, creating cards was refused (Trello 403 BOARD_PERMISSION_DENIED); the board had just been closed, so the card flows (AC13–AC20, AC23) couldn't be run there.
+- Next: Jaime: run the card flows on a scratch board (from a card, Planning, a claim conflict, a plan and a code PR, archive to Done), inline and with plans kept separate; tick AC13–AC20 and AC23 as they pass.

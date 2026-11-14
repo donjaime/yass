@@ -32,6 +32,13 @@ For anything bigger than one pull request:
 - Under `## Pieces` in `plan.md`, say what order they go in and why. When a piece truly can't start before another is done, also set its `blocked:` to that piece's folder; `yass status` then shows what it's waiting on.
 - Small changes don't need pieces, or a plan: their `change.md` Steps and Acceptance are enough.
 
+## With a tracker
+When the change's yass folder names a Trello board (`tracker:` in its `settings.yaml`, or its `yass.yaml`), follow the Trello workflow in the `yass-init` playbook. For planning:
+- **Planning starts** on a card still in Will Do (a small change planned straight from a card): move it to Planning with a comment, as `yass-shape` does. If it's already in Planning from shaping, leave it; anywhere else, stop and ask.
+- **Pieces:** when you create a piece, look for a card that clearly covers it and make that card its `source:`; if two might fit, ask. With none, offer to create one in Planning. A piece's card moves like a top-level change's.
+- **The plan's pull request** gets a comment on the change's card when it's up for review, with the link, and another when it merges, saying the plan is accepted.
+- **A card that changed:** when the human says so, read it and propose plan revisions here.
+
 ## Plan mode
 Harness plan modes (Claude Code's, and others') usually can't write files. Research and draft there; once the human approves the plan and you can write again, write it into the change as above.
 
