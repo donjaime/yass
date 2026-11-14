@@ -32,10 +32,11 @@ INSTALL_OUT="$(y init)"
 
 echo "1. install"
 has   "a first install suggests the adopting commit" "chore: adopt YASS" echo "$INSTALL_OUT"
+has   "…and connecting a tracker with yass-init" "use yass-init to connect our Trello board" echo "$INSTALL_OUT"
 for f in tools/yass/githooks/pre-commit yass/README.md yass/changes/.gitkeep \
          yass/archive/.gitkeep AGENTS.md .agents/skills/yass-work/SKILL.md .agents/skills/yass-shape/SKILL.md \
          .agents/skills/yass-plan/SKILL.md .agents/skills/yass-status/SKILL.md .agents/skills/yass-log/SKILL.md \
-         .agents/skills/yass-update/SKILL.md; do
+         .agents/skills/yass-update/SKILL.md .agents/skills/yass-init/SKILL.md; do
   [ -e "$f" ] && ok "has $f" || bad "missing $f"
 done
 has "the yass folder README describes the monthly archive" "archive/.*<YYYY>/<MM>/" cat yass/README.md
@@ -46,6 +47,9 @@ hasnt "the hook is off by default" "githooks" git config core.hooksPath
 has   "status on an empty repo" "no active changes" y
 has   "init is idempotent" "already set up" y init
 git add -A; run_ok "adopting commit" git commit -q -m "chore: adopt YASS"
+has   "the AGENTS.md section names yass-init for setup and trackers" "yass-init" cat AGENTS.md
+y init >/dev/null
+[ -z "$(git status --porcelain)" ] && ok "init run again on a set-up repo changes no file" || bad "a second init changed: $(git status --porcelain | tr '\n' ' ')"
 echo "# My rules" > AGENTS.md; y init >/dev/null
 has   "init keeps your AGENTS.md content" "# My rules" cat AGENTS.md
 has   "…and adds its section once" "^1$" bash -c 'grep -c "yass:begin" AGENTS.md'
@@ -616,7 +620,7 @@ VR="$(printf '%s' "$V" | sed 's/[.+]/\\&/g')"   # the version as a regex: pseudo
 newrepo "$W/e2e/alone"
 INIT_OUT="$(env -u YASS_BIN PATH="$B:/usr/bin:/bin" yass init)"
 for f in .agents/skills/yass-log/SKILL.md .agents/skills/yass-plan/SKILL.md .agents/skills/yass-shape/SKILL.md \
-         .agents/skills/yass-status/SKILL.md .agents/skills/yass-work/SKILL.md AGENTS.md yass/changes/.gitkeep; do
+         .agents/skills/yass-status/SKILL.md .agents/skills/yass-work/SKILL.md .agents/skills/yass-init/SKILL.md AGENTS.md yass/changes/.gitkeep; do
   [ -e "$f" ] && ok "writes $f" || bad "missing $f"
 done
 [ -x tools/yass/githooks/pre-commit ] && ok "…and an executable hook script" || bad "no executable hook"
@@ -703,8 +707,9 @@ newrepo "$W/e2e/up"; "$Y4" init --claude --hooks >/dev/null
 printf '# Ours, before\n\n%s\n\n# Ours, after\n' "$(cat AGENTS.md)" > AGENTS.md; printf '\n# Our Claude notes\n' >> CLAUDE.md
 "$Y4" new "Keep me" >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
 KEEP="$(cat yass/changes/*-keep-me/change.md | cksum) $(grep -c 'Ours' AGENTS.md) $(grep -c 'Our Claude notes' CLAUDE.md)"
-echo "edited" > .agents/skills/yass-work/SKILL.md; git commit -qam "edit a playbook"
+echo "edited" > .agents/skills/yass-work/SKILL.md; git rm -rq .agents/skills/yass-init; git commit -qam "edit a playbook, lose one"
 UP="$("$Y5" upgrade)"
+[ -f .agents/skills/yass-init/SKILL.md ] && [ -f .claude/skills/yass-init/SKILL.md ] && ok "upgrade writes yass-init beside the other playbooks" || bad "upgrade left yass-init out"
 has   "upgrade says what it upgraded, from and to" "upgraded YASS's files from 0.4.0.* to 0.5.0" echo "$UP"
 has   "…and lists each file" "wrote .claude/skills/yass-work/SKILL.md" echo "$UP"
 has   "every stamp is the new version" "^ ?[0-9]+ 0.5.0$" stamps
@@ -1437,7 +1442,7 @@ mkdir -p .agents/skills/yass-mine .husky; printf -- '---\nname: yass-mine\n---\n
 printf 'yass hook\n' > .husky/pre-commit; git add -A; git commit -q -m "chore: adopt YASS"; HEAD0=$(git rev-parse HEAD)
 H="$W/e2e/deinit-home"; US="$W/e2e/deinit-user"; rm -rf "$H" "$US"; mkdir -p "$H" "$US"; cp -R .agents/skills/yass-work "$US/"
 OUT="$(env HOME="$H" YASS_SKILLS_DIR="$US" yass deinit)"
-for p in .agents/skills/yass-work .claude/skills/yass-work apps/web/.agents/skills/yass-plan tools/yass/githooks/pre-commit tools/yass/githooks/commit-msg; do
+for p in .agents/skills/yass-work .agents/skills/yass-init .claude/skills/yass-init apps/web/.agents/skills/yass-plan tools/yass/githooks/pre-commit tools/yass/githooks/commit-msg; do
   [ ! -e "$p" ] && ok "removes $p" || bad "$p is still there"
 done
 has   "…listing what it removed" "^removed \.agents/skills/yass-work$" echo "$OUT"

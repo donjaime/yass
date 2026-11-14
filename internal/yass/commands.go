@@ -148,6 +148,7 @@ YASS is set up. Next:
   2. Ask your agent to start something:
        small:  "use yass-work to fix <bug>"
        large:  "use yass-shape to plan <feature>"
+       board:  "use yass-init to connect our Trello board"
   3. ` + "`yass status`" + ` shows what's in flight.
 `)
 	}
