@@ -1,6 +1,6 @@
 ---
 name: yass-init
-description: Set up YASS in this repo and connect it to a tracker. Check what's already set up, run `yass init` for what's missing, record who you are and which team's yass folders are yours (`yass me`), and adopt a Trello board for a yass folder (bootstrap a blank board, match an existing one's lists, ask when they don't fit), writing its settings to the folder's settings.yaml. Safe to run again. Also holds the Trello workflow the other playbooks follow. Use for "set up YASS here", "connect our Trello board", "use this board for our plans", or when a playbook needs the Trello workflow. Also connects Jira or any other tracker through an interview about your organization's workflow, remembered outside YASS ("connect Jira", "change how we update our tracker").
+description: Set up YASS in this repo and connect it to a tracker. Check what's already set up, run `yass init` for what's missing, on a repo shared by teams record who you are and which team's yass folders are yours (`yass me`), and adopt a Trello board for a yass folder (bootstrap a blank board, match an existing one's lists, ask when they don't fit), writing its settings to the folder's settings.yaml. Safe to run again. Also holds the Trello workflow the other playbooks follow. Use for "set up YASS here", "connect our Trello board", "use this board for our plans", or when a playbook needs the Trello workflow. Also connects Jira or any other tracker through an interview about your organization's workflow, remembered outside YASS ("connect Jira", "change how we update our tracker").
 ---
 
 # yass-init
@@ -14,7 +14,10 @@ description: Set up YASS in this repo and connect it to a tracker. Check what's 
    - The yass folder is `yass/` by default. `--path <folder>` names another (`--path specs`), in the repo or outside it; outside the repo is how plans are kept private.
    - Then run `yass init <options>`. Running it again writes only what's missing. Show what it wrote and run `yass status`.
    - Commit only with the latitude to (`chore: adopt YASS`); otherwise give the human the commands.
-3. **You and your team,** once per clone. `yass me` shows what's known; if the folders aren't set (or the human wants to change them), ask who they are and which team they're on, meaning which of `yass root`'s yass folders are theirs, and save it: `yass me --name "<name>" --team <team> --folders <yass folder>[,<another>]`. The first folder is where a new change goes from the repo root, and `yass status` then shows just their work. Anything they'd tell an agent every session can go in `--notes`. Never open or edit the settings file itself: `yass me` is the way in. In a repo with one yass folder, set it only if they want to.
+3. **Teams (optional),** once per clone, only when `yass root` lists more than one yass folder and `yass me` has no folders yet. Ask whether several teams share this repo.
+   - **Working alone** (one person with public and private plans, say): set nothing. Everything is theirs: `yass status` shows it all, and new changes go in the yass folder nearest where they stand, as without a memory.
+   - **Teams:** ask who they are and which team they're on, meaning which of `yass root`'s yass folders are theirs, and save it: `yass me --name "<name>" --team <team> --folders <yass folder>[,<another>]`. The first folder is where a new change goes from the repo root, and `yass status` then shows just their work (`--all`: everyone's).
+   - Either way, anything they'd tell an agent every session can go in `yass me --notes "…"`. Never open or edit the settings file itself: `yass me` is the way in.
 4. **Offer a tracker** for any yass folder without one. Trello has a built-in workflow (below). Any other tracker (Jira, Linear, Asana, your own) gets its workflow from a short interview, since how it's used depends on your organization. Ask which, if any.
 
 ## Adopt a Trello board

@@ -214,7 +214,7 @@ func cmdMe(a *args) error {
 	}
 	saved := ""
 	if !m.Saved {
-		saved = "  (not saved yet: set a field, e.g. yass me --folders <yass folder>)"
+		saved = "  (nothing saved for this clone yet)"
 	}
 	fmt.Printf("%s, this clone (%s)%s\n", m.File, m.Clone, saved)
 	fmt.Printf("name:    %s\nteam:    %s\nfolders: %s\nnotes:   %s\n", m.Name, m.Team, strings.Join(m.Folders, ", "), m.Notes)

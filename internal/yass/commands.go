@@ -463,8 +463,6 @@ func cmdStatus(a *args) (int, error) {
 			}
 		}
 		fmt.Printf("yours: %s; %d more change(s) in %d other yass folder(s): yass status --all\n", strings.Join(names, ", "), hidden, len(hiddenIn))
-	} else if !filter && !archived && !a.b["all"] && len(r.Roots) > 1 && r.me != nil && len(r.me.Folders) == 0 {
-		r.note("this repo has %d yass folders; set yours with `yass me --folders <folder>`, and yass status shows just your work (--all for everyone's)", len(r.Roots))
 	}
 	if n := versionNote(r); n != "" {
 		r.note("%s", n)
