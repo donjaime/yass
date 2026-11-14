@@ -72,6 +72,7 @@ The other playbooks follow this whenever a change's yass folder has a Trello boa
 | A top-level change's archive merges | to Done | |
 | A piece is done and its pull request merged | to Done | |
 
+- **A card worked without a change** (its intent was unambiguous enough to skip YASS): check it's in Will Do, then move it to Implementing; comment on its pull request when it's up and when it merges or closes; move it to Done when it merges. Planning is skipped.
 - **One card per top-level change.** A piece can have its own card, which moves the same way as its piece. When a new piece clearly covers an existing card, make that card its `source:`; when two might fit, ask.
 - **Starting from a card:** asked to shape or plan one, create the change with the card's title and its link as `source:` (`yass new "<card title>" --source <card link>`).
 - **No card yet:** when a change or piece is created in a folder with a board and has no card, offer to create one in the column its state implies. If they decline, leave the board alone.

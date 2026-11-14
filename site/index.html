@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>YASS! Yet Another Spec System</title>
-<meta name="description" content="Lightweight project management for people and coding agents, in plain files next to your code. YASS keeps the plan, progress and decisions for every change, so people and agents can plan and build together.">
+<meta name="description" content="Lightweight project management for people and coding agents, in plain files next to your code. YASS keeps the plan, progress and decisions for the changes worth reviewing, so people and agents can plan and build together.">
 <meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://donjaime.github.io/yass/">
@@ -26,7 +26,7 @@
   <div class="wrap hero-inner">
     <img class="emblem" src="assets/emblem.webp" alt="" title="A sassy “yes” to building with coding agents." width="240" height="240">
     <h1><span class="wordmark" title="A sassy “yes” to building with coding agents.">YASS<span class="bang">!</span></span> <span class="sub-header">Yet Another Spec System.</span></h1>
-    <p class="lede">YASS keeps the plan, progress and decisions for every change in plain files next to your code, so people and agents can plan and build together.</p>
+    <p class="lede">YASS keeps the plan, progress and decisions for the changes worth reviewing in plain files next to your code, so people and agents can plan and build together.</p>
     <p class="actions">
       <a class="button primary" href="#install">Install</a>
       <a class="button" href="https://github.com/donjaime/yass">GitHub</a>
@@ -57,7 +57,7 @@
 
 <section id="folder" class="wrap">
   <h2>A change is a folder.</h2>
-  <p>Each piece of work gets a dated folder. Progress, decisions and a log travel in it, in the same commits as the code they describe.</p>
+  <p>Each change worth reviewing gets a dated folder. Progress, decisions and a log travel in it, in the same commits as the code they describe. Unambiguous work, like a typo fix or a mechanical cleanup, skips it: that's just a good pull request.</p>
 <pre class="tree"><b>yass/</b>
 ├── <b>changes/</b>                       <span class="dim">active work</span>
 │   ├── 2026-10-02-fix-double-tap-save/

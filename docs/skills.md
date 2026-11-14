@@ -14,7 +14,7 @@ This page is an index for reviewing what each playbook lets an agent do. The `SK
 | [`yass-status`](../kit/.agents/skills/yass-status/SKILL.md) | report | "where are we?" | nothing | no; it lists what needs one |
 | [`yass-log`](../kit/.agents/skills/yass-log/SKILL.md) | report | "why did we…?", "why does this code…?", release notes, retros | nothing | no |
 
-The usual flow is (plan mode →) shape → plan → work, with `yass-status` along the way and `yass-log` whenever someone asks why. Small changes skip straight to `yass-work`. Each step ends where the next begins: shaping never plans, planning never builds.
+The usual flow is (plan mode →) shape → plan → work, with `yass-status` along the way and `yass-log` whenever someone asks why. Small changes skip straight to `yass-work`, and work whose intent is unambiguous skips YASS altogether: `yass-work` decides first, opening one good pull request for trivial or clear-cut work and asking before it starts a change for anything that deserves review. Each step ends where the next begins: shaping never plans, planning never builds.
 
 **Starting work.** `yass-work` only builds a change it's been pointed at, by name or because the session is already on it. It never picks one because it's in progress. Boxes are `[ ]` not started, `[/]` in progress, `[x]` done, `[-]` dropped. `yass status` marks changes with no Log entry and no box in progress or done as `not started`, and changes whose boxes are all done or dropped as `done`; shaping and planning write neither, so a freshly planned change stays `not started` until someone starts it. In a fully autonomous run, where the harness or human has put the agent in charge, the agent makes that choice and any approvals itself, and records them in Decisions.
 

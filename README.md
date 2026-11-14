@@ -2,13 +2,13 @@
 
 **A sassy "yes" to building with coding agents, without losing the plot.**
 
-YASS keeps the plan, progress and decisions for every change in plain files next to your code, so people and agents can plan and build together.
+YASS keeps the plan, progress and decisions for the changes worth reviewing in plain files next to your code, so people and agents can plan and build together.
 
 **Describe the change, not the whole system.** Your code, docs and READMEs are the source of truth for what exists. YASS doesn't write it down a second time: it specs only what needs to change, keeps that next to the code, in plain markdown that agents and humans both read. It's lightweight project management for people and coding agents.
 
 **[Install it](#install)**, then [set up a repo](#set-up-a-repo), or see [the YASS page](https://donjaime.github.io/yass/) for the tour.
 
-Each piece of work is a **change**: a folder that carries as much ceremony as its scope needs, from a one-file bug fix to a feature with a PRD, a plan and a dozen pull requests. Progress, decisions and notes live in the folder, so any person or agent, on any harness, can pick up where the last one stopped.
+Work whose intent deserves discussion, review or approval becomes a **change**: a folder that carries as much ceremony as its scope needs, from a one-file bug fix to a feature with a PRD, a plan and a dozen pull requests. Work whose intent is unambiguous (a typo, a mechanical cleanup, a one-off) needs none of it: it's just a good pull request. Progress, decisions and notes live in the folder, so any person or agent, on any harness, can pick up where the last one stopped.
 
 ```
 yass/
@@ -31,8 +31,8 @@ YASS doesn't commit for you. The CLI never commits (archiving only stages the mo
 
 ## The rules
 
-1. **YASS describes change, not the current system.** Your code and its docs say what exists today. YASS says what you're changing, why, and how it went. A project that uses YASS from day one ends up with an archive that tells the story of the whole product; a project that adopts it later just starts recording from there.
-2. **A change is a folder, and ceremony scales with scope.** A bug fix is one `change.md`. A new feature, component or system adds `prd.md` and `plan.md`, maybe `design.md`, and splits into PR-sized pieces inside it.
+1. **YASS describes change, not the current system.** Your code and its docs say what exists today. YASS says what you're changing, why, and how it went. A project that uses YASS from day one ends up with an archive that tells the story of every change worth reviewing (the small stuff is in its pull requests); a project that adopts it later just starts recording from there.
+2. **A change is a folder, and ceremony scales with scope,** starting from none. A simple or unambiguous change is one pull request whose description says what and why; your agent decides, and asks when it isn't sure. A bug fix worth agreeing on first is one `change.md`. A new feature, component or system adds `prd.md` and `plan.md`, maybe `design.md`, and splits into PR-sized pieces inside it.
 3. **Progress travels with the code.** Marking boxes in progress or done and appending to `## Log` and `## Decisions` go in the same commits as the code they describe.
 4. **Intent changes get their own commit.** The PRD, the design, the plan's text, and a change's title, Goal and Acceptance, including dropping an acceptance criterion. If the plan turns out wrong, change it on purpose, in a commit someone can review, not quietly next to the code. Mid-build, that means a stacked branch: the intent change underneath, the code rebased on top, so work keeps moving and decisions can still be reviewed apart from execution.
 5. **Done means every box is checked.** Then `yass archive` moves the folder to `archive/<YYYY>/<MM>/`. Finishing is separate from merging: a large change spans many branches and pull requests, and feedback can reopen the plan before it's done.
