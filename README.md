@@ -331,7 +331,7 @@ tracker:
     project: PAY
 ```
 
-`yass status` warns about a Trello board that's missing a list or isn't a `trello.com/b/…` link, and never about another system's settings. A change's card is its `source:`; with a board set, `yass status <change>` shows it with the column its state puts it in (`card: https://trello.com/c/… (column: Implementing)`), which your agent checks against the real card before moving it. A `tracker.local.md` in a yass folder, where an agent keeps a tracker workflow when its harness has no memory, must be gitignored; `yass status` warns when it isn't.
+`yass status` warns about a Trello board that's missing a list or isn't a `trello.com/b/…` link, and never about another system's settings. A change's card is its `source:`; with a board set, `yass status <change>` shows it with the column its state puts it in (`card: https://trello.com/c/… (column: Implementing)`), which your agent checks against the real card before moving it. For Jira and other systems, the team's workflow goes in the yass folder's `team.md`, committed with its plans.
 
 ## Monorepos
 

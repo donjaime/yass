@@ -9,13 +9,9 @@ import (
 // comments, following the playbooks. The binary checks the settings, says which column a change's card
 // belongs in, and keeps the private parts of that setup from leaking into a public code repo.
 
-// LocalTracker is the file a yass folder keeps a tracker workflow in when the agent's harness has no
-// memory of its own. It's per machine, so git must ignore it.
-const LocalTracker = "tracker.local.md"
-
 // checkSettings checks each yass folder's settings.yaml (design §2), and notes a yass.yaml that points
 // to plans outside the repo and that git would commit with settings beyond the pointer: those may leak
-// private setup, so a human should check. It's a note, not a warning. A local tracker file stays out of git.
+// private setup, so a human should check. It's a note, not a warning.
 func (r *Repo) checkSettings() {
 	for _, root := range r.Roots {
 		if f := filepath.Join(root.Dir, SettingsName); isFile(f) {
@@ -59,14 +55,6 @@ func (r *Repo) checkSettings() {
 					}
 				}
 			}
-		}
-		f := filepath.Join(root.Dir, LocalTracker)
-		if !isFile(f) || gitCommonDir(root.Dir) == "" {
-			continue
-		}
-		if _, ignored := git(root.Dir, "check-ignore", "-q", LocalTracker); !ignored {
-			r.warn("%s: keeps this machine's tracker workflow, so git should ignore it; add %s to %s",
-				r.disp(f), LocalTracker, r.disp(filepath.Join(root.Dir, ".gitignore")))
 		}
 	}
 }

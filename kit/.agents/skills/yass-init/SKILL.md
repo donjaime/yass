@@ -1,6 +1,6 @@
 ---
 name: yass-init
-description: Set up YASS in this repo and connect it to a tracker. Check what's already set up, run `yass init` for what's missing, on a repo shared by teams record who you are and which team's yass folders are yours (`yass me`), and adopt a Trello board for a yass folder (bootstrap a blank board, match an existing one's lists, ask when they don't fit), writing its settings to the folder's settings.yaml. Safe to run again. Also holds the Trello workflow the other playbooks follow. Use for "set up YASS here", "connect our Trello board", "use this board for our plans", or when a playbook needs the Trello workflow. Also connects Jira or any other tracker through an interview about your organization's workflow, remembered outside YASS ("connect Jira", "change how we update our tracker").
+description: Set up YASS in this repo and connect it to a tracker. Check what's already set up, run `yass init` for what's missing, on a repo shared by teams record who you are and which team's yass folders are yours (`yass me`), and adopt a Trello board for a yass folder (bootstrap a blank board, match an existing one's lists, ask when they don't fit), writing its settings to the folder's settings.yaml. Safe to run again. Also holds the Trello workflow the other playbooks follow. Use for "set up YASS here", "connect our Trello board", "use this board for our plans", or when a playbook needs the Trello workflow. Also connects Jira or any other tracker through an interview about your team's workflow, kept in the yass folder's team.md ("connect Jira", "change how we update our tracker").
 ---
 
 # yass-init
@@ -43,24 +43,20 @@ description: Set up YASS in this repo and connect it to a tracker. Check what's 
 5. **Check it:** `yass status` warns about nothing in the tracker settings. Commit where the yass folder lives (the plans repo, when it's elsewhere), with the latitude to; otherwise give the human the commands.
 
 ## Connect another tracker
-For Jira or anything else, YASS has no workflow of its own: it learns yours. What it learns is remembered by you, the agent, never written into YASS's files.
-1. **You need a tool for it** in your harness (a connector, an API, a CLI). With none, say so and stop. Never ask for a key or token in chat.
-2. **Interview the human,** briefly, and only about what they know:
+For Jira or anything else, YASS has no workflow of its own: it learns your team's, once, and keeps it in the team's memory, `team.md` at the top of the yass folder, beside `settings.yaml`. It's committed with the plans and reviewed like any plan, so every teammate's agent follows the same workflow; with plans kept outside the repo, it's in the plans folder and as private as they are.
+1. **Look first.** If `team.md` has a `## Project management` section, that's the workflow: follow it, and ask nothing about it. Tell the human it's there.
+2. **You need a tool for it** in your harness (a connector, an API, a CLI). With none, say so and stop. Never ask for a key or token in chat.
+3. **Interview the human,** briefly, and only about what they know:
    - which project, team or board this yass folder's work belongs to;
    - how work maps: one issue per top-level change? Pieces as sub-tasks, stories under an epic, or nothing? Which issue types?
    - which status or transition matches each moment YASS has: planning starts, the plan's pull request is up and merges, building starts, a code pull request is up and merges or closes, a piece is done, the change is archived;
    - what to comment, when, and what to leave alone (fields, assignees, sprints, anything their process owns);
-   - whether, and how, to create an issue for a new top-level change that has none (pieces never get one: they roll up to their change's);
-3. **Write it down as a workflow:** the same moments as the Trello table below, each with what to do in their tracker, plus any rule they gave. Show it to them and fix what they correct.
-4. **Remember it, outside YASS:**
-   - **In your harness's memory,** when you have one you can write to (a memory tool, or a memory folder your instructions name), scoped to this repo. Most harnesses have one.
-   - **Only when you're sure you have none:** in `tracker.local.md` at the top of the yass folder, and add `tracker.local.md` to that folder's `.gitignore` (`yass status` warns when git doesn't ignore it).
-   - **Not sure?** Ask the human where to keep it.
-   - Never in `settings.yaml`, `yass.yaml`, `AGENTS.md` or a playbook: the workflow is your organization's, and it's per person.
+   - whether, and how, to create an issue for a new top-level change that has none (pieces never get one: they roll up to their change's).
+4. **Write it into `team.md`,** under `## Project management`: the same moments as the Trello table below, each with what to do in their system, plus any rule they gave. Create `team.md` if there's none (`# <yass folder>: team memory`, then that section). Show it to them and fix what they correct. It's a change for the team to review: commit it like a plan, with the latitude to; otherwise give them the commands.
 5. **Store only identifiers** under `tracker:` in the yass folder's `settings.yaml`, named after the tool (`jira: {site: https://acme.atlassian.net, project: PAY}`): links and keys the workflow needs, nothing about the process. YASS stores them and never checks them.
-6. **Tell them** that each teammate's agent learns the workflow once (memory is per person), and that running `yass-init` again changes it.
+6. **Never anywhere else:** not your harness's own memory, not `yass me`, not `AGENTS.md`, `yass.yaml` or a playbook. The workflow is the team's, so it lives with the team's plans.
 
-The lifecycle playbooks then do what this workflow says at each moment, with the same check before each change of status: the issue should be where the last moment left it; if it's elsewhere, someone may have picked it up, so stop and ask.
+The lifecycle playbooks then do what `team.md` says at each moment, with the same check before each change of status: the issue should be where the last moment left it; if it's elsewhere, someone may have picked it up, so stop and ask.
 
 ## The Trello workflow
 The other playbooks follow this whenever a change's yass folder has a Trello board. Work flows from the board into YASS: changes start from cards and keep them moving, and a card is added only for a top-level change the human says yes to. The card is the change's `source:`; `yass status <change>` prints it with the column the change's state puts it in (`card: <link>  (column: Planning)`). The card hears only about the moments below. Everything finer (boxes, the Log, decisions) stays in the change's files.

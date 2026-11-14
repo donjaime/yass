@@ -75,7 +75,7 @@ Jira, Linear, GitHub Projects, Azure Boards and the others are set up differentl
 - which status or transition matches each YASS moment (planning starts, a pull request up or merged, building starts, archived);
 - what to comment, and what to leave to your process (fields, assignees, sprints).
 
-The agent writes that down as a workflow, shows it to you, and remembers it in its harness's memory, outside YASS. Only when it's sure its harness has no memory does it keep the workflow in a gitignored `tracker.local.md` in the yass folder instead; `yass status` warns if git doesn't ignore it. The playbooks then follow the workflow at the same moments as Trello's, with the same check before each change of status.
+The agent writes that down as your team's workflow in the yass folder's `team.md`, under `## Project management`, and shows it to you. `team.md` sits beside `settings.yaml` and is committed with the plans: your team reviews it like any plan, and every teammate's agent follows the same one. With plans kept outside the repo, it's in the plans folder, as private as they are. The playbooks then follow it at the same moments as Trello's, with the same check before each change of status. When `team.md` already has a workflow, setting up asks nothing about it.
 
 Only identifiers go in `settings.yaml`, named after the tool. YASS stores them as they are and never checks them:
 
@@ -86,4 +86,4 @@ tracker:
     project: PAY
 ```
 
-The workflow belongs to each person: every teammate's agent learns it once, from its own interview, and running `yass-init` again changes it.
+The workflow belongs to the team, and a team of one is fine: a solo developer keeps theirs in `team.md` too. To change it, edit `team.md` in a pull request, or run `yass-init` again.
