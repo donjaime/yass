@@ -41,7 +41,7 @@ It's a note, not a warning, so `--strict` passes if you mean it. Agents connecti
 yass: <target> [ac:<criteria>]
 ```
 
-- **target** is a change's folder name, `<change>/<piece>`, a piece's own name when only one change has a piece by that name, or `none` for a commit that belongs to no change (a dependency bump, a typo fix). Archived changes count too.
+- **target** is a change's folder name, `<change>/<piece>`, a piece's own name when only one change has a piece by that name, or `none`, which marks a commit that belongs to no change on purpose. You need `none` only where CI runs `yass hook --range … --require-trailers`; otherwise a commit with no change simply has no trailer. Archived changes count too.
 - **`ac:`** names the criteria the commit works toward, comma-separated: `yass: 2026-09-14-offline-sync ac:ac2,ac5`.
 - **Case doesn't matter;** YASS writes lower case. A commit for two changes gets two `yass:` lines. A key this version of YASS doesn't know is a note, not an error, so newer trailers don't break older binaries.
 
