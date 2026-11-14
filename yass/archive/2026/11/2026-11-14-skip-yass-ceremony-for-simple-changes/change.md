@@ -4,6 +4,7 @@ source: https://trello.com/c/uH69ZiZB/1-skip-yass-ceremony-for-simple-changes-an
 follows: 
 blocked:
 created: 2026-11-14T18:51:32Z
+archived: 2026-11-14T19:10:22Z
 ---
 # Skip YASS ceremony for simple changes and/or changes whose intentions don't require discussion and review
 

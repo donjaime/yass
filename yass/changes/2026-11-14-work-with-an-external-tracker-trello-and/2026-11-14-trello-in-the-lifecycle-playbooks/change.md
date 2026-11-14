@@ -41,3 +41,10 @@ yass-shape, yass-plan, yass-work and yass-status each follow the Trello workflow
 - Did: "With a tracker" in `yass-shape`, `yass-plan`, `yass-work` and `yass-status` (the moments, the claim check, pieces' cards, offering cards, a changed card, privacy with plans elsewhere); docs/skills.md says how the playbooks use a board. Unit, e2e, examples and site pass.
 - Tried, manually: on the scratch board, creating cards was refused (Trello 403 BOARD_PERMISSION_DENIED); the board had just been closed, so the card flows (AC13–AC20, AC23) couldn't be run there.
 - Next: Jaime: run the card flows on a scratch board (from a card, Planning, a claim conflict, a plan and a code PR, archive to Done), inline and with plans kept separate; tick AC13–AC20 and AC23 as they pass.
+### 2026-11-14 (claude)
+- Did, live on the public board, with card uH69ZiZB and the small change `2026-11-14-skip-yass-ceremony-for-simple-changes` (#97 intent, #98 code):
+  - AC13, first half: the change was created from the card with its title and link as `source:`, and `yass status` showed `card: … (column: Planning)`. The `yass-status` half (listing Will Do cards) isn't checked yet.
+  - AC14: the card was checked still in Will Do, then moved to Planning with a comment naming the change; it got a comment when the plan's PR (#97) was up and another when it merged.
+  - AC15: the card was checked in Planning, then moved to Implementing when building started; ticking boxes added nothing; it got a comment when the code PR (#98) was up and when it merged.
+  - AC11, live: after #98, `yass status` showed "Implementing, until its archive merges: then Done".
+- Next: AC16 when the archive PR merges (the card should move to Done); then AC13's `yass-status` half, AC17 to AC20 and AC23.
