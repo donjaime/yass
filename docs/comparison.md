@@ -21,12 +21,12 @@ OpenSpec is the closest neighbor and very good at what it does. The differences 
 - **Progress lives in the change.** Ticked boxes, decisions with who made them, and a log ending in **Next:** let any agent on any harness resume from the files alone.
 - **Finishing is separate from merging.** A change can span many pull requests and plan revisions before it's archived.
 
-## Alongside a tracker
+## Alongside a project management system
 
-YASS isn't a tracker, and doesn't try to be one. Trello, Jira or Linear stay where the team, and people outside the repo, see what's being worked on. YASS is where a change is actually specified, planned and built, next to the code; your agent keeps the tracker in step at a handful of moments, through the tracker's own connector or CLI. See [trackers.md](trackers.md).
+YASS isn't a project management system, and doesn't try to be one. Jira, Linear, GitHub Projects, Azure Boards or Trello stay where the team, and people outside the repo, see what's being worked on, as part of your wider product development life cycle. YASS is where a change is actually specified, planned and built, next to the code; your agent keeps the system in step at a handful of moments, through its own connector or CLI. See [project-management.md](project-management.md).
 
 ## When not to use YASS
 - A prototype you'll throw away. Use plan mode and tests.
 - You want a maintained, per-capability description of current behavior. Use OpenSpec or similar.
 - You want the tool to enforce approvals, verification or merge rules. YASS records them; your CI and review enforce them.
-- You want progress tracked in your tracker rather than in the repo. YASS keeps it in the files and tells the tracker only the big moments.
+- You want progress tracked in your project management system rather than in the repo. YASS keeps it in the files and tells the system only the big moments.

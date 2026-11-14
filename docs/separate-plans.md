@@ -33,7 +33,7 @@ When a `yass.yaml` that git would commit carries anything besides `path:` and `i
 note: yass.yaml points to plans outside the repo, and git would commit it with tracker:, which may be private; check that's intentional, or move them to …/my-project-plans/settings.yaml
 ```
 
-It's a note, not a warning, so `--strict` passes if you mean it. Agents connecting a tracker write its settings to `settings.yaml`.
+It's a note, not a warning, so `--strict` passes if you mean it. Agents connecting a project management system write its settings to `settings.yaml`.
 
 ## The trailer
 
