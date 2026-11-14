@@ -48,6 +48,8 @@ has   "status on an empty repo" "no active changes" y
 has   "init is idempotent" "already set up" y init
 git add -A; run_ok "adopting commit" git commit -q -m "chore: adopt YASS"
 has   "the AGENTS.md section names yass-init for setup and trackers" "yass-init" cat AGENTS.md
+has   "…and says not every pull request needs a change" "Not every pull request needs a change" cat AGENTS.md
+has   "…asking first when the intent deserves review" "deserves discussion, review or approval, ask whether to start a change" cat AGENTS.md
 y init >/dev/null
 [ -z "$(git status --porcelain)" ] && ok "init run again on a set-up repo changes no file" || bad "a second init changed: $(git status --porcelain | tr '\n' ' ')"
 echo "# My rules" > AGENTS.md; y init >/dev/null
