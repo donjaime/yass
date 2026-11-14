@@ -14,14 +14,14 @@ yass-init asks who you are and which team you're on and writes the personal memo
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC5, AC6, AC11 in plan.md
+- [x] Delivers AC5, AC6, AC11 in plan.md
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
 - [x] `yass-init`: ask who and which team, write with `yass me`, show it when run again
 - [x] `AGENTS.md` section and lifecycle playbooks: read `yass me` at the start
 - [x] `yass-status`: your work by default, everyone's on request
-- [/] Manual: `yass-init` in this repo and a scratch multi-team repo, then a fresh session
+- [x] Manual: `yass-init` in this repo and a scratch multi-team repo, then a fresh session
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>, <YYYY-MM-DD>)", appended as you go. -->
@@ -40,3 +40,6 @@ yass-init asks who you are and which team you're on and writes the personal memo
 - Did: teams are optional (intent revision underneath): the note is gone from `yass status`, `yass-init` step 3 is "Teams (optional)", `yass me` doesn't push a field on an empty memory, and the `AGENTS.md` section, `yass-status`, docs/skills.md and docs/monorepo.md say a solo developer sets nothing. e2e now checks there's no memory note in a three-folder repo (677 pass); unit, examples and site pass.
 - Did, manually: AC5's solo path in this repo (Jaime works alone, with public and private plans): nothing to set; `yass status` shows both folders' work with no memory note, and `yass me` shows his git name with nothing saved.
 - Next: AC11 (`yass-status` here) and AC6 (a fresh session, Jaime's); tick them and the Delivers box.
+### 2026-11-14 (claude)
+- Did, manually: AC11 here (solo: `yass me` has nothing saved, so `yass-status` reported everything as Jaime's, and all four linked cards were in the column their change implies). AC6 in a fresh session in the scratch repo `yass-trial` (Jaime's "Dark mode toggle" session): it ran `yass me` first and created the change in `services/web/yass` because `yass me` put Jaime on web. AC5's team path in another fresh session there (Jaime's "YASS setup and GitHub Issues connection"): it asked whether teams share the repo and saved team `web`, folder `services/web/yass`, through `yass me`.
+- Next: done once this merges; the card moves to Done.

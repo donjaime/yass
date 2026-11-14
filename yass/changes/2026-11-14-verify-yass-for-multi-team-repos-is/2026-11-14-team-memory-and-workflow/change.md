@@ -14,7 +14,7 @@ A team.md at the top of each yass folder holds what the team shares, starting wi
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [/] Delivers AC12, AC13–AC18 in plan.md
+- [x] Delivers AC12, AC13–AC18 in plan.md
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
@@ -22,8 +22,8 @@ A team.md at the top of each yass folder holds what the team shares, starting wi
 - [x] Lifecycle playbooks and `yass-status` read the workflow from `team.md`
 - [x] Remove the `tracker.local.md` check and its e2e; check it's silent now
 - [x] README, docs/project-management.md, docs/skills.md
-- [ ] Manual: interview with GitHub Issues, then a fresh session following it
-- [ ] Record the tracker change's AC17–AC20 checks in its Log as they pass
+- [x] Manual: interview with GitHub Issues, then a fresh session following it
+- [x] Record the tracker change's AC17–AC20 checks in its Log as they pass
 
 ## Decisions
 <!-- Progress. "- <decision> - <why> (<who>, <YYYY-MM-DD>)", appended as you go. -->
@@ -39,3 +39,7 @@ A team.md at the top of each yass folder holds what the team shares, starting wi
 ### 2026-11-14 (claude)
 - Did: card UOyz3M0x checked in Planning and moved to Implementing. Removed the `tracker.local.md` check (tracker.go) and its e2e checks, replaced by one that `yass status` ignores the file (AC17); `yass-init`'s "Connect another tracker" now reads and writes the workflow in `team.md`; the "Another tracker" lines in `yass-shape`, `yass-plan`, `yass-work` and `yass-status`, and the `AGENTS.md` section, point at `team.md`; the README, docs/project-management.md, docs/skills.md, the 0.5.0 changelog and the folder README template follow. Unit, e2e (676), examples and site pass; no bench, since this removes work from `yass status`.
 - Next: the manual run (an interview with GitHub Issues as the other system, then a fresh session following `team.md`), and recording the tracker change's AC17–AC20 checks as they pass.
+### 2026-11-14 (claude)
+- Did, manually, in the scratch repo `yass-trial` with GitHub Issues as the other system (dry run, no real issues): AC13 and AC14 in Jaime's setup session (no workflow yet, so it interviewed, wrote `## Project management` into each folder's `team.md`, showed it, left it uncommitted, and put only placeholder identifiers in `settings.yaml`; nothing went to its own memory, `yass me` or a `tracker.local.md`). AC16 in a fresh session (it read `team.md` and laid out what it would do in GitHub Issues at each moment, matching it row by row). AC15 with a simulated teammate: a second clone with its own config folder and a subagent as Alex Kim's agent ran `yass-init`; it found the workflow in `team.md` and asked nothing about it, asking only whether teams share the repo and who Alex is, and saved Alex on web through `yass me` with the repo left clean. AC18: the tracker change's AC17–AC20 recorded in its piece 3 Log.
+- Found, for a follow-up: the teammate's agent noted that placeholder identifiers in `settings.yaml` go unnoticed, that a fresh clone's hook is off with nothing offering it, that the name could be confirmed rather than asked, that `--folders` doesn't say relative or absolute, and that whether to ask about notes is unclear.
+- Next: done once this merges; the card moves to Done.

@@ -51,3 +51,12 @@ yass-shape, yass-plan, yass-work and yass-status each follow the Trello workflow
 ### 2026-11-14 (claude)
 - Did: per the R17 revision (intent underneath), work flows from the board into YASS: `yass-init`'s Trello workflow, `yass-shape` and `yass-work` ask whether to create a card only for a new top-level change, and create it only on a yes; `yass-plan` and the workflow never create cards for pieces, which roll up to their change's card; linking to a card that already covers the work stays, for deduplication; the interview for other systems asks only about issues for top-level changes; docs/project-management.md says so up front. Unit, e2e, examples and site pass.
 - Next: AC20 as revised (ask for a top-level change, never a card for a piece) gets checked on the next change and pieces worked.
+### 2026-11-14 (claude)
+- Did, simulated on the public board with Jaime's OK (subagents played "someone else"; no card created):
+  - AC17: a subagent moved "Verify yass deinit works" to Planning; asked to shape it, I found it out of Will Do with no change linking it, and stopped without creating a change, moving or commenting. Moved it back to Will Do afterwards.
+  - AC20: a throwaway top-level change with no card got the question "create one?" (answer: no; nothing created), and a piece with no matching card got neither a card nor a question.
+  - AC18: a piece named for "Speed up CI for gh stack workflows" was linked to that existing card as its `source:` (yass status: card, column Planning) instead of being treated as cardless.
+  - AC19: a subagent commented a new requirement on that card; told the card changed, I read it and proposed two acceptance criteria for the piece through `yass-plan`, editing nothing. The comment ("Simulation … safe to delete") is still on the card.
+  - AC13's `yass-status` half: run on this repo earlier, listing the Will Do cards with none out of step. AC14–AC16 passed live on card uH69ZiZB.
+  - The throwaway change was deleted, never committed.
+- Next: AC23 (plans kept separate with a board) is all that's left; Jaime is taking it as its own card.
