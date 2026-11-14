@@ -32,7 +32,7 @@
 - **The `AGENTS.md` section and each lifecycle playbook** read the personal memory at the start (`yass me`), and the team memory's workflow at each tracker moment.
 - **`yass-status`** reports your work by default.
 
-**The tracker change.** Its AC25–AC27 and AC29 are already dropped, superseded here (R13). Its open Trello checks (AC17–AC20) get exercised on this change's own cards: pieces linked to cards or offered one, a card moved by hand mid-flight, a card edited. They're recorded in that change's Log as they pass.
+**The tracker change.** Its AC25–AC27 and AC29 are already dropped, superseded here (R13). Its open Trello checks (AC17–AC20) get exercised on this change's own cards: pieces linked only to cards that already cover them, no cards created for pieces, a card moved by hand mid-flight, a card edited. They're recorded in that change's Log as they pass.
 
 ## Acceptance
 ### M1
@@ -55,7 +55,7 @@
 - [ ] AC15 (R16) Given a `team.md` that already has the workflow, when a teammate runs `yass-init`, then it asks only who they are and which team, and nothing about the workflow — verify: manual
 - [ ] AC16 (R12) Given that workflow, when a new session starts shaping a change in that folder, then the agent does what `team.md` says at that moment (for GitHub Issues: the issue's status or label, and the comment) — verify: manual
 - [ ] AC17 (R12) Given a `tracker.local.md` in a yass folder, when `yass status` runs, then it says nothing about it — verify: e2e
-- [ ] AC18 (R13) Given this change's pieces and their cards, when they're created, worked and finished, then the tracker change's AC17–AC20 are exercised and recorded in its Log: a piece linked to the card that covers it, or offered one (AC18, AC20); a card moved by hand mid-flight, which the agent stops for (AC17); a card edited, which the agent proposes plan revisions for (AC19) — verify: manual
+- [ ] AC18 (R13) Given this change's pieces and their cards, when they're worked and finished, then the tracker change's AC17–AC20 are exercised and recorded in its Log: a piece linked to the card that covers it (AC18), no card created for a piece, which rolls up to its change's card (AC20), a card moved by hand mid-flight, which the agent stops for (AC17), and a card edited, which the agent proposes plan revisions for (AC19) — verify: manual
 
 ## Pieces
 Three pieces, in order:

@@ -36,7 +36,7 @@ The Trello workflow (the playbooks)
 - **R11** [M1] Every move is a best-effort claim check: just before moving a card, the agent reads its column and compares it to the column it expected (R6). If the card has already moved, it assumes someone else claimed or advanced it, doesn't move it, and tells the human. This is optimistic, not a lock, and the playbooks say so.
 - **R12** [M1] A piece can have its own card. When creating a piece that clearly covers an existing card, the agent links it as the piece's `source:`; when it's ambiguous, it asks. A piece's card moves through the columns as its piece is planned, built and finished, the same as a top-level change's. Pieces are archived with their parent, so a piece's card moves to Done when the piece's own pull request merges and its boxes are all done.
 - **R13** [M1] When the human says a card changed on Trello, the agent reads it, compares it with the change's PRD and plan, and proposes revisions through `yass-shape` or `yass-plan`. Nothing flows from the board on its own.
-- **R17** [M1] When a yass folder has a tracker and someone starts a change (or piece) with no card, the agent offers to create one, filled in by the tracker's workflow: the Trello workflow above, or the one learned for another tracker (R15). Declined, the board is left alone.
+- **R17** [M1] Work flows from the project management system into YASS. When a top-level change starts with no card and its yass folder has a board, the agent may ask whether to create one, and creates it only on a yes. Pieces never get cards created for them: they roll up to their change's card, so decomposing a card's work adds no noise to the board. Linking a change or piece to a card that already covers it (R12) is for coherence and deduplication.
 - **R18** [M1] A yass folder can keep its settings (the tracker's included) in an optional `settings.yaml` inside it, merged with its `yass.yaml`, the same way whether the folder is in the repo or outside it. With plans kept outside the repo, that puts private settings in the private plans folder, while the public `yass.yaml` keeps only the pointer. When a committed `yass.yaml` pointing outside the repo carries anything besides `path:` and `ignore:`, YASS notes it as possibly accidental. The playbooks write nothing about the tracker (board links, card links, workflow) into the code repo themselves.
 
 Other trackers
@@ -52,6 +52,7 @@ Docs
 - Two-way sync. Nothing changes the files because a card changed, except when the human asks the agent to (R13).
 - Progress, boxes or Log entries on cards.
 - Archiving or deleting cards on Trello.
+- Creating cards, issues or lists for pieces, or for anything else beyond a top-level change the human said yes to (R17). Bootstrapping a blank board's five lists while adopting it (R4) is setup, done only when asked to adopt it.
 - Any Jira (or other tracker) workflow built into YASS: no issue types, transitions or fields in the playbooks or `yass.yaml`.
 - A hard lock on cards. The claim check is best effort.
 - Opinions on more than one board per yass folder, or on Trello labels, members, checklists or due dates.
