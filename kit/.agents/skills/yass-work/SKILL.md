@@ -44,6 +44,7 @@ When the change's yass folder names a Trello board (`tracker:` in its `settings.
 - **Done:** a piece's card moves to Done when the piece is done and its pull request merged; a top-level change's, when its archive merges. Each time, check it's in Implementing first.
 - **A new small change, or a piece, with no card:** offer to create one in the column its state implies.
 - **Plans kept elsewhere:** never put a board or card link in the code repo (commits, pull request descriptions). The plans link the card.
+- **Another tracker** (any other key under `tracker:`): at these same moments, do what the workflow you remember for it says: from your harness's memory, or the yass folder's `tracker.local.md` when it's there (read it first). Remember none? Run `yass-init`'s interview first, or ask.
 
 ## Intent changes mid-build
 Building often shows the plan is wrong. Don't quietly fix it next to the code, and don't give up either: stack it.
