@@ -6,7 +6,7 @@ This page is an index for reviewing what each playbook lets an agent do. The `SK
 
 | Playbook | Mode | Use it for | Writes files | Waits for a human |
 |---|---|---|---|---|
-| [`yass-init`](../kit/.agents/skills/yass-init/SKILL.md) | attended | "set up YASS here", "connect our Trello board"; the Trello workflow the others follow | `yass init`'s files; a yass folder's `settings.yaml`; lists on a blank board | before options and before committing; when a board's lists don't fit |
+| [`yass-init`](../kit/.agents/skills/yass-init/SKILL.md) | attended | "set up YASS here", "connect our Trello board", "connect Jira"; the Trello workflow the others follow | `yass init`'s files; a yass folder's `settings.yaml`; lists on a blank board | before options and before committing; when a board's lists don't fit |
 | [`yass-update`](../kit/.agents/skills/yass-update/SKILL.md) | attended | "update YASS", or `yass status`'s version note | the `yass` binary; YASS's files in the repo | before downloading a binary, and before committing |
 | [`yass-shape`](../kit/.agents/skills/yass-shape/SKILL.md) | conversation | a new feature, component or system; a harness plan to save; revising a PRD | `prd.md`, `change.md` | to pick a scope, and to approve the PRD |
 | [`yass-plan`](../kit/.agents/skills/yass-plan/SKILL.md) | mostly automated | approach, acceptance criteria, pieces; a harness plan to save; revising a plan | `plan.md`, `design.md`, pieces | no; asks only about real choices the PRD leaves open |
@@ -20,19 +20,19 @@ The usual flow is (plan mode →) shape → plan → work, with `yass-status` al
 
 **Git.** No playbook commits on its own initiative, and none pushes, merges or opens pull requests. `yass-work` touches git only to stack an intent fix under the code, and `yass-update` and `yass-init` only to commit what they upgraded or set up, each when the human or the harness has given it that latitude; otherwise they hand the human the commands. The CLI never touches git. What a good commit looks like (intent apart from code) is in the README rules, the `AGENTS.md` section and the optional hook.
 
-**Trackers.** When a yass folder names a Trello board, `yass-shape`, `yass-plan` and `yass-work` move the change's card and comment on it at the moments in `yass-init`'s Trello workflow, and for another tracker do what the workflow remembered from `yass-init`'s interview says at the same moments (planning started, a pull request up, merged or closed, building started, archived), checking before each move that the card is where they expect, and stopping to ask if it isn't. `yass-status` only reads the board. Finer progress stays in the files.
+**Project management systems.** YASS covers the inner loop of a product and software development life cycle: shaping, planning and building one change. The outer loop (an idea backlog, and the board or project where the team and people outside the repo follow active work) usually lives in a project management system such as Jira, Linear, GitHub Issues and Projects, GitLab, Azure Boards, Asana, ClickUp or Trello. When a yass folder names one (`tracker:` in its `settings.yaml`), `yass-shape`, `yass-plan` and `yass-work` keep it in step at a few moments (planning started, a pull request up, merged or closed, building started, archived), checking before each update that the item is where they expect and stopping to ask if it isn't. For Trello they follow `yass-init`'s built-in workflow; for any other system, the workflow your agent learned from `yass-init`'s interview. `yass-status` only reads it. Finer progress stays in the files. The playbooks and settings call this a *tracker*.
 
 **Plan mode.** `yass-shape`, `yass-plan` and `yass-work` can each start from a plan the harness's plan mode produced, carrying over its decisions instead of asking again, and telling the human what they added beyond it.
 
 ## yass-init
 
-Sets a repo up through the agent and connects a yass folder to its tracker. Safe to run again: it checks first and offers only what's missing.
+Sets a repo up through the agent and connects a yass folder to its project management system (a tracker, in the playbooks). Safe to run again: it checks first and offers only what's missing.
 
 - **Reads:** `yass root -v`, `yass status`; the `AGENTS.md` section, the playbooks, the hook setting; `tracker:` in each yass folder's `settings.yaml` or `yass.yaml`; the board's open lists, through the harness's Trello tool.
 - **Runs:** `yass init` with the options the human picks (`--claude`, `--global`, `--hooks`, `--path` for another folder name or plans outside the repo).
 - **Writes:** what `yass init` writes; the board's five lists when the board is blank; `tracker.trello` (board link, list IDs) in the yass folder's `settings.yaml`, never `yass.yaml`, so private plans keep their board out of the code repo.
 - **Human gates:** asks for options before `yass init`; asks before changing a board whose lists don't fit the five, and changes nothing until answered; commits only with latitude. Never asks for a Trello key or token: with no Trello tool in the harness, it stops.
-- **Another tracker:** interviews the human about their organization's workflow (project, how work maps, which status matches each moment, what to comment and leave alone), shows it back, and remembers it in the harness's memory; only when sure there's none, in a gitignored `tracker.local.md` in the yass folder, and when unsure it asks. Only identifiers go under `tracker:` in `settings.yaml`. Each teammate's agent learns it once.
+- **Another project management system** (Jira, Linear, GitHub Projects, Azure Boards…): interviews the human about their organization's workflow (project, how work maps, which status matches each moment, what to comment and leave alone), shows it back, and remembers it in the harness's memory; only when sure there's none, in a gitignored `tracker.local.md` in the yass folder, and when unsure it asks. Only identifiers go under `tracker:` in `settings.yaml`. Each teammate's agent learns it once.
 - **Also holds** the Trello workflow the other playbooks follow: which moments move a card or add a comment, the check before every move, pieces' cards, and keeping board links out of a public code repo.
 
 ## yass-update
