@@ -4,9 +4,9 @@
 
 ## Approach
 **The personal memory is a file the binary finds and reads; agents do the rest.**
-- **Where it lives** is in [design.md §1](design.md#1-where-the-personal-memory-lives-and-how-a-clone-is-named): `~/.config/yass/clones/<repo>-<id>.md`, keyed by the clone's git common dir. That's the same git folder `yass use` already keeps state in ([trailers.go](../../../internal/yass/trailers.go)).
-- **What's at its top** is in [§2](design.md#2-whats-at-the-top-of-the-personal-memory): `name:`, `team:`, `folders:`, read with the same frontmatter reader `change.md` uses ([text.go](../../../internal/yass/text.go)).
-- **`yass me`** prints the file's path and contents. With no file yet, it creates one from a template: `name:` comes from git's `user.name`, and `folders:` stays empty for `yass-init` to fill.
+- **Where it lives** is in [design.md §1](design.md#1-where-the-personal-memory-lives-and-how-a-clone-is-named): one global `~/.config/yass/settings.json`, with an entry per clone keyed by the clone's git common dir. That's the same git folder `yass use` already keeps state in ([trailers.go](../../../internal/yass/trailers.go)).
+- **What it holds** is in [§2](design.md#2-what-the-personal-memory-holds): `name` once for every repo, and per clone `team`, `folders` and `notes`. Only `yass me` reads or writes the file, so an agent never needs permission outside the project.
+- **`yass me`** prints this clone's memory (`--json` for agents), with `name` falling back to git's `user.name` until it's set. `yass me --name … --team … --folders a,b --notes …` sets fields, refusing a folder that isn't a yass folder here, and writes the file atomically (temp file, then rename).
 
 **"Just your work" is a filter on `yass status`'s list, not a new view.**
 - After `loadRepo` ([repo.go](../../../internal/yass/repo.go)), `cmdStatus` ([commands.go](../../../internal/yass/commands.go)) keeps the changes that are:
@@ -36,10 +36,10 @@
 
 ## Acceptance
 ### M1
-- [ ] AC1 (R1) Given a clone and a linked worktree of it, and a second clone of the same repo, when `yass me` runs in each, then the clone and its worktree print the same path under `~/.config/yass/clones/` (or `$YASS_CONFIG_DIR`) and the second clone prints a different one — verify: e2e
-- [ ] AC2 (R1) Given `yass me` has created the memory, when `git status` runs, then nothing in the repo changed — verify: e2e
-- [ ] AC3 (R2, R3) Given no memory, when `yass me` runs, then it creates one with `name:` from git's `user.name`, an empty `folders:` and a notes heading, and prints its path and contents; run again, it prints the same and changes nothing — verify: e2e
-- [ ] AC4 (R2) Given a memory with an unknown key at the top, or a `folders:` entry that isn't a yass folder here, when `yass status` runs, then the first is a note and the second a warning naming the folder — verify: unit and e2e
+- [ ] AC1 (R1) Given a clone and a linked worktree of it, and a second clone of the same repo, when `yass me --folders` is set in the clone, then the worktree's `yass me` shows the same folders, the second clone's shows none, and all of them name the same settings file, `~/.config/yass/settings.json` (or `$YASS_CONFIG_DIR`) — verify: e2e
+- [ ] AC2 (R1) Given `yass me` has saved the memory, when `git status` runs, then nothing in the repo changed — verify: e2e
+- [ ] AC3 (R2, R3) Given no settings file, when `yass me` runs, then it shows this clone's memory with `name` from git's `user.name` and no folders, and writes nothing; `yass me --team search --folders services/search --notes "…"` saves it, `yass me --json` returns the same as data, and `--name` changes the name for every clone — verify: e2e
+- [ ] AC4 (R2, R3) Given `yass me --folders` naming a folder that isn't a yass folder here, when it runs, then it refuses and names the folder; given a settings file edited by hand to name one, `yass status` warns, naming it — verify: e2e
 - [ ] AC5 (R4) Given a repo with two team folders and no memory, when `yass-init` runs, then it asks who you are and which folders are yours and writes them with `yass me`; run again, it shows them and changes only what you correct — verify: manual
 - [ ] AC6 (R5) Given a memory naming your folders, when an agent starts work in a fresh session, then it reads the memory (`yass me`) before choosing where a new change goes or whose work to report — verify: manual
 - [ ] AC7 (R6) Given a memory with `folders: [services/search]`, a change in `services/web` waiting on a search change, a change in `yass/` with an unmerged branch you committed to, and other changes elsewhere, when `yass status` runs, then it lists the search changes, the waiting web change and the one with your branch, and ends with how many other changes, in how many folders, it left out and that `--all` shows them — verify: e2e

@@ -2,38 +2,41 @@
 <!-- Intent: the calls that are hard to undo. Edit only in commits without code. -->
 
 ## Context
-Two new files become public surface that people and teams will have on disk after 0.5.0: the personal memory (where it lives and what's at its top) and the team memory (its name). Moving either later means a migration in `yass upgrade` or a note telling everyone to move a file.
+Two new files become public surface that people and teams will have on disk after 0.5.0: the personal memory (where it lives and what's in it) and the team memory (its name). Moving either later means a migration in `yass upgrade` or a note telling everyone to move a file.
 
 ## 1. Where the personal memory lives, and how a clone is named
 
 ### Options
-- **A. `${XDG_CONFIG_HOME:-~/.config}/yass/clones/<repo>-<id>.md` on macOS and Linux, and `%APPDATA%\yass\clones\…` on Windows.**
-  - `<repo>` is the base name of the clone's top folder, so a person can find their file by eye.
-  - `<id>` is the first 8 hex characters of a SHA-256 of the clone's git common dir (absolute, cleaned). Every linked worktree shares that dir, so they all find the same file, and a separate clone gets its own.
-  - `$YASS_CONFIG_DIR` overrides the folder, as `$YASS_SKILLS_DIR` does for playbooks, for tests and unusual setups.
-- **B. Go's `os.UserConfigDir()` everywhere.** That's `~/Library/Application Support/yass/…` on macOS: correct by Apple's rules, but awkward to find and edit by hand, and different from where YASS already puts user files (`~/.agents/skills/`).
+- **A. One global `${XDG_CONFIG_HOME:-~/.config}/yass/settings.json`** (`%APPDATA%\yass\settings.json` on Windows; `$YASS_CONFIG_DIR` overrides the folder), with an entry per clone, read and written only by the `yass` CLI.
+  - A clone's key is the first 8 hex characters of a SHA-256 of its git common dir (absolute, cleaned). Every linked worktree shares that dir, so they share the entry, and a separate clone gets its own.
+  - Agents never open the file: they run `yass me`, which they can run anywhere their shell can. An agent's file permissions usually stop at the project's folders, so a file outside it would need a prompt every session, or an extra allowed directory set up by every person.
+- **B. A markdown file per clone in `~/.config/yass/clones/`**, which agents read directly. This was the first plan. It's easy to edit by hand, but agents usually can't reach it without asking.
 - **C. Keyed by the remote URL.** It would survive re-cloning, but the PRD wants a separate clone set up again, and remote URLs change (forks, SSH vs HTTPS, renames).
 
 ### Decision
-**A.** One predictable place a person can open, named after the repo, and shared by exactly the checkouts that share a git folder: a clone's worktrees, and nothing else. (claude, while planning; for review, 2026-11-14)
+**A** (Jaime, 2026-11-14, after B was planned): the file lives where personal state belongs, and the CLI is the way in, so permissions never get in the agent's way.
 
-## 2. What's at the top of the personal memory
+## 2. What the personal memory holds
 
 ### Options
-- **A. Markdown with YAML frontmatter,** like `change.md`. The binary reads only the frontmatter; agents read all of it.
-  ```markdown
-  ---
-  name: Sam Rivera
-  team: search
-  folders: [services/search]
-  ---
-  # Notes for agents
+- **A. JSON, written by the CLI:**
+  ```json
+  {
+    "name": "Sam Rivera",
+    "clones": {
+      "3f9a1c2e": { "repo": "/Users/sam/src/acme", "team": "search",
+                    "folders": ["services/search"], "notes": "…" }
+    }
+  }
   ```
-  `folders:` are yass folders by path from the repo top, the same paths `yass status` prints. The first is where `yass new` puts a change from the repo root.
-- **B. A YAML file plus a separate notes file.** It's cleaner for the binary, but means two files per clone to explain, against the PRD's one.
+  - `name` is yours across every repo; `team`, `folders` and `notes` are per clone.
+  - `repo` is only there so a person reading the file can tell entries apart.
+  - `folders` are yass folders by path from the repo top, as `yass status` prints them, or the folder a team's yass folder serves (`services/search`). The first is where `yass new` puts a change from the repo root.
+  - Keys YASS doesn't know are kept as they are when it writes.
+- **B. Markdown with frontmatter per clone** (the first plan). It's friendlier to edit by hand, but the CLI would have to parse and rewrite prose to change a field.
 
 ### Decision
-**A** (Jaime chose one markdown file, 2026-11-14). An unknown key at the top is a note, not a warning, since it's a person's own file. A folder listed there that isn't a yass folder in this repo is a warning, naming it.
+**A** (Jaime chose a global settings file through the CLI, 2026-11-14). `yass me --json` gives agents exactly what the binary reads. The notes are one string per clone, enough for things an agent should hear every session.
 
 ## 3. The team memory
 
@@ -46,5 +49,5 @@ Two new files become public surface that people and teams will have on disk afte
 
 ## Consequences and rollback
 - **Upgrade:** `yass upgrade` doesn't touch either file. No repo has either today, so nothing migrates.
-- **Rollback:** before release, both are cheap to drop. After release, moving the personal memory means `yass me` would look in both places for a release.
+- **Rollback:** before release, both are cheap to drop. After release, the settings file's shape is public: a change to it means `yass me` reading the old shape for a release.
 - **Bench:** filtering `yass status` adds one small file read and no git calls; `tests/bench.sh` timings go in the pull request.

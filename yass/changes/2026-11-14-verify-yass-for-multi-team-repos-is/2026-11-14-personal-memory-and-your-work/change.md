@@ -9,7 +9,7 @@ created: 2026-11-14T19:53:58Z
 
 ## Goal
 <!-- Intent. What is true when this change is finished, in a paragraph. Edit it only in a commit without code. -->
-A personal YASS memory per clone, in ~/.config/yass/clones/ and shared by the clone's worktrees, that yass me creates and prints; yass status lists just your work when it names your folders (your folders, changes waiting on yours, changes on your branches), with --all for everyone's and a note when there's nothing to filter by; and yass new from the repo root uses your first folder.
+A personal YASS memory per clone, in a global ~/.config/yass/settings.json and shared by the clone's worktrees, that yass me prints and sets (--json for agents), so agents never need to open a file outside the project; yass status lists just your work when it names your folders (your folders, changes waiting on yours, changes on your branches), with --all for everyone's and a note when there's nothing to filter by; and yass new from the repo root uses your first folder.
 
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
