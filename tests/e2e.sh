@@ -51,6 +51,7 @@ git add -A; run_ok "adopting commit" git commit -q -m "chore: adopt YASS"
 has   "the AGENTS.md section names yass-init for setup and trackers" "yass-init" cat AGENTS.md
 has   "…and yass-update for versions out of step" "yass-update" cat AGENTS.md
 has   "…and says not every pull request needs a change" "Not every pull request needs a change" cat AGENTS.md
+has   "…and to start with yass me" "run .yass me." cat AGENTS.md
 y init >/dev/null
 [ -z "$(git status --porcelain)" ] && ok "init run again on a set-up repo changes no file" || bad "a second init changed: $(git status --porcelain | tr '\n' ' ')"
 echo "# My rules" > AGENTS.md; y init >/dev/null
