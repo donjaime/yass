@@ -125,7 +125,27 @@ In Buildkite, run this as the step that uploads the rest of the pipeline, and up
 
 ## Many teams in one repo
 
-Each team gets its own yass folder (`yass init services/search`), so its changes, archive and `keep:` setting are its own. `yass status` shows them all; `yass new` puts a change in the one nearest where you're standing.
+Each team gets its own yass folder (`yass init services/search`), so its changes, archive and `keep:` setting are its own. `yass status` shows them all, or [just yours](#just-your-work) once your personal memory names them; `yass new` puts a change in the one nearest where you're standing, or in yours from the repo root.
+
+### Just your work
+
+Most people open their agent at the repo root, so YASS needs to know which team's folder is theirs. Each person keeps a personal memory for each clone: a markdown file in their own user folder (`~/.config/yass/clones/`, or `$XDG_CONFIG_HOME/yass/clones/`; `%APPDATA%\yass\clones\` on Windows), never in the repo. Every worktree of the clone shares it, and another clone is set up again. `yass me` prints it, creating it the first time; `yass-init` fills it in:
+
+```markdown
+---
+name: Sam Rivera
+team: search
+folders: [services/search]
+---
+# Notes for agents
+```
+
+With `folders:` set, `yass status` lists just your work:
+- the changes in your folders;
+- changes elsewhere that wait on one of yours, through `blocked:`;
+- changes on an unmerged branch with your commits, matched by your git email.
+
+It ends with how much it left out; `yass status --all` shows everyone's, and naming a change always shows it. `yass new` run at the repo root puts the change in your first folder; inside a team's folder, that folder. Without a memory, `yass status` shows everything and, in a repo with more than one yass folder, notes how to narrow it.
 
 ### Who reviews plans: CODEOWNERS
 

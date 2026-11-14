@@ -21,6 +21,7 @@ import (
 type branchRow struct {
 	branch, author string
 	when           time.Time
+	mine           bool // a commit on this branch to this folder is by you (git's user.email)
 	done, total    int
 	next           string
 	unread         bool // the files at the branch tip aren't local (a partial clone): no progress
@@ -100,22 +101,28 @@ func (r *Repo) branches(since time.Time) *branchView {
 	}
 	// One log over every branch, limited to the yass folders' changes/: which branch reached each
 	// commit (--source), who made it and when, and the files it touched.
-	args := append([]string{"log", "--source", "--no-renames", "--format=%x01%S%x09%an%x09%ct", "--name-only",
+	args := append([]string{"log", "--source", "--no-renames", "--format=%x01%S%x09%an%x09%ct%x09%ae", "--name-only",
 		fmt.Sprintf("--since=@%d", since.Unix())}, refs...)
 	args = append(append(append(args, "--not", merged), "--"), paths...)
 	log, _ := git(r.Top, args...)
 	type key struct{ branch, folder string }
 	seen := map[key]*branchRow{}
 	var order []key
-	var ref, author string
+	var ref, author, email string
 	var when time.Time
+	me, _ := git(r.Top, "config", "user.email")
+	me = strings.ToLower(strings.TrimSpace(me))
 	for _, l := range strings.Split(log, "\n") {
 		if strings.HasPrefix(l, "\x01") {
-			f := strings.SplitN(l[1:], "\t", 3)
-			if len(f) == 3 {
+			f := strings.SplitN(l[1:], "\t", 4)
+			if len(f) >= 3 {
 				ref, author = f[0], f[1]
 				sec, _ := strconv.ParseInt(f[2], 10, 64)
 				when = time.Unix(sec, 0)
+				email = ""
+				if len(f) == 4 {
+					email = strings.ToLower(strings.TrimSpace(f[3]))
+				}
 			}
 			continue
 		}
@@ -127,6 +134,9 @@ func (r *Repo) branches(since time.Time) *branchView {
 			if seen[k] == nil { // newest first: the first commit seen is the latest
 				seen[k] = &branchRow{branch: ref, author: author, when: when}
 				order = append(order, k)
+			}
+			if me != "" && email == me {
+				seen[k].mine = true
 			}
 		}
 	}
@@ -236,6 +246,25 @@ func ago(t time.Time) string {
 const branchRowMark = "\x00branch"
 
 // linesFor are a change's or piece's branch lines in yass status.
+// yours says whether an unmerged branch with your commits touches the change or one of its pieces.
+func (v *branchView) yours(r *Repo, c *Change) bool {
+	if v == nil {
+		return false
+	}
+	for _, x := range append([]*Change{c}, c.Pieces...) {
+		rel, err := filepath.Rel(r.Top, x.Path)
+		if err != nil {
+			continue
+		}
+		for _, row := range v.rows[filepath.ToSlash(rel)] {
+			if row.mine {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (v *branchView) linesFor(r *Repo, c *Change, indent string) [][2]string {
 	if v == nil {
 		return nil

@@ -5,6 +5,7 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 W="${1:-$(mktemp -d)}"; rm -rf "$W/e2e"; mkdir -p "$W/e2e"
 unset YASS_STRICT YASS_HOOK YASS_HOME
+export YASS_CONFIG_DIR="$W/config"   # personal memories go here, never in your own ~/.config
 # Build the CLI (or use $YASS_BIN) and put it first on PATH, where the hook and install.sh look for it.
 if [ -z "${YASS_BIN:-}" ]; then
   mkdir -p "$W/bin"; (cd "$ROOT" && go build -o "$W/bin/yass" ./cmd/yass) || { echo "build failed"; exit 1; }
@@ -1433,6 +1434,47 @@ hasnt "…with nothing to note or warn about" "^(note|warning)" y status
 rm specs/settings.yaml; printf "path: specs\n$BOARD" > yass.yaml
 has   "…and so does a tracker in its yass.yaml" "^card: https://trello.com/c/Nm1/named" y status named-card
 hasnt "…with no note, since the plans are in the repo" "git would commit it" y status
+
+echo "18. a personal memory, and just your work"
+newrepo "$W/e2e/me"; rm -rf "$W/e2e/me-wt" "$W/e2e/me-clone"
+y init --no-agents >/dev/null; y init services/search --no-agents >/dev/null; y init services/web --no-agents >/dev/null
+S=$(cd services/search && yass new "Faster search"); R1=$(y new "Root thing"); R2=$(y new "Root mine")
+WEB=$(cd services/web && yass new "Web waits"); sub "$WEB/change.md" '^blocked:$' "blocked: $(basename "$S")"
+git add -A; git commit -q -m "chore: adopt YASS"
+has   "with no memory, status lists everyone's work" "root-thing" y status
+has   "…and notes how to see just yours" "^note: this repo has 3 yass folders; name yours in .yass me." y status
+MEOUT="$(y me)"; MEFILE="$(sed -n 's/^created //p' <<<"$MEOUT")"
+has   "yass me creates the memory in the config folder, per clone" "^created $W/config/clones/me-[0-9a-f]{8}\.md$" echo "$MEOUT"
+has   "…with your git name and no folders yet" "^name: Sam$" cat "$MEFILE"
+SUM="$(cksum < "$MEFILE")"
+has   "run again, it prints the same file" "^$MEFILE$" y me
+[ "$(cksum < "$MEFILE")" = "$SUM" ] && ok "…and changes nothing" || bad "a second yass me changed the memory"
+[ -z "$(git status --porcelain)" ] && ok "…and nothing in the repo" || bad "yass me wrote into the repo: $(git status --porcelain)"
+git worktree add -q "$W/e2e/me-wt" -b me-wt
+has   "a linked worktree finds the same memory" "^$MEFILE$" bash -c "cd '$W/e2e/me-wt' && yass me"
+git clone -q "$W/e2e/me" "$W/e2e/me-clone"
+hasnt "…and another clone gets its own" "$MEFILE" bash -c "cd '$W/e2e/me-clone' && yass me"
+sub "$MEFILE" '^folders: \[\]$' "folders: [nope]\ncolour: blue"
+has   "a folder the memory names that isn't a yass folder warns" "folders: nope isn't a yass folder here" y status
+has   "…and a key yass doesn't read is a note" "^note: .*'colour' isn't something yass reads" y status
+sub "$MEFILE" '^folders: \[nope\]$' "folders: [services/search]"; sub "$MEFILE" '^colour: blue\n' ""
+git switch -q -c mine; echo "- [/] started" >> "$R2/change.md"; git commit -qam "yass: start root-mine"; git switch -q main
+OUT="$(y status)"
+has   "with your folders named, status lists your folder's changes" "faster-search" echo "$OUT"
+has   "…a change waiting on one of yours" "web-waits" echo "$OUT"
+has   "…and one on a branch you've committed to" "root-mine" echo "$OUT"
+hasnt "…but not the rest" "root-thing" echo "$OUT"
+has   "…saying what it left out" "^yours: services/search/yass/; 1 more change\(s\) in 1 other yass folder\(s\): yass status --all$" echo "$OUT"
+hasnt "…and no note about setting it up" "name yours in" echo "$OUT"
+has   "--all shows everyone's work" "root-thing" y status --all
+hasnt "…without the closing line" "^yours:" y status --all
+has   "naming a change shows it, yours or not" "^Root thing$" y status root-thing
+has   "yass new from the repo root puts the change in your folder" "^services/search/yass/changes/$TODAY-from-the-top$" y new "From the top"
+has   "…inside a team folder, that team's" "^services/web/yass/changes/$TODAY-for-the-web$" bash -c "cd services/web && yass new 'For the web'"
+has   "…and a piece goes in its change's folder" "^yass/changes/$TODAY-root-thing/$TODAY-a-piece$" y new "A piece" --in root-thing
+git worktree remove --force "$W/e2e/me-wt"
+newrepo "$W/e2e/me-one"; y init --no-agents >/dev/null
+hasnt "a repo with one yass folder gets no note about it" "name yours in" y status
 
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

@@ -3,6 +3,7 @@
 set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 W="${1:-$(mktemp -d)}"; fail=0
+export YASS_CONFIG_DIR="$W/config"   # personal memories go here, never in your own ~/.config
 if [ -z "${YASS_BIN:-}" ]; then
   mkdir -p "$W/bin"; (cd "$ROOT" && go build -o "$W/bin/yass" ./cmd/yass) || exit 1; YASS_BIN="$W/bin/yass"
 fi

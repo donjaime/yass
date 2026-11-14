@@ -8,6 +8,7 @@ W="${1:-$(mktemp -d)}"; mkdir -p "$W"
 [ -n "${BENCH_KEEP:-}" ] || trap 'rm -rf "$W/bench"' EXIT
 rm -rf "$W/bench"; mkdir -p "$W/bench"
 unset YASS_STRICT YASS_HOOK YASS_HOME
+export YASS_CONFIG_DIR="$W/config"   # personal memories go here, never in your own ~/.config
 if [ -z "${YASS_BIN:-}" ]; then
   mkdir -p "$W/bin"; (cd "$ROOT" && go build -o "$W/bin/yass" ./cmd/yass) || { echo "build failed"; exit 1; }
   YASS_BIN="$W/bin/yass"
@@ -83,6 +84,9 @@ check "yass status, with $BRANCHES branches" "$(ms "$YASS_BIN" status)" 1000
 branches refs/remotes/origin/remote- "$REMOTES"
 echo "  + $REMOTES remote branches with recent work"
 check "yass status, with $REMOTES remote branches more" "$(ms "$YASS_BIN" status)" 2000
+"$YASS_BIN" me >/dev/null; MEF="$("$YASS_BIN" me | head -1)"
+sed -i.bak 's/^folders: \[\]$/folders: [teams\/t001]/' "$MEF"; rm -f "$MEF.bak"
+check "yass status, just your work (a memory naming one folder)" "$(ms "$YASS_BIN" status)" 2000
 
 echo "trailers: a code repo with $COMMITS commits, its plans kept apart"
 newrepo "$W/bench/trailers"; printf 'path: %s\n' "$W/bench/status/teams/t001/yass" > yass.yaml

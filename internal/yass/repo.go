@@ -509,6 +509,7 @@ type Repo struct {
 	absent           map[string]string // changes git has that aren't on disk (sparse checkouts), by name
 	merged           map[*Root]string  // the merged branch per yass folder, once looked up
 	codeDir          *string           // this code repo's git common dir, once looked up
+	me               *Me               // the personal memory, once checked (nil outside git)
 }
 
 // findRepo finds the repo and its yass folders, without reading any changes.
@@ -867,6 +868,7 @@ func (r *Repo) archivedPieces() {
 
 func (r *Repo) check() {
 	r.checkSettings()
+	r.me = r.checkMe()
 	known := map[string]bool{}
 	addKnown := func() {
 		for _, c := range append(append([]*Change{}, r.Active...), r.Archived...) {
