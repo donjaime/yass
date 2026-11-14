@@ -15,7 +15,7 @@
   - on an unmerged branch whose commits are yours.
 - **Branches:** the branch view's one `git log` ([branches.go](../../../internal/yass/branches.go)) already reads each commit's author name. It adds the email and marks a row yours when that matches git's `user.email`. `--no-branches` skips this part.
 - **The closing line** says how many changes in how many other folders were left out, and that `--all` shows them.
-- **When nothing is filtered:** no memory, or no `folders:`, filters nothing. When the repo has two or more yass folders, a note says `yass me` sets up the filter.
+- **When nothing is filtered:** no memory, or no `folders:`, filters nothing and says nothing: teams are optional, and a solo developer keeps today's view.
 - **Naming a change** (`yass status <change>`) is never filtered.
 - **`yass new`** uses your first folder when the yass folder nearest where you're standing (`rootForCwd`) is the repo's top-level one, or there's none. Inside a team's folder it behaves as today, and `--in` still overrides both.
 
@@ -40,11 +40,11 @@
 - [ ] AC2 (R1) Given `yass me` has saved the memory, when `git status` runs, then nothing in the repo changed — verify: e2e
 - [ ] AC3 (R2, R3) Given no settings file, when `yass me` runs, then it shows this clone's memory with `name` from git's `user.name` and no folders, and writes nothing; `yass me --team search --folders services/search --notes "…"` saves it, `yass me --json` returns the same as data, and `--name` changes the name for every clone — verify: e2e
 - [ ] AC4 (R2, R3) Given `yass me --folders` naming a folder that isn't a yass folder here, when it runs, then it refuses and names the folder; given a settings file edited by hand to name one, `yass status` warns, naming it — verify: e2e
-- [ ] AC5 (R4) Given a repo with two team folders and no memory, when `yass-init` runs, then it asks who you are and which folders are yours and writes them with `yass me`; run again, it shows them and changes only what you correct — verify: manual
+- [ ] AC5 (R4) Given a repo with two team folders and no memory, when `yass-init` runs and the human says teams share the repo, then it asks who they are and which folders are theirs and writes them with `yass me`; run again, it shows them and changes only what they correct. Given a human who works alone, it sets nothing and moves on — verify: manual
 - [ ] AC6 (R5) Given a memory naming your folders, when an agent starts work in a fresh session, then it reads the memory (`yass me`) before choosing where a new change goes or whose work to report — verify: manual
 - [ ] AC7 (R6) Given a memory with `folders: [services/search]`, a change in `services/web` waiting on a search change, a change in `yass/` with an unmerged branch you committed to, and other changes elsewhere, when `yass status` runs, then it lists the search changes, the waiting web change and the one with your branch, and ends with how many other changes, in how many folders, it left out and that `--all` shows them — verify: e2e
 - [ ] AC8 (R7) Given the same repo, when `yass status --all` runs, then every change is listed with no closing line about what's left out, and `yass status <change>` shows any change, yours or not — verify: e2e
-- [ ] AC9 (R8) Given no memory, or one with no `folders:`, when `yass status` runs, then everything is listed as today; a repo with two or more yass folders gets one note saying `yass me` sets up the filter, and a repo with one gets none — verify: e2e
+- [ ] AC9 (R8) Given no memory, or one with no `folders:`, when `yass status` runs, then everything is listed as today, with no note about the memory, in a repo with one yass folder or several — verify: e2e
 - [ ] AC10 (R9) Given a memory whose first folder is `services/search`, when `yass new` runs at the repo root, then the change goes in `services/search/yass`; run inside `services/web`, in web's folder; with `--in`, where that says — verify: e2e
 - [ ] AC11 (R10) Given a memory naming your folders, when the human asks the agent where things stand, then `yass-status` reports their work, and everyone's when they ask for it — verify: manual
 - [ ] AC12 (R14) Given docs/monorepo.md, the README and docs/project-management.md, when read, then they explain the personal memory, just your work and `--all`, where new changes go, and that a team's workflow lives in its `team.md` — verify: `tests/site.sh` and manual reading

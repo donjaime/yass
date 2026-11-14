@@ -15,20 +15,21 @@ Project management has the same gap. The workflow an agent learns for Jira or an
   - With an agent open at the repo root, `yass status` shows only your work by default.
   - `yass new` puts a change in your team's folder, with no `--in` and no `cd`.
 - **Teams on a project management system other than Trello.** The workflow is written down once, in the team's yass folder, reviewed like any plan, and followed by every teammate's agent, on any harness.
-- **Setting up:** a person sets up once per clone, through `yass-init`, saying who they are and which team they're on. When the team already has a workflow, nothing else is asked.
+- **Setting up:** a person on a team sets up once per clone, through `yass-init`, saying who they are and which team they're on. When the team already has a workflow, nothing else is asked.
+- **Solo developers,** even with several yass folders (public and private plans, say): nothing changes and nothing nags. Everything is theirs, as today.
 
 ## Requirements
 The local memory
 - **R1** [M1] Each person has one YASS memory per clone, kept in a global YASS settings file in their own user folder, outside every repo. Every worktree of the clone finds the same entry; a separate clone has its own, set up again. It's never in the repo, so nothing needs gitignoring.
 - **R2** [M1] Each clone's entry holds your team, your team's yass folders (one or more, by path) and your own notes for agents; who you are is kept once, for every repo (defaulting to git's `user.name`). It holds nothing your team shares: that goes in the team memory (R15).
 - **R3** [M1] Agents and people read and change the memory only through the `yass` CLI, never by opening the file: an agent's permissions usually stop at the project's folders. One command prints this clone's memory (and, as data, for agents) and sets its fields; it writes the file safely when two agents save at once.
-- **R4** [M1] `yass-init` sets the memory up as part of setup: it asks who you are and which team (which yass folders) you're on, and writes them. Running it again shows what's there and changes only what you correct.
+- **R4** [M1] `yass-init` asks whether several teams share the repo. If they do, it asks who you are and which team (which yass folders) you're on, and writes them. Working alone, it sets nothing. Running it again shows what's there and changes only what you correct.
 - **R5** [M1] The playbooks read the memory at the start of their work, to know who they're working for and where that person's work goes, and from it, which team memory applies.
 
 Just your work
 - **R6** [M1] When the memory names your yass folders, `yass status` lists only your work: the changes in your folders, and any other change with an unmerged branch you've committed to. A closing line says how much it left out and that `--all` shows it.
 - **R7** [M1] `yass status --all` shows everyone's work, as `yass status` does today.
-- **R8** [M1] Without a memory, or with no folders in it, `yass status` shows everything, as today, and says once how to set up a memory.
+- **R8** [M1] Without a memory, or with no folders in it, `yass status` shows everything, exactly as today. Teams are an optional addition, so YASS never asks a solo developer to set one up: not even when they keep several yass folders, like public and private plans.
 - **R9** [M1] `yass new` run outside any yass folder's part of the repo (at the root, say) puts the change in your first yass folder. Inside a team's folder, it uses that folder, as today. `--in` still overrides both.
 - **R10** [M1] The `yass-status` playbook reports your work by default, and everyone's when asked.
 
