@@ -1,0 +1,11 @@
+# YASS settings for this yass folder, merged with ../yass.yaml (README: settings.yaml).
+# The public board for this repo's public changes; private plans name their own board in their own folder.
+tracker:
+  trello:
+    board: https://trello.com/b/c0YZDe9B/yass-public
+    lists:                 # each list's Trello ID, by role
+      ideas: 6af89b13410f38ec8605a751
+      will-do: 6af89b14a81d79ca989eac09
+      planning: 6af89b150c872a100572141d
+      implementing: 6af89b16dfcfaee898ff15d3
+      done: 6af89b17883eda2ebfd9edab
