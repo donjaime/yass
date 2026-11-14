@@ -20,6 +20,10 @@ YASS knows who you are in a repo with many teams. Each person has one unversione
 - `yass status` shows just your work by default when the memory names your folders, and `--all` shows everyone's (Jaime, 2026-11-14)
 - `yass-init` sets the memory up during setup, asking once per clone (Jaime, 2026-11-14)
 - Two layers: a personal memory per clone (who you are, which team) and a team memory committed in each yass folder (the project management workflow and anything else the team shares). The workflow for systems other than Trello always goes in the team memory, never a harness's memory, a `tracker.local.md` or the personal memory - a team's workflow is the team's: written once, reviewed like a plan, followed by every agent, and private when the plans are (Jaime, 2026-11-14)
+- PRD approved for planning (Jaime, 2026-11-14)
+- "Your work" is the changes in your folders, changes waiting on one of yours, and changes with an unmerged branch whose commits are yours (your git email); naming a change is never filtered - the PRD left cross-team work open: seeing who waits on you is the useful part, without pulling in every root change (claude, while planning; for review, 2026-11-14)
+- The "set up `yass me`" note appears only in repos with two or more yass folders - with one, there's nothing to filter, so the note would be noise (claude, while planning; for review, 2026-11-14)
+- The personal memory's command is `yass me` (claude, while planning; for review, 2026-11-14)
 - Plans kept separate with a board (the tracker change's AC23) stays out of this change; Jaime takes it as its own card (Jaime, 2026-11-14)
 
 ## Log
