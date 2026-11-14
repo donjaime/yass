@@ -137,3 +137,17 @@ func TestSettingsOverlay(t *testing.T) {
 		t.Errorf("the same value, or none, changes nothing and differs in nothing: %+v %v", s, differ)
 	}
 }
+
+func TestMyRoots(t *testing.T) {
+	top := filepath.FromSlash("/r")
+	root := &Root{Dir: filepath.Join(top, "yass"), Owner: top}
+	search := &Root{Dir: filepath.Join(top, "services", "search", "yass"), Owner: filepath.Join(top, "services", "search")}
+	r := &Repo{Top: top, Roots: []*Root{root, search}}
+	mine, unknown := r.myRoots(&Me{Folders: []string{"services/search", "yass", "services/search/yass", "nope", "."}})
+	if len(mine) != 3 || mine[0] != search || mine[1] != root || mine[2] != search {
+		t.Errorf("mine = %v; want search (by the folder it serves), root, search (by its yass folder)", mine)
+	}
+	if strings.Join(unknown, " ") != "nope ." {
+		t.Errorf("unknown = %v; want nope and . (the repo top names no team folder)", unknown)
+	}
+}

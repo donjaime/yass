@@ -66,7 +66,8 @@ type spec struct {
 var specs = map[string]spec{
 	"init":    {[]string{"no-agents", "private", "claude", "global", "hooks", "agents"}, []string{"path"}, 0, 1, "yass init [dir] [--path P] [--agents] [--claude] [--global] [--hooks] [--no-agents] [--private]"},
 	"new":     {[]string{"large", "design"}, []string{"in", "goal", "platforms", "source", "follows"}, 1, 1, `yass new "<title>" [--large] [--design] [--in CHANGE] [--goal G] [--platforms P] [--source S] [--follows ARCHIVED]`},
-	"status":  {[]string{"archived", "strict", "no-branches", "brief"}, []string{"since"}, 0, 1, "yass status [<change>] [--brief] [--archived] [--strict] [--since 14d|DATE] [--no-branches]"},
+	"status":  {[]string{"archived", "strict", "no-branches", "brief", "all"}, []string{"since"}, 0, 1, "yass status [<change>] [--all] [--brief] [--archived] [--strict] [--since 14d|DATE] [--no-branches]"},
+	"me":      {[]string{"json"}, []string{"name", "team", "folders", "notes"}, 0, 0, "yass me [--json] [--name N] [--team T] [--folders a,b] [--notes \"…\"]"},
 	"archive": {[]string{"force"}, nil, 1, 1, "yass archive <change> [--force]"},
 	"decisions": {[]string{"json"}, []string{"since", "until", "about", "change", "limit", "cites"}, 0, 0,
 		"yass decisions [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--about TEXT] [--change C] [--cites SHA] [--limit N] [--json]"},
@@ -197,6 +198,8 @@ func run(argv []string) int {
 		code, err = cmdUpdate(a)
 	case "use":
 		err = cmdUse(a)
+	case "me":
+		err = cmdMe(a)
 	case "evict":
 		err = cmdEvict(a)
 	case "decisions":

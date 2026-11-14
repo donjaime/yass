@@ -205,7 +205,14 @@ func cmdNew(a *args) error {
 		}
 		root, base = parent.Root, parent.Path
 	} else {
-		if root = r.rootForCwd(); root == nil {
+		root = r.rootForCwd()
+		// From the repo root (no team folder nearer), a change goes in your first yass folder.
+		if (root == nil || root.Owner == r.Top) && r.me != nil {
+			if roots, _ := r.myRoots(r.me); len(roots) > 0 {
+				root = roots[0]
+			}
+		}
+		if root == nil {
 			msg := r.noRoot("no yass/ folder here; run `yass init` first")
 			for _, w := range r.Warnings {
 				msg += "\n  " + w
@@ -335,6 +342,30 @@ func cmdStatus(a *args) (int, error) {
 	if multi {
 		pad = "  "
 	}
+	// Just your work (design §2): with the personal memory naming your yass folders, the changes in
+	// them, changes waiting on one of yours, and changes on an unmerged branch with your commits.
+	mine := map[*Root]bool{}
+	if !archived && !a.b["all"] && r.me != nil {
+		roots, _ := r.myRoots(r.me)
+		for _, root := range roots {
+			mine[root] = true
+		}
+	}
+	filter := len(mine) > 0
+	keep := func(c *Change) bool {
+		if !filter || mine[c.Root] || view.yours(r, c) {
+			return true
+		}
+		for _, x := range append([]*Change{c}, c.Pieces...) {
+			for _, d := range x.Deps {
+				if mine[d.Root] {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	hidden, hiddenIn := 0, map[*Root]bool{}
 	for _, root := range r.Roots {
 		pool := r.Active
 		if archived {
@@ -347,9 +378,15 @@ func cmdStatus(a *args) (int, error) {
 			case c.Root != root:
 			case c.Evicted:
 				evicted = append(evicted, c)
+			case !keep(c):
+				hidden++
+				hiddenIn[root] = true
 			default:
 				items = append(items, c)
 			}
+		}
+		if filter && !mine[root] && len(items) == 0 {
+			continue
 		}
 		if !archived {
 			sort.SliceStable(items, func(i, j int) bool { return root.rank(items[i].Name) < root.rank(items[j].Name) })
@@ -417,6 +454,17 @@ func cmdStatus(a *args) (int, error) {
 	}
 	if view != nil && !archived {
 		fmt.Printf("branches: unmerged work since %s; %s\n", since.Format("2006-01-02"), view.fresh)
+	}
+	if filter && hidden > 0 {
+		var names []string
+		for _, root := range r.Roots {
+			if mine[root] {
+				names = append(names, r.disp(root.Dir)+"/")
+			}
+		}
+		fmt.Printf("yours: %s; %d more change(s) in %d other yass folder(s): yass status --all\n", strings.Join(names, ", "), hidden, len(hiddenIn))
+	} else if !filter && !archived && !a.b["all"] && len(r.Roots) > 1 && r.me != nil && len(r.me.Folders) == 0 {
+		r.note("this repo has %d yass folders; set yours with `yass me --folders <folder>`, and yass status shows just your work (--all for everyone's)", len(r.Roots))
 	}
 	if n := versionNote(r); n != "" {
 		r.note("%s", n)
