@@ -12,6 +12,7 @@ Building software sits inside a bigger product development life cycle. Ideas wai
 YASS covers the inner loop: one change, shaped, planned and built, with progress next to the code. It doesn't replace your project management system. It fits inside it. Your agent keeps the system up to date at the few moments people outside the repo care about, and everything finer stays in the files.
 
 - **The `yass` binary never calls your project management system.** Your agent does, through whatever its harness can reach: a connector (MCP), an API, a CLI. The binary only checks the settings and says where a change's card should be.
+- **Work flows from your project management system into YASS.** Changes start from its cards and issues, and keep them moving. YASS adds a card only for a top-level change you say yes to, never for the pieces you break it into, so the board holds what your team put there.
 - **Files stay the source of truth.** Nothing on the board changes your plans on its own. When something changes there, tell your agent, and it proposes how to revise the plan.
 - **Ask your agent to connect it.** "Connect our Trello board", or "connect Jira", runs the [`yass-init`](../kit/.agents/skills/yass-init/SKILL.md) playbook.
 
@@ -62,7 +63,7 @@ One card per top-level change. As the change moves, the agent moves the card and
 | a code pull request is up, then merges or closes | a comment each time, with the link |
 | the change's archive merges | moves to Done |
 
-A large change's pieces can have cards of their own, which move the same way; a piece's card moves to Done when the piece is done and its pull request merged. When a new piece clearly covers an existing card, the agent links it, and when it's unclear, it asks. A change with no card gets an offer to create one.
+A large change's pieces can have cards of their own, which move the same way; a piece's card moves to Done when the piece is done and its pull request merged. When a new piece clearly covers an existing card, the agent links it, and when it's unclear, it asks. A new top-level change with no card gets the question whether to create one, and a card only if you say yes. Pieces never get cards of their own created for them: they roll up to their change's card, so breaking a card's work down adds no noise to the board.
 
 **Two agents, one board.** Before every move, the agent checks the card is where it should be: in Will Do before Planning, in Planning before Implementing. If it's somewhere else, someone else (another agent, or a person) has probably picked it up, so the agent stops and asks instead of duplicating the work. `yass status <change>` prints the column a change's card belongs in (`card: … (column: Implementing)`), and `yass-status` points out cards that are out of step. It's optimistic, not a lock: Trello can't move a card only if it's still where you last saw it.
 

@@ -19,7 +19,7 @@ yass-shape, yass-plan, yass-work and yass-status each follow the Trello workflow
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
 - [x] `yass-shape` and `yass-plan`: start from a card, Planning, plan PR up, plan merged
-- [x] `yass-work`: Implementing, PR up and merged or closed, archive merged moves to Done, pieces' cards, offering cards
+- [x] `yass-work`: Implementing, PR up and merged or closed, archive merged moves to Done, pieces' cards (cards only for top-level changes, on a yes, per the R17 revision)
 - [x] `yass-status`: Will Do cards as waiting to start
 - [x] Claim check before every move, in each playbook
 - [x] A changed card on request: propose revisions
@@ -48,3 +48,6 @@ yass-shape, yass-plan, yass-work and yass-status each follow the Trello workflow
   - AC15: the card was checked in Planning, then moved to Implementing when building started; ticking boxes added nothing; it got a comment when the code PR (#98) was up and when it merged.
   - AC11, live: after #98, `yass status` showed "Implementing, until its archive merges: then Done".
 - Next: AC16 when the archive PR merges (the card should move to Done); then AC13's `yass-status` half, AC17 to AC20 and AC23.
+### 2026-11-14 (claude)
+- Did: per the R17 revision (intent underneath), work flows from the board into YASS: `yass-init`'s Trello workflow, `yass-shape` and `yass-work` ask whether to create a card only for a new top-level change, and create it only on a yes; `yass-plan` and the workflow never create cards for pieces, which roll up to their change's card; linking to a card that already covers the work stays, for deduplication; the interview for other systems asks only about issues for top-level changes; docs/project-management.md says so up front. Unit, e2e, examples and site pass.
+- Next: AC20 as revised (ask for a top-level change, never a card for a piece) gets checked on the next change and pieces worked.
