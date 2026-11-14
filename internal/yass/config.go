@@ -4,12 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
+
+// SettingsName is the optional settings file inside a yass folder: branch:, archive: and tracker:,
+// merged with its yass.yaml, the folder's winning. It lives with the plans, so private plans keep
+// their settings private (design §2).
+const SettingsName = "settings.yaml"
 
 // ConfigName is the settings file that can stand in for a yass/ folder and point to one elsewhere.
 const ConfigName = "yass.yaml"
@@ -145,6 +151,31 @@ func sortedAnyKeys(m map[string]any) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// overlay is a yass.yaml's settings with a settings.yaml's on top: each one the folder sets wins.
+// It also names the settings the two give different values.
+func overlay(pointer, folder Config) (Config, []string) {
+	var differ []string
+	if b := strings.TrimSpace(folder.Branch); b != "" {
+		if p := strings.TrimSpace(pointer.Branch); p != "" && p != b {
+			differ = append(differ, "branch:")
+		}
+		pointer.Branch = b
+	}
+	if k := folder.Archive.Keep; k > 0 {
+		if pointer.Archive.Keep > 0 && pointer.Archive.Keep != k {
+			differ = append(differ, "archive:")
+		}
+		pointer.Archive.Keep = k
+	}
+	if folder.Tracker != nil {
+		if pointer.Tracker != nil && !reflect.DeepEqual(pointer.Tracker, folder.Tracker) {
+			differ = append(differ, "tracker:")
+		}
+		pointer.Tracker = folder.Tracker
+	}
+	return pointer, differ
 }
 
 // trello is the Trello board these settings name, if they name one.

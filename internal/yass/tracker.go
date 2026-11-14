@@ -13,27 +13,50 @@ import (
 // memory of its own. It's per machine, so git must ignore it.
 const LocalTracker = "tracker.local.md"
 
-// checkSettings notes a yass.yaml that points to plans outside the repo and that git would commit
-// with settings beyond the pointer (design §2): those describe private plans, so a human should check
-// that publishing them is intentional. It's a note, not a warning. And a local tracker file stays out of git.
+// checkSettings checks each yass folder's settings.yaml (design §2), and notes a yass.yaml that points
+// to plans outside the repo and that git would commit with settings beyond the pointer: those may leak
+// private setup, so a human should check. It's a note, not a warning. A local tracker file stays out of git.
 func (r *Repo) checkSettings() {
 	for _, root := range r.Roots {
+		if f := filepath.Join(root.Dir, SettingsName); isFile(f) {
+			own, unknown, err := loadConfig(f)
+			if err != nil {
+				r.warn("%s: %v", r.disp(f), err)
+			}
+			for _, k := range unknown {
+				r.warn("%s: unknown setting '%s' (a newer yass may know it)", r.disp(f), k)
+			}
+			for _, p := range own.problems {
+				r.warn("%s: %s", r.disp(f), p)
+			}
+			if strings.TrimSpace(own.Path) != "" || len(own.Ignore) > 0 {
+				r.warn("%s: path: and ignore: belong in yass.yaml, which says where the yass folder is; here they're ignored", r.disp(f))
+			}
+			if root.Config != "" {
+				if pc, _, err := loadConfig(root.Config); err == nil {
+					if _, differ := overlay(pc, own); len(differ) > 0 {
+						r.warn("%s and %s give %s different values; %s's are used", r.disp(root.Config), r.disp(f), strings.Join(differ, ", "), SettingsName)
+					}
+				}
+			}
+		}
 		if root.Config != "" && within(root.Config, r.Top) && !within(root.Config, root.Dir) && r.separate(root) {
 			if _, ignored := git(r.Top, "check-ignore", "-q", root.Config); !ignored {
-				c := root.settings()
-				var extra []string
-				if strings.TrimSpace(c.Branch) != "" {
-					extra = append(extra, "branch:")
-				}
-				if c.Archive.Keep > 0 {
-					extra = append(extra, "archive:")
-				}
-				if c.Tracker != nil {
-					extra = append(extra, "tracker:")
-				}
-				if len(extra) > 0 {
-					r.note("%s points to plans outside the repo, and git would commit it with %s; check that's intentional, or keep the file out of git (it works from there too)",
-						r.disp(root.Config), strings.Join(extra, ", "))
+				if c, _, err := loadConfig(root.Config); err == nil {
+					var extra []string
+					if strings.TrimSpace(c.Branch) != "" {
+						extra = append(extra, "branch:")
+					}
+					if c.Archive.Keep > 0 {
+						extra = append(extra, "archive:")
+					}
+					if c.Tracker != nil {
+						extra = append(extra, "tracker:")
+					}
+					if len(extra) > 0 {
+						r.note("%s points to plans outside the repo, and git would commit it with %s, which may be private; check that's intentional, or move them to %s",
+							r.disp(root.Config), strings.Join(extra, ", "), filepath.Join(root.Dir, SettingsName))
+					}
 				}
 			}
 		}

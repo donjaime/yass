@@ -121,3 +121,19 @@ func TestTrackerSettings(t *testing.T) {
 		}
 	}
 }
+
+func TestSettingsOverlay(t *testing.T) {
+	board := map[string]any{"trello": map[string]any{"board": "https://trello.com/b/AbC123"}}
+	pointer := Config{Branch: "main", Tracker: map[string]any{"jira": "PAY"}}
+	pointer.Archive.Keep = 5
+	s, differ := overlay(pointer, Config{Branch: "trunk", Tracker: board})
+	if s.Branch != "trunk" || s.Archive.Keep != 5 || s.trello() != "https://trello.com/b/AbC123" {
+		t.Errorf("overlay = branch %q keep %d board %q; want the folder's branch and tracker, the pointer's keep", s.Branch, s.Archive.Keep, s.trello())
+	}
+	if strings.Join(differ, " ") != "branch: tracker:" {
+		t.Errorf("differ = %v; want branch: and tracker:", differ)
+	}
+	if s, differ := overlay(pointer, Config{Branch: "main"}); s.Branch != "main" || s.Archive.Keep != 5 || s.Tracker["jira"] != "PAY" || len(differ) != 0 {
+		t.Errorf("the same value, or none, changes nothing and differs in nothing: %+v %v", s, differ)
+	}
+}

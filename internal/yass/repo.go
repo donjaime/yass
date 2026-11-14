@@ -108,12 +108,17 @@ type Root struct {
 	settled  *Config  // settings(), once read
 }
 
-// settings are the yass folder's settings, from the yass.yaml that points to it.
+// settings are the yass folder's settings: its yass.yaml's, with its settings.yaml's on top (design §2).
 func (root *Root) settings() Config {
 	if root.settled == nil {
 		var s Config
 		if root.Config != "" {
 			s, _, _ = loadConfig(root.Config)
+		}
+		if f := filepath.Join(root.Dir, SettingsName); isFile(f) {
+			if own, _, err := loadConfig(f); err == nil {
+				s, _ = overlay(s, own)
+			}
 		}
 		root.settled = &s
 	}
@@ -706,6 +711,11 @@ func (r *Repo) findRoots() {
 	}
 	if len(r.Roots) == 0 && len(r.Warnings) == warned {
 		r.borrowConfig()
+	}
+	for _, root := range r.Roots { // a settings.yaml's branch: counts too
+		if b := strings.TrimSpace(root.settings().Branch); b != "" {
+			root.Branch = b
+		}
 	}
 	sort.SliceStable(r.Roots, func(i, j int) bool {
 		a, b := r.Roots[i].Owner, r.Roots[j].Owner

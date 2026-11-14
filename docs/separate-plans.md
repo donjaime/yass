@@ -10,14 +10,30 @@ yass: 2026-09-14-offline-sync/2026-09-16-offline-queue
 
 The trailer survives squash merges when the pull request's description or commit list keeps it, and git tools read it (`git log --format='%(trailers:key=yass)'`). Changes whose plans are in the repo's own `yass/` need none: their progress travels in the commits.
 
-## Settings and a public code repo
-The `yass.yaml` that points to the plans also holds their settings (`branch:`, `archive:`, `tracker:`). In an open source repo you may not want those published, so `yass status` adds a note when that file would be committed with anything besides `path:` and `ignore:`:
+## Settings stay with the plans
+Put the plans' settings (`branch:`, `archive:`, `tracker:`) in a `settings.yaml` at the top of the plans folder. It's committed in the plans repo, so teammates share it and it has history, and it applies from the code repo, its linked worktrees, and inside the plans repo. The code repo's `yass.yaml` then needs only the pointer:
+
+```yaml
+# yass.yaml, in the public code repo
+path: ${YASS_PLANS:-../my-project-plans}
+```
+
+```yaml
+# my-project-plans/settings.yaml
+branch: main
+tracker:
+  trello:
+    board: https://trello.com/b/AbC123/my-project
+    lists: { ideas: 64f0…, will-do: 64f1…, planning: 64f2…, implementing: 64f3…, done: 64f4… }
+```
+
+When a `yass.yaml` that git would commit carries anything besides `path:` and `ignore:`, `yass status` notes it, since it may publish private setup:
 
 ```
-note: yass.yaml points to plans outside the repo, and git would commit it with tracker:; check that's intentional, or keep the file out of git (it works from there too)
+note: yass.yaml points to plans outside the repo, and git would commit it with tracker:, which may be private; check that's intentional, or move them to …/my-project-plans/settings.yaml
 ```
 
-It's a note, not a warning, so `--strict` passes if you mean it. To keep the settings private, gitignore `yass.yaml`: YASS still reads it, and linked worktrees borrow it from the main checkout. Agents setting up a tracker ask before writing its settings into a committed `yass.yaml`.
+It's a note, not a warning, so `--strict` passes if you mean it. Agents connecting a tracker write its settings to `settings.yaml`.
 
 ## The trailer
 

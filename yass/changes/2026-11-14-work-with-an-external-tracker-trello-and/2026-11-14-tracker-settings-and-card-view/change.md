@@ -21,7 +21,8 @@ A yass folder can name its tracker: tracker.trello is validated and other tracke
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
 - [x] `tracker:` in `Config`: validate `trello` (board link, five list IDs, unknown keys), keep other keys as-is
 - [-] A folder's own `yass.yaml`: found beside `changes/`/`archive/`, not a pointer; its settings win; `path:` there warns
-- [x] Note a `yass.yaml` pointing outside the repo that git would commit with settings beyond `path:` and `ignore:`
+- [x] `settings.yaml` in a yass folder: merged with `yass.yaml`, the folder's winning; warn on differing values, misplaced `path:`/`ignore:` and unknown settings
+- [x] Note a `yass.yaml` pointing outside the repo that git would commit with settings beyond `path:` and `ignore:`, suggesting `settings.yaml`
 - [x] `card:` line in `yass status <change>` with the expected column
 - [x] Warn about a `tracker.local.md` git doesn't ignore
 - [x] Unit tests, e2e flows, bench
@@ -34,7 +35,8 @@ A yass folder can name its tracker: tracker.trello is validated and other tracke
 - The card's column follows the change's `yass status` state: a Log entry counts as started, as it does everywhere else (claude, 2026-11-14)
 - Unit tests cover only logic that needs no files: the Trello checks on YAML parsed in memory, and (until it was dropped below) the settings merge as a pure `overlay()`; the card column, discovery and warnings are left to e2e section 17, which already runs them end to end - after Jaime's review, so the unit tests pay their freight (Jaime, 2026-11-14)
 - Dropped the folder's own `yass.yaml` step and the code behind it (discovery, `overlay()`, the warnings about settings in the pointer); the yass.yaml that points to a folder holds its settings, and a note asks to check one pointing outside the repo that git would commit with settings beyond `path:` and `ignore:` - Jaime's reversal, recorded in the parent's Decisions and design §2, merged first as its own intent commit underneath (Jaime, 2026-11-14)
-- The checks for committed private settings and for `tracker.local.md` run in `check()`, so every command that loads changes sees them, not only `yass status` (claude, 2026-11-14)
+- `settings.yaml` (design §2 option C): read from each yass folder already found, so discovery is unchanged; `overlay()` returns to merge it and also names the settings the two files give different values, for the warning. This repo's `yass/README.md` and the folder README template list it (Jaime's call; implementation claude, 2026-11-14)
+- The checks for `settings.yaml`, committed private settings and `tracker.local.md` run in `check()`, so every command that loads changes sees them, not only `yass status` (claude, 2026-11-14)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
@@ -47,3 +49,5 @@ A yass folder can name its tracker: tracker.trello is validated and other tracke
 - Did: after review on #88, unit tests no longer touch the disk: `trackerProblems` on in-memory YAML, `overlay()` pulled out of `Root.settings()` and tested pure, and the card-column test dropped as a repeat of e2e section 17.
 - Did: reworked after Jaime's reversal: removed the folder's own `yass.yaml` (repo.go and config.go back to one settings file, `Root.settings()` just caches it), the pointer warning became a note in `checkSettings` (tracker.go), e2e 17b/17c rewritten (plans outside the repo, committed vs gitignored pointer, `--strict`, a `specs/` folder), README and docs/separate-plans.md updated. 743 e2e checks pass.
 - Did: reran unit, examples, site and `tests/bench.sh` after the rework: status 799ms, with 100 branches 818ms, with 1000 remote branches 1418ms, status <change> 231ms, hook 102ms; all targets met.
+- Did: `settings.yaml` per design §2 option C: `SettingsName`, `overlay()` with differing settings (config.go), merged in `Root.settings()` and its `branch:` applied after discovery (repo.go), checks and the reworded note (tracker.go); unit `TestSettingsOverlay`; e2e 17b and 17c rewritten (748 pass); README, docs/separate-plans.md, the folder README template and `yass/README.md`.
+- Did: `tests/bench.sh` with `settings.yaml`: status 801ms, with 100 branches 818ms, with 1000 remote branches 1417ms, status <change> 230ms, hook 103ms; all targets met.
