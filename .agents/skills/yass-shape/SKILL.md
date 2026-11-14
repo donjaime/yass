@@ -2,7 +2,7 @@
 name: yass-shape
 description: Shape a large YASS change, in conversation with a human. Turn a problem or opportunity, or a plan already drafted in the harness's plan mode, into a prd.md (why, for whom, outcomes, non-goals, requirements, milestones) inside a new change folder, or revise the PRD of an active change after feedback. Use when someone wants to build a new feature, component or system, wants to save a plan as a YASS change, or when what a large change promises needs to change.
 metadata:
-  yass-version: "0.4.0"
+  yass-version: "0.5.0"
 ---
 
 # yass-shape
@@ -13,6 +13,7 @@ Shaping is a conversation. It's where a human decides what to build and why, so 
 
 ## A new large change
 1. **Start from what exists.** If this session already has a plan (from the harness's plan mode, or a plan file the human points you to), it's your first draft: carry over its problem, scope, decisions and open questions rather than asking again. Ask only about what the PRD needs and the plan doesn't say. Otherwise, understand the problem first: who it's for, what evidence says it matters, and what success looks like.
+   - Run `yass me` first: a new change goes in the person's yass folder (`yass new` does that from the repo root), and their team is who it's for.
    - Either way, read the relevant code and docs, check the archive for earlier work on the same thing (`yass status --archived`, and `yass decisions --about "<words>"` for what was decided), and `yass status` for anything in flight that overlaps.
 2. **Frame options before requirements.** For a non-trivial problem, sketch 2–3 ways to scope it (appetite, rough solution, risks) and let a human pick. Skip this when the scope is already clear, or the human already picked one in their plan.
 3. **Create it:** `yass new "<title>" --large [--source <link>] [--follows <archived change>]`. Fill in `prd.md`:
@@ -23,8 +24,17 @@ Shaping is a conversation. It's where a human decides what to build and why, so 
    - **Milestones:** slices that each leave users better off.
    - **Open questions:** anything still undecided.
 4. Write the change's one-paragraph Goal in `change.md`, and the big calls in its `## Decisions` with who made them. A choice the human made in their plan is theirs: credit them.
-5. **Show a human the PRD** and get their go-ahead before planning, unless your team has told you otherwise. If it came from an approved plan, say what you added or changed beyond that plan; the rest is already agreed. In a fully autonomous run, where you've been put in charge of approvals, approve it yourself and record that in `## Decisions`.
-6. Offer `yass-plan` next. If the harness plan also covered the approach, `yass-plan` can use it too.
+5. **Its pull request,** like any, leads in plain words with what's proposed and why; the requirement IDs go in the collapsed tracking block at the end (`yass-work`, "Write pull requests and commits for people").
+6. **Show a human the PRD** and get their go-ahead before planning, unless your team has told you otherwise. If it came from an approved plan, say what you added or changed beyond that plan; the rest is already agreed. In a fully autonomous run, where you've been put in charge of approvals, approve it yourself and record that in `## Decisions`.
+7. Offer `yass-plan` next. If the harness plan also covered the approach, `yass-plan` can use it too.
+
+## With a tracker
+When the change's yass folder names a Trello board (`tracker:` in its `settings.yaml`, or its `yass.yaml`), follow the Trello workflow in the `yass-init` playbook. For shaping:
+- **From a card:** asked to shape one, create the change with the card's title and link (`yass new "<card title>" --large --source <card link>`). A new change with no card: ask whether to create one in Planning, and create it only on a yes.
+- **Planning starts:** check the card is still in Will Do, then move it to Planning with a comment that planning has begun, naming the change folder. If it's anywhere else, someone may have claimed it: don't move it or comment; tell the human where it is, and ask.
+- **The PRD's pull request** gets a comment on the card when it's up for review, with the link, and another when it merges, saying the plan is accepted. Nothing else goes on the card.
+- **A card that changed:** when the human says so, read it and propose PRD revisions here.
+- **Another tracker** (any other key under `tracker:`): at these same moments, do what the yass folder's `team.md` says under `## Project management`. None there? Run `yass-init`'s interview first, or ask.
 
 ## Plan mode
 Harness plan modes (Claude Code's, and others') usually can't write files. Research and draft there; once the human approves the plan and you can write again, create the change as above. The harness plan lives with the session, the change folder lives with the repo.
