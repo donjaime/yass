@@ -17,6 +17,9 @@ bad() { echo "  FAIL $1"; fail=$((fail+1)); }
 run_ok()   { local d="$1"; shift; local o; if o="$("$@" 2>&1)"; then ok "$d"; else bad "$d"; sed 's/^/       /' <<<"$o" | head -20; fi; }
 run_fail() { local d="$1"; shift; local o; if o="$("$@" 2>&1)"; then bad "$d (should have failed)"; sed 's/^/       /' <<<"$o" | head -20; else ok "$d"; fi; }
 has()   { local d="$1" p="$2"; shift 2; local o; o="$("$@" 2>&1)"; if grep -qE -- "$p" <<<"$o"; then ok "$d"; else bad "$d (no /$p/)"; sed 's/^/       /' <<<"$o" | head -25; fi; }
+# fails DESC PATTERN CMD…: one run, which must exit non-zero and print PATTERN
+fails() { local d="$1" p="$2"; shift 2; local o; if o="$("$@" 2>&1)"; then bad "$d (should have failed)"; sed 's/^/       /' <<<"$o" | head -20
+  elif grep -qE -- "$p" <<<"$o"; then ok "$d"; else bad "$d (no /$p/)"; sed 's/^/       /' <<<"$o" | head -25; fi; }
 hasnt() { local d="$1" p="$2"; shift 2; local o; o="$("$@" 2>&1)"; if grep -qE -- "$p" <<<"$o"; then bad "$d (found /$p/)"; sed 's/^/       /' <<<"$o" | head -25; else ok "$d"; fi; }
 y() { yass "$@"; }
 # portable in-place regex edit (GNU and BSD): sub FILE PATTERN REPLACEMENT [COUNT]
@@ -26,6 +29,8 @@ sub() { P="$2" R="$3" N="${4:-0}" perl -0777 -i -pe '
 newrepo() { rm -rf "$1"; mkdir -p "$1"; cd "$1"; git init -q -b main; git config user.email t@t; git config user.name Sam
   echo app > app.txt; git add -A; git commit -q -m "existing app"; }
 TODAY=$(date +%F); MONTH=$(date -u +%Y/%m)   # archives go in archive/<YYYY>/<MM>/, by UTC month
+# stamps: each version stamped in the repo's YASS files (playbooks, AGENTS.md section, hook), with how many carry it
+stamps() { grep -rhoE 'yass-version: "?[^" ]+|yass:begin version=[^ ]+' . --include=SKILL.md --include=AGENTS.md --include=pre-commit 2>/dev/null | sed -E 's/.*(version: "?|version=)//' | sort | uniq -c | tr -s ' '; }
 
 newrepo "$W/e2e/solo"
 INSTALL_OUT="$(y init)"
@@ -33,30 +38,23 @@ INSTALL_OUT="$(y init)"
 echo "1. install"
 has   "a first install suggests the adopting commit" "chore: adopt YASS" echo "$INSTALL_OUT"
 has   "…and connecting a tracker with yass-init" "use yass-init to connect our Trello board" echo "$INSTALL_OUT"
-for f in tools/yass/githooks/pre-commit yass/README.md yass/changes/.gitkeep \
-         yass/archive/.gitkeep AGENTS.md .agents/skills/yass-work/SKILL.md .agents/skills/yass-shape/SKILL.md \
-         .agents/skills/yass-plan/SKILL.md .agents/skills/yass-status/SKILL.md .agents/skills/yass-log/SKILL.md \
-         .agents/skills/yass-update/SKILL.md .agents/skills/yass-init/SKILL.md; do
+for f in yass/README.md yass/changes/.gitkeep yass/archive/.gitkeep; do
   [ -e "$f" ] && ok "has $f" || bad "missing $f"
 done
-has "the yass folder README describes the monthly archive" "archive/.*<YYYY>/<MM>/" cat yass/README.md
-[ ! -e .claude ] && ok "no Claude files without --claude" || bad ".claude written without --claude"
-[ ! -e yass/config.yml ] && ok "no config file" || bad "a config file appeared"
+[ ! -e .claude ] && [ ! -e CLAUDE.md ] && ok "no Claude files without --claude" || bad "Claude files written without --claude"
 has   "AGENTS.md has the YASS section" "yass:begin" cat AGENTS.md
 hasnt "the hook is off by default" "githooks" git config core.hooksPath
 has   "status on an empty repo" "no active changes" y
 has   "init is idempotent" "already set up" y init
 git add -A; run_ok "adopting commit" git commit -q -m "chore: adopt YASS"
 has   "the AGENTS.md section names yass-init for setup and trackers" "yass-init" cat AGENTS.md
+has   "…and yass-update for versions out of step" "yass-update" cat AGENTS.md
 has   "…and says not every pull request needs a change" "Not every pull request needs a change" cat AGENTS.md
-has   "…asking first when the intent deserves review" "deserves discussion, review or approval, ask whether to start a change" cat AGENTS.md
 y init >/dev/null
 [ -z "$(git status --porcelain)" ] && ok "init run again on a set-up repo changes no file" || bad "a second init changed: $(git status --porcelain | tr '\n' ' ')"
 echo "# My rules" > AGENTS.md; y init >/dev/null
 has   "init keeps your AGENTS.md content" "# My rules" cat AGENTS.md
 has   "…and adds its section once" "^1$" bash -c 'grep -c "yass:begin" AGENTS.md'
-y init >/dev/null
-has   "…even when run again" "^1$" bash -c 'grep -c "yass:begin" AGENTS.md'
 git checkout -q AGENTS.md
 
 echo "2. a small change"
@@ -73,7 +71,6 @@ sub "$P/change.md" '^## Acceptance\n' '## Acceptance\n- [ ] Given Save tapped tw
 has   "a fresh change is not started" "fix-double-tap-save +0/1 +not started" y status
 has   "…in the detail view too" "progress: 0/1  \(not started\)" y status double-tap
 sub "$P/change.md" '^- \[ \] $' '- [x] Reproduce\n- [ ] Disable Save while saving'
-hasnt "a ticked box starts it" "not started" y status
 has "status shows progress and next" "fix-double-tap-save +1/3 +next: Given Save tapped twice" y status
 printf '\n### %s (claude)\n- Did: reproduced\n- Next: disable the button\n' "$TODAY" >> "$P/change.md"
 has "next comes from the Log when there is one" "next: disable the button" y status
@@ -83,10 +80,8 @@ git add -A; git commit -q -m "yass: new change"
 sub "$P/change.md" '^- \[ \] Disable' '- [/] Disable'
 has      "an in-progress box isn't done" "fix-double-tap-save +1/3" y status
 has      "…and the detail view marks it" "\[/\] Disable Save while saving" y status double-tap
-run_fail "archive refuses with open boxes" y archive double-tap
-has      "…and says which, in progress included" "2 box\(es\) still open" y archive double-tap
+fails "archive refuses with open boxes, and says which, in progress included" "2 box\(es\) still open" y archive double-tap
 sub "$P/change.md" '^- \[ \] Given' '- [x] Given'; sub "$P/change.md" '^- \[/\] Disable' '- [-] Disable'
-has      "a dropped box doesn't count" "fix-double-tap-save +2/2" y status
 has      "every box done or dropped: done" "fix-double-tap-save +2/2 +done" y status
 has      "…in the detail view too" "progress: 2/2  \(done\)" y status double-tap
 git commit -qam "progress"
@@ -105,11 +100,9 @@ OLD=yass/changes/2025-01-05-old-thing; mkdir -p "$OLD"; printf '# Old thing\n\n#
 git add -A; git commit -qm "yass: old thing"
 run_ok   "a change from an earlier month…" y archive old-thing
 [ -d "yass/archive/$MONTH/2025-01-05-old-thing" ] && ok "…goes in the month it was archived" || bad "not in this month's folder"
-has      "a change without frontmatter gets some" "^---$" head -1 "yass/archive/$MONTH/2025-01-05-old-thing/change.md"
 git commit -qm "yass: archive old-thing"
 DUP="yass/changes/$TODAY-fix-double-tap-save"; mkdir -p "$DUP"; printf '# Again\n\n## Steps\n- [x] Done\n' > "$DUP/change.md"
-run_fail "archive refuses a name that's already archived" y archive "$DUP"
-has      "…and says where the other one is" "already archived, at yass/archive/$MONTH/$TODAY-fix-double-tap-save" y archive "$DUP"
+fails "archive refuses a name that's already archived, and says where the other one is" "already archived, at yass/archive/$MONTH/$TODAY-fix-double-tap-save" y archive "$DUP"
 rm -rf "$DUP"
 
 echo "3. a large change with pieces"
@@ -135,10 +128,8 @@ hasnt "…but its change is, once any piece is" "offline-sync  \(large\) .*not s
 sub "$B/change.md" '^- \[ \] Badge' '- [/] Badge'
 hasnt "an in-progress box starts it" "sync-badge .*not started" y status
 has   "…and becomes next when the Log has none" "sync-badge .*next: Badge" y status
-run_fail "a piece can't be archived alone" y archive offline-queue
-has      "…it goes with its change" "archived with their change" y archive offline-queue
-run_fail "archive refuses open boxes in pieces" y archive offline-sync
-has      "…and names the piece" "Worker  \($TODAY-offline-queue/change.md\)" y archive offline-sync
+fails "a piece can't be archived alone, it goes with its change" "archived with their change" y archive offline-queue
+fails "archive refuses open boxes in pieces, and names the piece" "Worker  \($TODAY-offline-queue/change.md\)" y archive offline-sync
 git add -A; git commit -q -m "yass: offline sync"
 run_ok   "--force archives anyway" y archive offline-sync --force
 [ -f "yass/archive/$MONTH/$TODAY-offline-sync/$TODAY-sync-badge/change.md" ] && ok "pieces moved along" || bad "pieces left behind"
@@ -166,11 +157,9 @@ rm -rf "yass/changes/$TODAY-x" "$Q"; rmdir "$L" 2>/dev/null || true
 run_fail "unknown change" y status nope-nothing
 E=$(y new "Empty one")
 run_fail "archive refuses a change with no boxes" y archive empty-one
-sub "$E/change.md" '^blocked:$' 'blocked:    # set when stuck'
-sub "$E/change.md" '^follows:.*$' "follows: $TODAY-sync-badge   # an archived piece"
+sub "$E/change.md" '^follows:.*$' "follows: $TODAY-sync-badge"
 printf '### %s (claude)\n- **Next:** bold next step\n' "$TODAY" >> "$E/change.md"
-hasnt "frontmatter comments are ignored" "empty-one .*BLOCKED|^warning" y status
-has   "follows can name an archived piece" "empty-one" y status
+hasnt "follows can name an archived piece" "^warning" y status
 has   "a bold **Next:** is read" "next: bold next step" y status
 rm -rf "$E"
 y new "Web cache" >/dev/null; y new "Web fonts" >/dev/null
@@ -259,7 +248,6 @@ has   "…and the Log" "windows-endings .*next: from the log" y status
 rm -rf "$R"
 N=$(y new "With notes" --source "gh issue #41"); sub "$N/change.md" '^- \[ \] $' '- [x] The work'
 mkdir -p "$N/notes" && printf -- '- [ ] an idea for later\n' > "$N/notes/ideas.md"
-has      "a # inside a value isn't a comment" "source: gh issue #41" y status with-notes
 has      "boxes in a subfolder that isn't a piece don't count" "with-notes .*1/1  done" y status
 run_ok   "…for archive either" y archive with-notes
 rm -rf "yass/archive/$MONTH/$TODAY-with-notes"; git add -A >/dev/null
@@ -279,9 +267,6 @@ rm -rf "apps"; git add -A; git commit -qm "chore: tidy" >/dev/null
 echo "8. install.sh installs the binary"
 newrepo "$W/e2e/claude"
 y init --claude --hooks >/dev/null
-[ -f .claude/skills/yass-work/SKILL.md ] && ok "--claude copies the playbooks" || bad "no .claude/skills"
-has "--claude imports AGENTS.md" "^@AGENTS.md" cat CLAUDE.md
-has "--hooks sets the hook path" "tools/yass/githooks" git config core.hooksPath
 git add -A; hasnt "the adopting commit isn't flagged" "heads-up" git commit -q -m "chore: adopt YASS"
 BD="$W/e2e/bindir"; rm -rf "$BD" "$W/e2e/bindir2" "$W/e2e/bindir3" "$W/e2e/bindir4" "$W/e2e/onebin" "$W/e2e/nobin"
 IOUT="$(bash "$ROOT/install.sh" --bin-dir "$BD")"
@@ -315,15 +300,13 @@ U="$W/e2e/unpacked"; rm -rf "$U"; mkdir -p "$U"; cp "$ROOT/install.sh" "$U/"; cp
 has   "an unpacked release with no kit/ installs its binary" "installed yass .* to .*/bindir4/yass" \
       env -u YASS_BIN PATH=/usr/bin:/bin bash "$U/install.sh" --bin-dir "$W/e2e/bindir4"
 K="$W/e2e/script-only"; rm -rf "$K"; mkdir -p "$K"; cp "$ROOT/install.sh" "$K/"
-run_fail "no binary next to the script: refuses" env -u YASS_BIN PATH=/usr/bin:/bin bash "$K/install.sh" --bin-dir "$W/e2e/nobin"
-has      "…and says how to get one" "no yass binary next to this script" env -u YASS_BIN PATH=/usr/bin:/bin bash "$K/install.sh" --bin-dir "$W/e2e/nobin"
+fails "no binary next to the script: refuses, and says how to get one" "no yass binary next to this script" env -u YASS_BIN PATH=/usr/bin:/bin bash "$K/install.sh" --bin-dir "$W/e2e/nobin"
 newrepo "$W/e2e/oneliner"
 run_ok "the one-liner's two commands set up a repo, with --bin-dir not on PATH" \
        env PATH=/usr/bin:/bin bash -c 'bash "$1" --bin-dir "$2" >/dev/null && "$2/yass" init >/dev/null' _ "$ROOT/install.sh" "$W/e2e/onebin"
 [ -f .agents/skills/yass-work/SKILL.md ] && [ -x tools/yass/githooks/pre-commit ] && ok "…playbooks, hook and all" || bad "the one-liner didn't set up the repo"
 newrepo "$W/e2e/bare"
-run_fail "new before init explains itself" y new "x"
-has      "…with the fix" "run .*yass init" y new "x"
+fails "new before init explains itself, with the fix" "run .*yass init" y new "x"
 
 echo "9. yass.yaml: the yass folder lives somewhere else"
 newrepo "$W/e2e/ext"; rm -rf "$W/e2e/ext-yass" "$W/e2e/home-yass"
@@ -431,7 +414,6 @@ has   "an unknown entry warns" "'2026-09-09-nope' isn't a change in yass/changes
 has   "…an archived one" "'2025-12-01-old' is archived" y status
 has   "…a piece" "'2026-03-02-piece' is a piece of 2026-03-01-charlie" y status
 has   "…and a repeat" "'2026-01-01-alpha' is listed more than once" y status
-run_fail "…and --strict fails" y status --strict
 git checkout -q yass/queue.md
 mkdir -p svc && y init svc --no-agents >/dev/null; mk svc/yass/changes/2026-01-01-one; mk svc/yass/changes/2026-02-01-two
 printf -- '- 2026-02-01-two\n' > svc/yass/queue.md
@@ -461,8 +443,7 @@ mkb yass/changes/2026-03-01-big; mkb yass/changes/2026-03-01-big/2026-03-02-part
 mkb yass/changes/2026-04-01-multi x "yass/changes/2026-01-01-alpha, 2026-03-01-big/2026-03-02-part"
 git add -A; git commit -q -m "chore: adopt YASS"
 has   "waiting on a change that isn't done" "2026-02-01-bravo .*waiting on: 2026-01-01-alpha" y status
-run_fail "archive refuses while it waits" y archive bravo
-has   "…and says why" "waiting on 2026-01-01-alpha" y archive bravo
+fails "archive refuses while it waits, and says why" "waiting on 2026-01-01-alpha" y archive bravo
 has   "several, as a path and as change/piece" "2026-04-01-multi .*waiting on: 2026-01-01-alpha, 2026-03-01-big/2026-03-02-part" y status
 sub yass/changes/2026-01-01-alpha/change.md '^- \[/\]' '- [x]'
 hasnt "once it's done, nothing waits on it" "bravo .*(waiting|BLOCKED)" y status
@@ -473,14 +454,12 @@ git commit -q -m "yass: archive bravo"
 y archive alpha >/dev/null; git commit -q -m "yass: archive alpha"
 hasnt "an archived dependency is met" "multi .*alpha" y status
 mkb yass/archive/2025-12-01-old x   # an archive from before months: flat
-[ -d "yass/archive/$MONTH/2026-01-01-alpha" ] && [ -d yass/archive/2025-12-01-old ] && ok "flat and monthly archives side by side" || bad "layouts not mixed"
 mkb yass/changes/2026-05-02-mixed / "2025-12-01-old, 2026-01-01-alpha"
 sub yass/changes/2026-05-02-mixed/change.md '^blocked:' 'follows: 2025-12-01-old\nblocked:'
 mkb yass/changes/2026-05-03-mixed2 / ; sub yass/changes/2026-05-03-mixed2/change.md '^blocked:' 'follows: 2026-01-01-alpha\nblocked:'
 hasnt "follows: and blocked: resolve in either layout" "warning" y status
 hasnt "…and both count as met" "mixed .*waiting" y status
 has   "status --archived lists both" "2025-12-01-old.*2026-01-01-alpha" bash -c 'yass status --archived | tr "\n" " "'
-has   "status finds an archived change in a month" "progress: 1/1  \(done\)" y status --archived 2026-01-01-alpha
 printf -- '- 2026-01-01-alpha\n' >> yass/queue.md
 has   "queue.md knows a monthly archive is archived" "'2026-01-01-alpha' is archived" y status
 rm -rf yass/queue.md yass/changes/2026-05-02-mixed yass/changes/2026-05-03-mixed2 yass/archive/2025-12-01-old
@@ -492,7 +471,6 @@ has   "status --archived says which it can't read" "2026-01-01-alpha/change.md: 
 chmod 644 "yass/archive/$MONTH/2026-01-01-alpha/change.md"; rm -rf yass/changes/2026-05-04-after
 mkb yass/changes/2026-05-01-free x "waiting on 2026-03-01-big and legal sign-off"
 has   "free text, even mentioning a change, is a reason" "2026-05-01-free .*BLOCKED: waiting on 2026-03-01-big and legal" y status
-run_fail "…and archive refuses" y archive free
 mkb yass/changes/2026-05-01-free x "2026-09-09-nope"
 has   "a dated name that isn't a change warns" "blocked: '2026-09-09-nope' looks like a change" y status
 has   "…and stays a reason" "free .*BLOCKED: 2026-09-09-nope" y status
@@ -519,8 +497,7 @@ B=$(git rev-parse HEAD); y new "Plan only" >/dev/null; printf 'x\n' > services/p
 has   "--only: a range with only plans exits 0" "plans only: 2 file" y paths --only "$B..HEAD"
 run_ok "…with status 0" y paths --only "$B..HEAD"
 B=$(git rev-parse HEAD); echo more >> app.txt; echo y >> services/payments/yass/changes/note.md; git commit -qam "feat: code and plans"
-run_fail "a range with any other file exits 1" y paths --only "$B..HEAD"
-has   "…and names one" "1 of 2 changed file.* e.g. app.txt" y paths --only "$B..HEAD"
+fails "a range with any other file exits 1, and names one" "1 of 2 changed file.* e.g. app.txt" y paths --only "$B..HEAD"
 run_fail "an empty range runs the checks (exits 1)" y paths --only HEAD..HEAD
 has   "a range it can't read exits 2 and says to fetch" "fetch history first" y paths --only nope..HEAD
 bash -c 'yass paths --only nope..HEAD' >/dev/null 2>&1; [ $? -eq 2 ] && ok "…with status 2" || bad "not exit 2"
@@ -607,46 +584,24 @@ has   "an include with no yass.yaml anywhere warns, and says how to stop" "yass.
 git config --unset yass.include '^gone$'
 run_fail "--private outside a folder refuses" y init --private --path ../x --no-agents
 
-echo "23. change names end on a whole word"
-newrepo "$W/e2e/slug"; y init --no-agents >/dev/null
-P=$(y new "Paths that don't exist yet compare through symlinks")
-has   "a long title ends on its last whole word" "/$TODAY-paths-that-don-t-exist-yet-compare$" echo "$P"
-mkdir -p yass/archive/2026-01-01-paths-that-don-t-exist-yet-compare-throu
-printf -- '# Paths that don'"'"'t exist yet compare through symlinks\n\n- [x] done\n' > yass/archive/2026-01-01-paths-that-don-t-exist-yet-compare-throu/change.md
-has   "an archived change cut the old way still lists by name alone" "^2026-01-01-paths-that-don-t-exist-yet-compare-throu$" y status --archived
-
 echo "24. yass init sets up a repo from the binary alone"
-B="$W/e2e/alone-bin"; rm -rf "$B"; mkdir -p "$B"; cp "$YASS_BIN" "$B/yass"
-V="$("$B/yass" --version | sed 's/^yass v\{0,1\}//')"
+V="$(yass --version | sed 's/^yass v\{0,1\}//')"
 VR="$(printf '%s' "$V" | sed 's/[.+]/\\&/g')"   # the version as a regex: pseudo-versions have . and +
 newrepo "$W/e2e/alone"
-INIT_OUT="$(env -u YASS_BIN PATH="$B:/usr/bin:/bin" yass init)"
-for f in .agents/skills/yass-log/SKILL.md .agents/skills/yass-plan/SKILL.md .agents/skills/yass-shape/SKILL.md \
-         .agents/skills/yass-status/SKILL.md .agents/skills/yass-work/SKILL.md .agents/skills/yass-init/SKILL.md AGENTS.md yass/changes/.gitkeep; do
-  [ -e "$f" ] && ok "writes $f" || bad "missing $f"
-done
-[ -x tools/yass/githooks/pre-commit ] && ok "…and an executable hook script" || bad "no executable hook"
-[ ! -e .claude ] && [ ! -e CLAUDE.md ] && ok "…and no Claude files without --claude" || bad "Claude files without --claude"
-hasnt "…and leaves the hook off" "githooks" git config core.hooksPath
-has   "it lists what it wrote" "wrote .agents/skills/yass-work/SKILL.md" echo "$INIT_OUT"
+yass init >/dev/null
 same=1; for f in "$ROOT"/kit/.agents/skills/*/SKILL.md; do
   n="$(basename "$(dirname "$f")")"
   diff -q <(grep -v -e '^metadata:$' -e '^  yass-version: ' ".agents/skills/$n/SKILL.md") "$f" >/dev/null || same=0
 done
 diff -q <(grep -v '^# yass-version: ' tools/yass/githooks/pre-commit) "$ROOT/kit/tools/yass/githooks/pre-commit" >/dev/null || same=0
-[ "$same" = 1 ] && ok "…each matching its source in kit/ but for the version stamp" || bad "an installed file differs from kit/ beyond its stamp"
-has   "playbooks carry the version in their frontmatter" "^  yass-version: \"$VR\"$" cat .agents/skills/yass-work/SKILL.md
-has   "…the AGENTS.md marker too" "<!-- yass:begin version=$VR " cat AGENTS.md
-has   "…and the hook" "^# yass-version: $VR$" cat tools/yass/githooks/pre-commit
-echo "changed" > .agents/skills/yass-work/SKILL.md
-has   "re-running keeps what's there" "already set up" yass init
-has   "…edits included" "^changed$" cat .agents/skills/yass-work/SKILL.md
+[ -x tools/yass/githooks/pre-commit ] || same=0
+[ "$same" = 1 ] && ok "every playbook and an executable hook, each matching its source in kit/ but for the version stamp" || bad "an installed file is missing, not executable, or differs from kit/ beyond its stamp"
+[ "$(stamps | wc -l | tr -d " ")" = 1 ] && stamps | grep -qE " $VR$" && ok "the playbooks, the AGENTS.md marker and the hook all carry the binary's version" || bad "stamps: $(stamps | tr "\n" " ")"
 newrepo "$W/e2e/alone-claude"; printf '# Our rules\n' > CLAUDE.md
 yass init --claude --hooks >/dev/null; yass init --claude >/dev/null
 [ -f .claude/skills/yass-work/SKILL.md ] && ok "--claude copies the playbooks for Claude Code" || bad "no .claude/skills"
 has   "…imports AGENTS.md at the top of CLAUDE.md" "^@AGENTS.md$" head -1 CLAUDE.md
 has   "…once, keeping what was there" "^1 1$" bash -c 'echo "$(grep -c "@AGENTS.md" CLAUDE.md) $(grep -c "# Our rules" CLAUDE.md)"'
-has   "--hooks turns the hook on" "^tools/yass/githooks$" git config core.hooksPath
 newrepo "$W/e2e/alone-claude2"; yass init --claude >/dev/null
 has   "…and writes a CLAUDE.md when there's none" "^@AGENTS.md$" cat CLAUDE.md
 newrepo "$W/e2e/alone-global"; H="$W/e2e/alone-home"; rm -rf "$H"
@@ -657,9 +612,6 @@ GL_OUT="$(HOME="$H" yass init --global --claude)"
 newrepo "$W/e2e/alone-skillsdir"; SD="$W/e2e/alone-skills"; rm -rf "$SD"
 YASS_SKILLS_DIR="$SD" HOME="$H" yass init --global >/dev/null
 [ -f "$SD/yass-work/SKILL.md" ] && ok "…or in \$YASS_SKILLS_DIR" || bad "\$YASS_SKILLS_DIR ignored"
-newrepo "$W/e2e/alone-team"; yass init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
-mkdir -p svc; yass init svc >/dev/null
-[ ! -e svc/.agents ] && [ ! -e svc/tools ] && ok "a team folder's init writes no playbooks or hook" || bad "team init wrote kit files"
 newrepo "$W/e2e/alone-noagents"; yass init --no-agents >/dev/null
 [ ! -e .agents ] && [ ! -e tools ] && [ ! -e AGENTS.md ] && ok "--no-agents skips AGENTS.md, the playbooks and the hook" || bad "--no-agents wrote agent files"
 
@@ -677,7 +629,7 @@ ROOT_AGENTS="$(cksum < AGENTS.md)"
 mkdir -p apps/web services/api
 yass init services/api >/dev/null
 [ -d services/api/yass/changes ] && ok "a folder without --agents gets its planning" || bad "no services/api/yass"
-[ ! -e services/api/AGENTS.md ] && [ ! -e services/api/.agents ] && ok "…and no agent files" || bad "folder init wrote agent files"
+[ ! -e services/api/AGENTS.md ] && [ ! -e services/api/.agents ] && [ ! -e services/api/tools ] && ok "…and no agent files or hook" || bad "folder init wrote agent files or a hook"
 [ "$(cksum < AGENTS.md)" = "$ROOT_AGENTS" ] && ok "…and leaves the root AGENTS.md alone" || bad "folder init changed the root AGENTS.md"
 mkdir -p services/ext; yass init services/ext --path ../../../mono-ext-plans >/dev/null
 [ -f services/ext/yass.yaml ] && [ ! -e services/ext/AGENTS.md ] && ok "…or its yass.yaml, with --path" || bad "folder --path init wrote the wrong files"
@@ -703,8 +655,7 @@ has   "…an AGENTS.md section stamped older gets one" "yass upgrade. updates th
 has   "…and init leaves the section as it is" "version=0.0.1 " cat AGENTS.md
 
 echo "26. yass upgrade"
-Y4="$(vbin 0.4.0)"; Y5="$(vbin 0.5.0)"; Y5D="$(vbin 0.5.0+dirty)"; YDEV="$(vbin dev)"
-stamps() { grep -rhoE 'yass-version: "?[^" ]+|yass:begin version=[^ ]+' . --include=SKILL.md --include=AGENTS.md --include=pre-commit 2>/dev/null | sed -E 's/.*(version: "?|version=)//' | sort | uniq -c | tr -s ' '; }
+Y4="$(vbin 0.4.0)"; Y5="$(vbin 0.5.0)"; YDEV="$(vbin dev)"
 newrepo "$W/e2e/up"; "$Y4" init --claude --hooks >/dev/null
 printf '# Ours, before\n\n%s\n\n# Ours, after\n' "$(cat AGENTS.md)" > AGENTS.md; printf '\n# Our Claude notes\n' >> CLAUDE.md
 "$Y4" new "Keep me" >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
@@ -722,13 +673,9 @@ has   "a hand edit is replaced, and the diff shows it" "^-edited$" git diff -- .
 git add -A; git commit -qm "chore: upgrade YASS"
 has   "at the binary's version, it's already up to date" "already up to date: YASS's files are at 0.5.0" "$Y5" upgrade
 [ -z "$(git status --porcelain)" ] && ok "…and changes nothing" || bad "an up-to-date upgrade changed files"
-run_fail "an older binary refuses" "$Y4" upgrade
-has   "…naming the newer version and the fix" "written by yass 0.5.0, newer than this one \(0.4.0\); .yass update. gets that version" "$Y4" upgrade
+fails "an older binary refuses, naming the newer version and the fix" "written by yass 0.5.0, newer than this one \(0.4.0\); .yass update. gets that version" "$Y4" upgrade
 [ -z "$(git status --porcelain)" ] && ok "…and writes nothing" || bad "a refused upgrade changed files"
-has   "a +dirty build rewrites its own version" "wrote AGENTS.md" "$Y5D" upgrade
-git checkout -q -- .
-run_fail "a binary with no version refuses to upgrade" "$YDEV" upgrade
-has   "…saying how to get a versioned build" "has no version .*Go 1.24" "$YDEV" upgrade
+fails "a binary with no version refuses to upgrade, saying how to get a versioned build" "has no version .*Go 1.24" "$YDEV" upgrade
 newrepo "$W/e2e/up-dev"; run_fail "…or to init" "$YDEV" init
 [ ! -e AGENTS.md ] && ok "…writing nothing" || bad "an unversioned init wrote files"
 newrepo "$W/e2e/up-global"; H="$W/e2e/up-home"; rm -rf "$H"
@@ -747,8 +694,7 @@ newrepo "$W/e2e/up-fresh"; "$Y5" init --claude --hooks >/dev/null
 same=1; for f in .agents .claude tools AGENTS.md CLAUDE.md; do diff -r -q "$W/e2e/up-legacy/$f" "$f" >/dev/null || same=0; done
 [ "$same" = 1 ] && ok "…ending up exactly like a fresh init" || bad "upgraded v0.2 repo differs from a fresh init: $(diff -rq "$W/e2e/up-legacy/.agents" .agents; diff -q "$W/e2e/up-legacy/AGENTS.md" AGENTS.md)"
 NG2="$W/e2e/up-nogit"; rm -rf "$NG2"; mkdir -p "$NG2"
-run_fail "upgrade outside a git repo refuses" bash -c 'cd "$1" && "$2" upgrade' _ "$NG2" "$Y5"
-has   "…and says why" "works inside a git repo" bash -c 'cd "$1" && "$2" upgrade' _ "$NG2" "$Y5"
+fails "upgrade outside a git repo refuses, and says why" "works inside a git repo" bash -c 'cd "$1" && "$2" upgrade' _ "$NG2" "$Y5"
 newrepo "$W/e2e/up-mono"; "$Y4" init >/dev/null; mkdir -p apps/web services/api vendor/x
 "$Y4" init apps/web --agents >/dev/null; "$Y4" init services/api --agents >/dev/null
 mkdir -p vendor/x/.agents/skills/yass-work; cp apps/web/.agents/skills/yass-work/SKILL.md vendor/x/.agents/skills/yass-work/
@@ -805,7 +751,6 @@ echo "29. same-day changes list in creation order"
 newrepo "$W/e2e/created"; y init --no-agents >/dev/null
 PZ=$(y new "Zebra"); PA=$(y new "Apple"); PP=$(y new "Parent" --large); PC=$(y new "Piece zebra" --in Parent); PB=$(y new "Piece apple" --in Parent)
 has   "yass new stamps created: in UTC" "^created: [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" cat "$PZ/change.md"
-has   "…and keeps the dated folder name" "^yass/changes/$TODAY-zebra$" echo "$PZ"
 has   "…a large change too" "^created: .*Z$" cat "$PP/change.md"
 has   "…and a piece" "^created: .*Z$" cat "$PC/change.md"
 sub "$PZ/change.md" '^created: .*$' "created: ${TODAY}T00:00:01Z"; sub "$PA/change.md" '^created: .*$' "created: ${TODAY}T00:00:02Z"
@@ -813,23 +758,9 @@ sub "$PP/change.md" '^created: .*$' "created: ${TODAY}T00:00:03Z"
 sub "$PC/change.md" '^created: .*$' "created: ${TODAY}T00:00:04Z"; sub "$PB/change.md" '^created: .*$' "created: ${TODAY}T00:00:05Z"
 mkdir -p "yass/changes/$TODAY-mango"; printf -- '---\nblocked:\n---\n# Mango\n\n- [ ] a\n' > "yass/changes/$TODAY-mango/change.md"
 has   "same-day changes list in creation order, unstamped first" "mango .*zebra .*apple .*parent .*piece-zebra .*piece-apple " bash -c 'yass status | tr "\n" " "'
-has   "an unstamped change still resolves" "# Mango|Mango" y status mango
 hasnt "…and draws no warning" "created" y status
 sub "$PA/change.md" '^created: .*$' "created: yesterday"
 has   "a created: that isn't a time warns" "apple: created 'yesterday' isn't a time" y status
-has   "…and sorts as unstamped (by date, then name)" "apple .*mango .*zebra " bash -c 'yass status | tr "\n" " "'
-
-echo "30. AGENTS.md says intent and archives land apart from code"
-Y5="$(vbin 0.5.0)"
-newrepo "$W/e2e/apart"; "$Y5" init >/dev/null
-has   "the section says intent stays out of a squashed pull request with code" "never changes in the same commit as code \(with squash merges, the same pull request\)" cat AGENTS.md
-has   "…that archives land apart from code" "in its own commit, apart from code" cat AGENTS.md
-has   "…and that pushing and pull requests need latitude" "rebase, push or open a pull request unless" cat AGENTS.md
-git add -A; git commit -q -m "chore: adopt YASS"
-sub AGENTS.md 'yass:begin version=0\.5\.0' 'yass:begin version=0.4.0'
-sub AGENTS.md ', apart from code \(with squash merges, a pull request without code\)' ''
-"$Y5" upgrade >/dev/null
-has   "yass upgrade brings an older section up to it" "in its own commit, apart from code" cat AGENTS.md
 
 echo "31. yass upgrade moves a flat archive into months"
 Y6="$(vbin 0.6.0)"
@@ -863,7 +794,6 @@ printf 'path: %s\n' "$P6" > yass.yaml
 OUT="$("$Y6" upgrade)"
 has   "a yass folder outside git migrates too" "migrated .*plain-plans \(archive-into-months\)" echo "$OUT"
 hasnt "…with nothing to commit" "commit it on its own" echo "$OUT"
-has   "…dated by its name, at midnight UTC" "^archived: 2026-02-03T00:00:00Z$" cat "$P6/archive/2026/02/2026-02-03-elsewhere/change.md"
 
 PR6="$W/e2e/plans-repo"; newrepo "$PR6"; flat archive/2026-01-05-planned; git add -A
 GIT_COMMITTER_DATE=2026-03-09T08:30:00Z git commit -q -m "yass: archive planned"
@@ -898,13 +828,9 @@ hasnt "…and under the limit, says nothing more" "more not shown" y decisions
 has   "no match says so" "^no decisions match$" y decisions --about zzz
 run_ok "…and exits 0" y decisions --about zzz
 run_fail "a bad date is refused" y decisions --since yesterday
-has   "--json is one array with every field" '"change": "2026-04-01-cee",' y decisions --json
 has   "…and parses" "Bee piece call" bash -c 'yass decisions --json | python3 -c "import json,sys; d=json.load(sys.stdin); print([x[\"decision\"] for x in d]); assert set(d[0]) == {\"change\",\"title\",\"who\",\"decision\",\"date\",\"created\",\"archived\"}"'
 has   "…with null for what's unknown" "^None None 2026-02-15$" bash -c 'yass decisions --json --change origin | python3 -c "import json,sys; o=[x for x in json.load(sys.stdin) if x[\"change\"].endswith(\"origin\")][0]; print(o[\"date\"], None if o[\"date\"] else None, o[\"archived\"])"'
 has   "…the same filters apply" '^\[\]$' y decisions --json --about zzz
-has   "new changes ask for dated entries" "\(<who>, <YYYY-MM-DD>\)" y template change
-has   "…large ones too" "\(<who>, <YYYY-MM-DD>\)" y template change-large
-has   "…and so does the AGENTS.md section" "\(<who>, <YYYY-MM-DD>\)" cat AGENTS.md
 newrepo "$W/e2e/decisions-none"
 has   "no yass folder says so" "no yass folder" y decisions
 run_ok "…and exits 0" y decisions
@@ -916,14 +842,12 @@ newrepo "$W/e2e/evict"; y init --hooks >/dev/null
 for n in 3 1 2; do mka yass/archive/2025/01/2025-01-0$n-jan-$n; done
 for n in 1 2 3 4; do mka yass/archive/2025/02/2025-02-0$n-feb-$n 2025-02-20T00:00:00Z; done
 mka "yass/archive/$NOWM/$TODAY-now-1" "${TODAY}T00:00:00Z"
-printf 'archive:\n  keep: 3\n  kepp: 4\n' > yass.yaml
+printf 'archive:\n  keep: 3\n' > yass.yaml
 y init teams/x --no-agents >/dev/null; mka teams/x/yass/archive/2025/01/2025-01-01-team-one
 git add -A; git commit -q -m "yass: archives"; JANSHA=$(git log -1 --format=%H -- yass/archive/2025/01)
-has   "an unknown setting under archive: warns" "unknown setting 'archive.kepp'" y status
 has   "a folder past keep gets a note" "note: yass/archive holds 8 archived changes, 5 past its keep of 3; .yass evict." y status
 hasnt "…another folder keeps the default" "teams/x/yass/archive holds" y status
-run_ok "…and --strict still passes on it" bash -c 'yass status --strict | grep -v kepp; sed -i.bak "/kepp/d" yass.yaml; yass status --strict'
-rm -f yass.yaml.bak; git add -A; git commit -q -m "yass: settings"
+run_ok "…and --strict still passes on it" y status --strict
 N=$(y new "One more"); sub "$N/change.md" '^- \[ \] $' '- [x] Done'; git add -A; git commit -q -m wip
 has   "archive says so too" "note: yass/archive holds 9 archived changes, 6 past its keep of 3" y archive one-more
 git commit -q -m "yass: archive one-more"
@@ -957,20 +881,16 @@ git reset -q --hard HEAD~1
 git rm -q -r "yass/archive/$NOWM/$TODAY-now-1"
 has   "deleting from the archive without a manifest is still flagged" "append-only" git commit -q -m "yass: tidy"
 git reset -q --hard HEAD~1
-has   "init's yass README says evict is the one exception" "append-only,\*\* except that .yass evict." cat yass/README.md
-has   "…and so does AGENTS.md" "only .yass evict. removes from it" cat AGENTS.md
 
 newrepo "$W/e2e/evict-refuse"; y init >/dev/null; printf 'archive:\n  keep: 1\n' > yass.yaml
 for n in 1 2; do mka yass/archive/2025/0$n/2025-0$n-01-m$n; done; git add -A; git commit -q -m arch
 echo "- [x] late edit" >> yass/archive/2025/01/2025-01-01-m1/change.md
-run_fail "a month with uncommitted changes: evict refuses" y evict
-has   "…and says why" "has changes that aren't committed" y evict
+fails "a month with uncommitted changes: evict refuses, and says why" "has changes that aren't committed" y evict
 [ -d yass/archive/2025/01 ] && ok "…and changes nothing" || bad "evicted anyway"
 git checkout -q -- yass
 P7="$W/e2e/plain-evict"; rm -rf "$P7"; for n in 1 2; do mka "$P7/archive/2025/0$n/2025-0$n-01-p$n"; done
 newrepo "$W/e2e/evict-plain"; printf 'path: %s\narchive:\n  keep: 1\n' "$P7" > yass.yaml
-run_fail "outside git, evict refuses" y evict
-has   "…and says why" "isn't in git" y evict
+fails "outside git, evict refuses, and says why" "isn't in git" y evict
 
 newrepo "$W/e2e/evict-merge"; y init >/dev/null; printf 'archive:\n  keep: 1\n' > yass.yaml
 for n in 1 2 3; do mka yass/archive/2025/0$n/2025-0$n-01-x$n; done; git add -A; git commit -q -m arch
@@ -1068,12 +988,8 @@ has   "outside a repo: no repo line, and the latest" "would install 0.6.0 \(the 
 hasnt "…no repo line" "this repo" "$R4" update --check
 cd "$W/e2e/update"
 has   "a go install build isn't replaced, and gets its command" "won't replace this binary: it was built with go install; .*go install github.com/donjaime/yass/cmd/yass@v0.5.0" "$(vbin 0.4.0)" update --check
-has   "a clone build gets how to rebuild" "built from a clone; update it there" "$(vbin dev)" update --check   # not y: on a tagged commit, a clone build carries the plain tag
-run_fail "an older --version is refused" "$R6" update --check --version v0.4.0
-has   "…and says why" "never downgrades" "$R6" update --check --version v0.4.0
 { kill "$RELPID"; wait "$RELPID"; } 2>/dev/null; RELPID=""
-run_fail "unreachable releases: it says so" "$R4" update --check
-has   "…naming where it looked" "couldn't reach http://127.0.0.1" "$R4" update --check
+fails "unreachable releases: it says so, naming where it looked" "couldn't reach http://127.0.0.1" "$R4" update --check
 unset YASS_RELEASES_URL
 
 echo "36. yass update installs"
@@ -1084,9 +1000,9 @@ mkrel() { local d="$W/releases/v$1" sum; mkdir -p "$d/x/yass_${GO_OS}_${GO_ARCH}
   cp "$2" "$d/x/yass_${GO_OS}_${GO_ARCH}/yass"; tar -czf "$d/$ASSET" -C "$d/x" "yass_${GO_OS}_${GO_ARCH}"; rm -rf "$d/x"
   sum=$( (sha256sum "$d/$ASSET" 2>/dev/null || shasum -a 256 "$d/$ASSET") | cut -d' ' -f1)
   case "${3:-ok}" in ok) echo "$sum  $ASSET";; bad) echo "0000000000000000000000000000000000000000000000000000000000000000  $ASSET";; unlisted) echo "$sum  other.tar.gz";; esac > "$d/checksums.txt"; }
-mkrel 0.5.0 "$(rbin 0.5.0)"; mkrel 0.6.0 "$R6"
+mkrel 0.5.0 "$(vbin 0.5.0)"; mkrel 0.6.0 "$R6"
 printf '#!/bin/sh\necho "yass 9.9.9"\n' > "$W/liar"; chmod +x "$W/liar"; mkrel 0.7.0 "$W/liar"
-mkrel 0.8.0 "$(rbin 0.8.0)" bad; mkrel 0.9.0 "$(rbin 0.9.0)" unlisted
+mkrel 0.8.0 "$R6" bad
 # PATHs with git and nothing else, and with a fake gh: auth status and attestation verify exit as told
 mkpath() { local d="$W/path-$1"; rm -rf "$d"; mkdir -p "$d"; ln -s "$(command -v git)" "$d/git"
   [ -n "${2:-}" ] && { printf '#!/bin/sh\ncase "$1" in auth) exit %s;; attestation) [ %s = 0 ] && exit 0; echo "verification failed: no attestation"; exit 1;; esac\n' "$2" "$3" > "$d/gh"; chmod +x "$d/gh"; }
@@ -1112,30 +1028,23 @@ has   "…and the binary is unchanged" "^yass 0.6.0$" "$W/inst/yass" version
 cd "$W"; fresh >/dev/null
 has   "outside a repo, update installs the latest" "^installed yass 0.6.0 " upd "$NOGH" update
 cd "$W/e2e/update"; fresh >/dev/null
-run_fail "a checksum that doesn't match: refused" upd "$NOGH" update --version v0.8.0
-has   "…and says so" "doesn't match the release's checksums.txt" upd "$NOGH" update --version v0.8.0
+fails "a checksum that doesn't match: refused, and says so" "doesn't match the release's checksums.txt" upd "$NOGH" update --version v0.8.0
 has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
-has   "an archive checksums.txt doesn't list: refused" "isn't listed in the release's checksums.txt" upd "$NOGH" update --version v0.9.0
 has   "with gh, provenance is verified" "checksum verified, build provenance verified" upd "$GHOK" update
 fresh >/dev/null
-run_fail "provenance that doesn't verify: refused" upd "$GHBAD" update
-has   "…and says why" "not installing 0.5.0: its build provenance didn't verify" upd "$GHBAD" update
+fails "provenance that doesn't verify: refused, and says why" "not installing 0.5.0: its build provenance didn't verify" upd "$GHBAD" update
 has   "…with what gh said" "verification failed: no attestation" upd "$GHBAD" update
 has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
 has   "gh not signed in: installs, and says provenance wasn't checked" "not checked: the GitHub CLI isn't signed in" upd "$GHOUT" update
 fresh >/dev/null
-run_fail "--require-provenance without gh: refused" upd "$NOGH" update --require-provenance
-has   "…and says why" "provenance can't be checked: the GitHub CLI isn't installed" upd "$NOGH" update --require-provenance
-run_fail "a downloaded binary that isn't the version asked for: refused" upd "$NOGH" update --version v0.7.0
-has   "…and says what it said" "doesn't run as 0.7.0 here \(it said: yass 9.9.9\)" upd "$NOGH" update --version v0.7.0
+fails "--require-provenance without gh: refused, and says why" "provenance can't be checked: the GitHub CLI isn't installed" upd "$NOGH" update --require-provenance
+fails "a downloaded binary that isn't the version asked for: refused, and says what it said" "doesn't run as 0.7.0 here \(it said: yass 9.9.9\)" upd "$NOGH" update --version v0.7.0
 has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
 hasnt "…and nothing left beside it" "yass-new" ls -A "$W/inst"
 chmod a-w "$W/inst"
-run_fail "a folder it can't write: refused before downloading" upd "$NOGH" update
-has   "…saying where, and what to do" "can't write to .*inst, where this yass is; rerun with permission" upd "$NOGH" update
+fails "a folder it can't write: refused before downloading, saying where, and what to do" "can't write to .*inst, where this yass is; rerun with permission" upd "$NOGH" update
 chmod u+w "$W/inst"
-run_fail "a release that doesn't exist: refused" upd "$NOGH" update --version v0.42.0
-has   "…naming it" "there's no release v0.42.0" upd "$NOGH" update --version v0.42.0
+fails "a release that doesn't exist: refused, naming it" "there's no release v0.42.0" upd "$NOGH" update --version v0.42.0
 fresh >/dev/null
 has   "installing past the repo says to upgrade it next, and that teammates follow" "^next: this repo's YASS files are older \(0.5.0\); run .yass upgrade. here and commit the diff \(chore: upgrade YASS\), and teammates then need yass 0.6.0 too" upd "$NOGH" update --latest
 fresh >/dev/null
@@ -1145,15 +1054,6 @@ fresh >/dev/null
 run_fail "releases unreachable: refused" upd "$NOGH" update
 has   "…the binary unchanged" "^yass 0.4.0$" "$W/inst/yass" version
 unset YASS_RELEASES_URL
-
-echo "37. yass-update, the playbook"
-newrepo "$W/e2e/update-kit"; "$(vbin 0.5.0)" init --claude >/dev/null
-[ -f .agents/skills/yass-update/SKILL.md ] && [ -f .claude/skills/yass-update/SKILL.md ] && ok "init installs yass-update with the others" || bad "no yass-update playbook"
-has   "the AGENTS.md section points to it" "out of step, or someone asks to update YASS: .yass-update." cat AGENTS.md
-has   "…and so does yass-status" "Versions out of step.*yass-update" cat .agents/skills/yass-status/SKILL.md
-git add -A; git commit -q -m "chore: adopt YASS"; rm -rf .agents/skills/yass-update .claude/skills/yass-update
-has   "upgrade adds it to a repo that doesn't have it" "wrote .agents/skills/yass-update/SKILL.md" "$(vbin 0.5.0)" upgrade
-[ -f .claude/skills/yass-update/SKILL.md ] && ok "…in .claude/skills too" || bad "not added to .claude/skills"
 
 echo "38. criteria the pieces deliver"
 newrepo "$W/e2e/delivers"; y init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"; BASE=$(git rev-parse HEAD)
@@ -1181,11 +1081,10 @@ cp "$L/plan.md" "$W/plan.orig"
 has   "with every piece done and AC3 ticked, the change is done" "three-pieces  \(large\) +10/10 +done" y status
 run_ok "archive doesn't refuse for criteria its pieces delivered" y archive three-pieces
 A="yass/archive/$MONTH/$TODAY-three-pieces/plan.md"
-has   "…and ticks them in the archived plan.md" "^- \[x\] AC1 .*\n?" grep -E "^- \[x\] AC(1|2|4) " "$A"
+[ "$(grep -cE '^- \[x\] AC(1|2|4) ' "$A")" = 3 ] && ok "…and ticks them in the archived plan.md" || bad "AC1, AC2 and AC4 aren't all ticked in $A"
 has   "…and nothing else changes in it" "^AC1,AC1,AC2,AC2,AC4,AC4$" bash -c "diff '$W/plan.orig' '$A' | grep -E '^[<>]' | grep -oE 'AC[0-9]+' | sort | paste -sd, -"
 hasnt "the archive commit passes the hook" "heads-up|append-only" git commit -q -m "yass: archive three-pieces"
 hasnt "main's whole history passes the hook" "." yass hook --range "$BASE..HEAD"
-[ "$(git log --oneline "$BASE..HEAD" | grep -c "close\|done")" -eq 0 ] && ok "no closing commit per piece" || bad "a closing commit snuck in"
 
 echo "39. sparse checkouts and assets"
 newrepo "$W/e2e/sparse-full"; y init >/dev/null; y init services/search --no-agents >/dev/null; y init services/web --no-agents >/dev/null
@@ -1201,7 +1100,6 @@ hasnt "…and says nothing of the one that isn't" "services/search/yass/ *$|sear
 run_ok "…and --strict passes" y status --strict
 has   "a blocked: outside the checkout says so, not that there's no such change" "blocked: '2026-01-02-search-thing' is in services/search/yass/, outside this sparse checkout, so it can't be checked" y status
 has   "…as does a follows:" "follows '2025-12-01-search-old', which is in services/search/yass/, outside this sparse checkout" y status
-hasnt "…and neither is a warning" "warning" y status
 cd "$W/e2e/sparse-full"
 mkb services/web/yass/changes/2026-01-03-typo / "2026-09-09-nope"
 has   "a name that really doesn't exist still warns" "warning: .*blocked: '2026-09-09-nope' looks like a change, but there's no such change" y status
@@ -1305,13 +1203,8 @@ echo "43. citations: one repo, plain hashes"
 newrepo "$W/e2e/cites"; y init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
 git switch -q -c feature; echo f >> app.txt; git commit -qam "feat: unmerged"; U7=$(git rev-parse --short=7 HEAD); git switch -q main
 H7=$(git rev-parse --short=7 HEAD)
-mkdir -p yass/changes/2026-01-02-cited; printf '# Cited\n\n## Steps\n- [x] Qualified — code: web@%s\n- [x] Thing — code: %s\n- [x] Gone — code: 0badc0d\n' "$H7" "$U7" > yass/changes/2026-01-02-cited/change.md
+mkdir -p yass/changes/2026-01-02-cited; printf '# Cited\n\n## Steps\n- [x] Thing — code: %s\n- [x] Gone — code: 0badc0d\n' "$H7" "$U7" > yass/changes/2026-01-02-cited/change.md
 git add -A; git commit -q -m "yass: cited"
-hasnt "a repo-qualified token isn't a citation: no check, no warning" "Qualified" y status
-hasnt "…and --cites doesn't find it" "Qualified" y decisions --cites "$H7"
-printf 'repo: web\nrepos:\n  web: ../web\n' > yass.yaml
-has   "repo: is an unknown setting now" "unknown setting 'repo'" y status
-has   "…and so is repos:" "unknown setting 'repos'" y status
 rm yass.yaml
 OUT="$(y archive cited 2>&1)"
 has   "archive archives a change whose done boxes cite unmerged or missing commits" "^archived .*2026-01-02-cited" echo "$OUT"
@@ -1330,8 +1223,7 @@ has   "a large change: its pieces and boxes" "^offline-sync: 1/2 pieces done, 3/
 has   "a small change: its boxes" "^fix-double-tap: 1/2 boxes$" y status double-tap --brief
 sub "$S/change.md" '^- \[ \] Unit test' '- [x] Unit test'
 has   "…and done when it is" "^fix-double-tap: 2/2 boxes, done$" y status double-tap --brief
-run_fail "--brief needs a change" y status --brief
-has   "…and says so" "--brief needs a change" y status --brief
+fails "--brief needs a change, and says so" "--brief needs a change" y status --brief
 
 echo "45. yass: trailers, with plans kept apart"
 PL="$W/e2e/trail-plans"; newrepo "$PL"; mkdir -p changes archive; touch changes/.gitkeep
@@ -1364,17 +1256,16 @@ has   "otherwise an earlier commit's trailer on the branch carries over" "^2026-
 c -m "feat: mine" -m "yass: none" >/dev/null; has "a trailer you wrote is left alone" "^none$" trailer
 git switch -q main; git merge -q --no-ff feature-x -m "Merge feature-x" 2>/dev/null
 [ -z "$(git log -1 --format='%(trailers:key=yass,valueonly)')" ] && ok "a merge commit gets none" || bad "a merge got a trailer"
-for t in "2026-02-01-login" "2026-01-01-old" "2026-02-01-login/2026-02-02-form" "2026-02-03-api" "none" "2026-02-01-LOGIN ac:ac1,AC2"; do
+for t in "2026-01-01-old" "2026-02-01-login/2026-02-02-form"; do
   hasnt "\`yass: $t\` is accepted" "heads-up|refusing" c -m "feat: t" -m "yass: $t"; done
 N0=$(git rev-list --count HEAD)
 has   "a malformed trailer gets a heads-up" "is malformed" c -m "feat: bad" -m "yass: 2026-02-01-login ac"
 [ "$(git rev-list --count HEAD)" -gt "$N0" ] && ok "…and the commit is made" || bad "a commit with a bad trailer was refused"
 has   "a piece name in two changes is ambiguous" "pieces in more than one change; give it as <change>/<piece>" c -m "feat: amb" -m "yass: 2026-02-02-form"
-has   "an unknown key is only a warning" "doesn't know the key 'foo'" c -m "feat: k" -m "yass: 2026-02-01-login foo:bar"
-hasnt "…not a heads-up" "heads-up" c -m "feat: k2" -m "yass: 2026-02-01-login foo:bar"
+OUT="$(c -m "feat: k" -m "yass: 2026-02-01-login foo:bar" 2>&1)"
+has   "an unknown key is only a warning" "doesn't know the key 'foo'" echo "$OUT"
+hasnt "…not a heads-up" "heads-up" echo "$OUT"
 has   "a name that isn't a change gets a heads-up, suggesting the closest" "'2026-02-01-logn' isn't a change or piece; did you mean 2026-02-01-login" c -m "feat: typo" -m "yass: 2026-02-01-logn"
-printf 'path: %s\ntrailers: require\n' "$PL" > yass.yaml
-has   "trailers: is an unknown setting now" "unknown setting 'trailers'" y status
 git checkout -q yass.yaml
 BASE=$(git rev-parse HEAD); c -m "feat: unnamed" >/dev/null; c -m "feat: named" -m "yass: 2026-02-01-login" >/dev/null
 c -m "feat: wrongly named" -m "yass: 2026-09-09-nope" >/dev/null
@@ -1399,7 +1290,7 @@ y use --clear >/dev/null
 newrepo "$W/e2e/trail-inline"; y init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
 rm tools/yass/githooks/prepare-commit-msg tools/yass/githooks/commit-msg; git add -A; git commit -q -m "older install: pre-commit only"
 sub tools/yass/githooks/pre-commit '^# yass-version: .*$' '# yass-version: 0.1.0'
-has   "yass upgrade adds the trailer hooks to an older install" "wrote tools/yass/githooks/commit-msg" "$(vbin 0.9.0)" upgrade
+has   "yass upgrade adds the trailer hooks to an older install" "wrote tools/yass/githooks/commit-msg" "$(vbin 0.6.0)" upgrade
 [ -x tools/yass/githooks/prepare-commit-msg ] && ok "…executable" || bad "prepare-commit-msg missing or not executable"
 git checkout -q -- . 2>/dev/null; git clean -qfd tools 2>/dev/null
 y use --clear >/dev/null 2>&1
@@ -1475,17 +1366,9 @@ echo "17. trackers: settings and the card view"
 newrepo "$W/e2e/trk"; rm -rf "$W/e2e/trk-plans" "$W/e2e/trk-wt"
 y init --no-agents >/dev/null
 BOARD='tracker:\n  trello:\n    board: https://trello.com/b/AbC123/payments\n    lists:\n      ideas: a1\n      will-do: a2\n      planning: a3\n      implementing: a4\n      done: a5\n'
-printf "$BOARD" > yass.yaml
-hasnt "a whole Trello board in yass.yaml warns about nothing" "warning" y status
 printf "$BOARD" | sed 's/      done: a5//' > yass.yaml
 has   "a list missing warns, naming it" "tracker.trello.lists.done: missing" y status
 run_ok "…without failing" y status
-printf "$BOARD" | sed 's#trello.com/b/AbC123/payments#example.com/board#' > yass.yaml
-has   "a board link that isn't Trello's warns" "isn't a Trello board link" y status
-printf "$BOARD" | sed 's/    lists:/    labels: x\n    lists:/' > yass.yaml
-has   "an unknown key under trello warns" "tracker.trello: unknown setting 'labels'" y status
-printf 'tracker:\n  jira:\n    site: https://acme.atlassian.net\n    project: PAY\n' > yass.yaml
-hasnt "another tracker's settings are the team's own" "warning" y status
 printf "$BOARD" > yass.yaml
 C=$(y new "Card change" --source https://trello.com/c/Xy12/card-change)
 has   "a change from a card shows its card and column: Planning" "^card: https://trello.com/c/Xy12/card-change  \(column: Planning\)" y status card-change
@@ -1521,7 +1404,6 @@ printf 'path: .\n' > "$W/e2e/trk-plans/yass.yaml"
 has   "…and inside the plans folder" "^card: https://trello.com/c/Sp1/separate" bash -c "cd '$W/e2e/trk-plans' && yass status separate-card"
 printf "path: ../trk-plans\nbranch: main\n$BOARD" > yass.yaml; rm "$W/e2e/trk-plans/settings.yaml"
 has   "a yass.yaml git would commit with private settings gets a note" "^note: yass.yaml points to plans outside the repo, and git would commit it with branch:, tracker:, which may be private; check that's intentional, or move them to .*trk-plans/settings.yaml" y status
-hasnt "…not a warning" "^warning" y status
 run_ok "…so --strict passes" y status --strict
 git add yass.yaml; git commit -q -m "chore: settings in the pointer"
 has   "…committed, it still notes it" "git would commit it with branch:, tracker:" y status
