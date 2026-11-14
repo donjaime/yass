@@ -101,7 +101,6 @@ type Root struct {
 	Dir    string // the yass folder: changes/, archive/, README.md
 	Owner  string // the folder it serves: where yass/ or the yass.yaml sits
 	Config string // the yass.yaml that points to Dir, if any
-	Own    string // the yass folder's own yass.yaml, when it isn't Config (design §2): its settings win
 	Branch string // the code branch that counts as merged, from yass.yaml
 	// Included: a team folder git never sees, named in the clone's git config (yass.include)
 	Included bool
@@ -109,36 +108,16 @@ type Root struct {
 	settled  *Config  // settings(), once read
 }
 
-// settings are the yass folder's settings: its pointer's, with its own yass.yaml's on top.
+// settings are the yass folder's settings, from the yass.yaml that points to it.
 func (root *Root) settings() Config {
-	if root.settled != nil {
-		return *root.settled
-	}
-	var s Config
-	if root.Config != "" {
-		s, _, _ = loadConfig(root.Config)
-	}
-	if root.Own != "" {
-		if o, _, err := loadConfig(root.Own); err == nil {
-			s = overlay(s, o)
+	if root.settled == nil {
+		var s Config
+		if root.Config != "" {
+			s, _, _ = loadConfig(root.Config)
 		}
+		root.settled = &s
 	}
-	root.settled = &s
-	return s
-}
-
-// overlay is a pointer's settings with a yass folder's own on top: each one the folder sets wins.
-func overlay(pointer, own Config) Config {
-	if strings.TrimSpace(own.Branch) != "" {
-		pointer.Branch = own.Branch
-	}
-	if own.Archive.Keep > 0 {
-		pointer.Archive.Keep = own.Archive.Keep
-	}
-	if own.Tracker != nil {
-		pointer.Tracker = own.Tracker
-	}
-	return pointer
+	return *root.settled
 }
 
 // keep is how many archived changes the yass folder should keep in its working tree (a soft limit).
@@ -622,12 +601,6 @@ func (r *Repo) findRoots() {
 		}
 	}
 
-	// A yass folder's own yass.yaml holds its settings; it doesn't point anywhere (design §2).
-	for f := range configs {
-		if ownConfig(f) {
-			delete(configs, f)
-		}
-	}
 	// Settle ignores shallowest first: a yass.yaml in an ignored folder doesn't count, nor do its ignores.
 	files := sortedKeys(configs)
 	sort.SliceStable(files, func(i, j int) bool { return depth(files[i]) < depth(files[j]) })
@@ -733,27 +706,6 @@ func (r *Repo) findRoots() {
 	}
 	if len(r.Roots) == 0 && len(r.Warnings) == warned {
 		r.borrowConfig()
-	}
-	for _, root := range r.Roots {
-		if own := filepath.Join(root.Dir, ConfigName); own != root.Config && isFile(own) {
-			root.Own = own
-			if o, unknown, err := loadConfig(own); err != nil {
-				r.warn("%s: %v", r.disp(own), err)
-			} else {
-				for _, k := range unknown {
-					r.warn("%s: unknown setting '%s' (a newer yass may know it)", r.disp(own), k)
-				}
-				for _, p := range o.problems {
-					r.warn("%s: %s", r.disp(own), p)
-				}
-				if o.Path != "" && strings.TrimSpace(o.Path) != "." {
-					r.warn("%s: a yass folder's own yass.yaml holds its settings and points nowhere; its `path:` is ignored", r.disp(own))
-				}
-			}
-			if s := strings.TrimSpace(root.settings().Branch); s != "" {
-				root.Branch = s
-			}
-		}
 	}
 	sort.SliceStable(r.Roots, func(i, j int) bool {
 		a, b := r.Roots[i].Owner, r.Roots[j].Owner

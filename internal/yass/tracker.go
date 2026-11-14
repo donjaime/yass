@@ -13,28 +13,27 @@ import (
 // memory of its own. It's per machine, so git must ignore it.
 const LocalTracker = "tracker.local.md"
 
-// checkSettings warns about settings in the wrong place: with plans kept separate, the code repo's
-// yass.yaml carries only the pointer (path: and ignore:), and a local tracker file stays out of git.
+// checkSettings notes a yass.yaml that points to plans outside the repo and that git would commit
+// with settings beyond the pointer (design §2): those describe private plans, so a human should check
+// that publishing them is intentional. It's a note, not a warning. And a local tracker file stays out of git.
 func (r *Repo) checkSettings() {
 	for _, root := range r.Roots {
-		if root.Config != "" && !within(root.Config, root.Dir) && r.separate(root) {
-			if c, _, err := loadConfig(root.Config); err == nil {
-				var moved []string
+		if root.Config != "" && within(root.Config, r.Top) && !within(root.Config, root.Dir) && r.separate(root) {
+			if _, ignored := git(r.Top, "check-ignore", "-q", root.Config); !ignored {
+				c := root.settings()
+				var extra []string
 				if strings.TrimSpace(c.Branch) != "" {
-					moved = append(moved, "branch:")
+					extra = append(extra, "branch:")
 				}
 				if c.Archive.Keep > 0 {
-					moved = append(moved, "archive:")
+					extra = append(extra, "archive:")
 				}
 				if c.Tracker != nil {
-					moved = append(moved, "tracker:")
+					extra = append(extra, "tracker:")
 				}
-				if len(moved) > 0 {
-					msg := "%s: with plans kept separate, it should carry only path: and ignore:; move %s to %s (with path: .)"
-					if c.Tracker != nil {
-						msg += ", since this file may be public"
-					}
-					r.warn(msg, r.disp(root.Config), strings.Join(moved, ", "), filepath.Join(root.Dir, ConfigName))
+				if len(extra) > 0 {
+					r.note("%s points to plans outside the repo, and git would commit it with %s; check that's intentional, or keep the file out of git (it works from there too)",
+						r.disp(root.Config), strings.Join(extra, ", "))
 				}
 			}
 		}

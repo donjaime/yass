@@ -10,20 +10,14 @@ yass: 2026-09-14-offline-sync/2026-09-16-offline-queue
 
 The trailer survives squash merges when the pull request's description or commit list keeps it, and git tools read it (`git log --format='%(trailers:key=yass)'`). Changes whose plans are in the repo's own `yass/` need none: their progress travels in the commits.
 
-## Settings live with the plans
-With plans in another repo, the code repo's `yass.yaml` is only a pointer: `path:`, and `ignore:` for the code repo's own folders. Everything else, `branch:`, `archive:` and `tracker:` included, goes in the plans repo's own `yass.yaml`, at its top, with `path: .`:
+## Settings and a public code repo
+The `yass.yaml` that points to the plans also holds their settings (`branch:`, `archive:`, `tracker:`). In an open source repo you may not want those published, so `yass status` adds a note when that file would be committed with anything besides `path:` and `ignore:`:
 
-```yaml
-# my-project-plans/yass.yaml
-path: .
-branch: main
-tracker:
-  trello:
-    board: https://trello.com/b/AbC123/my-project
-    lists: { ideas: 64f0…, will-do: 64f1…, planning: 64f2…, implementing: 64f3…, done: 64f4… }
+```
+note: yass.yaml points to plans outside the repo, and git would commit it with tracker:; check that's intentional, or keep the file out of git (it works from there too)
 ```
 
-It applies from the code repo, from its linked worktrees, and from inside the plans repo. Anything other than the pointer left in the code repo's `yass.yaml` still works, but `yass status` warns and names where to move it: an open source repo shouldn't publish how its private plans are run.
+It's a note, not a warning, so `--strict` passes if you mean it. To keep the settings private, gitignore `yass.yaml`: YASS still reads it, and linked worktrees borrow it from the main checkout. Agents setting up a tracker ask before writing its settings into a committed `yass.yaml`.
 
 ## The trailer
 

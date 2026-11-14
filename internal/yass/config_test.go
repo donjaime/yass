@@ -121,16 +121,3 @@ func TestTrackerSettings(t *testing.T) {
 		}
 	}
 }
-
-func TestOwnSettingsWin(t *testing.T) {
-	board := map[string]any{"trello": map[string]any{"board": "https://trello.com/b/AbC123"}}
-	pointer := Config{Branch: "main", Tracker: map[string]any{"jira": "PAY"}}
-	pointer.Archive.Keep = 5
-	s := overlay(pointer, Config{Branch: "trunk", Tracker: board})
-	if s.Branch != "trunk" || s.Archive.Keep != 5 || s.trello() != "https://trello.com/b/AbC123" {
-		t.Errorf("overlay = branch %q keep %d board %q; want the folder's branch and tracker, the pointer's keep", s.Branch, s.Archive.Keep, s.trello())
-	}
-	if s := overlay(pointer, Config{}); s.Branch != "main" || s.Archive.Keep != 5 || s.Tracker["jira"] != "PAY" {
-		t.Errorf("an empty own yass.yaml changed the pointer's settings: %+v", s)
-	}
-}

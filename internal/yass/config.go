@@ -154,14 +154,6 @@ func (c Config) trello() string {
 	return strings.TrimSpace(b)
 }
 
-// ownConfig says whether a yass.yaml is a yass folder's own settings rather than a pointer: one in a
-// yass/ folder with changes/ or archive/ in it (design §2). A plans folder's own yass.yaml says
-// path: . and is both.
-func ownConfig(file string) bool {
-	owner := filepath.Dir(file)
-	return filepath.Base(owner) == "yass" && (isDir(filepath.Join(owner, "changes")) || isDir(filepath.Join(owner, "archive")))
-}
-
 // resolvePath expands environment variables and ~ in p, and makes it absolute relative to base.
 // ${VAR:-default} uses default when VAR is unset or empty, so side-by-side clones need no setup.
 func resolvePath(p, base string) (string, error) {
