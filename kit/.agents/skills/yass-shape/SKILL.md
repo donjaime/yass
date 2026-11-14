@@ -22,8 +22,9 @@ Shaping is a conversation. It's where a human decides what to build and why, so 
    - **Milestones:** slices that each leave users better off.
    - **Open questions:** anything still undecided.
 4. Write the change's one-paragraph Goal in `change.md`, and the big calls in its `## Decisions` with who made them. A choice the human made in their plan is theirs: credit them.
-5. **Show a human the PRD** and get their go-ahead before planning, unless your team has told you otherwise. If it came from an approved plan, say what you added or changed beyond that plan; the rest is already agreed. In a fully autonomous run, where you've been put in charge of approvals, approve it yourself and record that in `## Decisions`.
-6. Offer `yass-plan` next. If the harness plan also covered the approach, `yass-plan` can use it too.
+5. **Its pull request,** like any, leads in plain words with what's proposed and why; the requirement IDs go in the collapsed tracking block at the end (`yass-work`, "Write pull requests and commits for people").
+6. **Show a human the PRD** and get their go-ahead before planning, unless your team has told you otherwise. If it came from an approved plan, say what you added or changed beyond that plan; the rest is already agreed. In a fully autonomous run, where you've been put in charge of approvals, approve it yourself and record that in `## Decisions`.
+7. Offer `yass-plan` next. If the harness plan also covered the approach, `yass-plan` can use it too.
 
 ## With a tracker
 When the change's yass folder names a Trello board (`tracker:` in its `settings.yaml`, or its `yass.yaml`), follow the Trello workflow in the `yass-init` playbook. For shaping:

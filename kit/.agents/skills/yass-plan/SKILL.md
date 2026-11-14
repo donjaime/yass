@@ -21,7 +21,8 @@ Planning mostly runs on its own. The human made the big calls while shaping; tur
    - Harness plans are usually lists of steps, not criteria. Write the criteria; don't relabel the steps.
 4. **Hard-to-undo calls** (data model, dependencies, architecture, security, public API): write `design.md` with at least two real options and who decided. `yass new … --design` creates it for a new change; for an existing one, `yass template design > <change folder>/design.md` and replace `{{title}}`.
 5. **Validation:** how the whole change is verified before it's called done.
-6. **Hand it back.** Say the plan is ready and that building starts when someone points `yass-work` at it. If the plan came from an approved harness plan, say what you added or changed beyond it.
+6. **Its pull request,** like any, leads in plain words with the approach and what will count as done; criterion and piece IDs go in the collapsed tracking block at the end (`yass-work`, "Write pull requests and commits for people").
+7. **Hand it back.** Say the plan is ready and that building starts when someone points `yass-work` at it. If the plan came from an approved harness plan, say what you added or changed beyond it.
 
 ## Split into pieces
 For anything bigger than one pull request:
