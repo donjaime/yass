@@ -66,7 +66,7 @@ yass --version
 
 ## Set up a repo
 
-**Ask your agent.** In a repo without YASS, paste [the install prompt](#with-your-agent) into your coding agent: it gets the binary if you need it, asks for your options, runs `yass init`, and then follows the `yass-init` playbook it installed, which offers to connect a tracker. Once the playbooks are there (in the repo, or in your user folder with `--global`), "set up YASS here" or "connect our Trello board" runs `yass-init` again; it checks what's set up and offers only what's missing.
+**Ask your agent.** In a repo without YASS, paste [the install prompt](#with-your-agent) into your coding agent: it gets the binary if you need it, asks for your options, runs `yass init`, and then follows the `yass-init` playbook it installed, which offers to connect your project management system (a Trello board, Jira, Linear…). Once the playbooks are there (in the repo, or in your user folder with `--global`), "set up YASS here" or "connect our Trello board" runs `yass-init` again; it checks what's set up and offers only what's missing.
 
 **By hand,** from inside the repo:
 

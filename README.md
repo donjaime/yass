@@ -303,13 +303,13 @@ path: ../my-project-plans        # relative to this file
 - **A path inside the repo works too,** under any name (`yass init --path specs` makes a `specs/` folder and its `yass.yaml`), and the hook recognizes it.
 - **One team can plan privately in a shared repo.** `yass init private --path ~/plans/private --private` makes a team folder that git never sees: it's listed in the clone's `.git/info/exclude`, and named in the clone's git config (`yass.include`) so YASS still finds it, from the top of the repo and from every worktree. Nothing is written to the repo, so each clone sets it up for itself. `yass paths` leaves it out, since no commit can contain it. To stop: `git config --unset yass.include '^private$'`, then delete the folder.
 
-`yass.yaml` is also where YASS settings go as they're added (`path`, `branch`, [`ignore`](#folders-that-arent-yours), [`archive: keep:`](docs/monorepo.md#keeping-the-working-tree-small) and [`tracker`](#the-tracker-that-governs-a-yass-folder) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
+`yass.yaml` is also where YASS settings go as they're added (`path`, `branch`, [`ignore`](#folders-that-arent-yours), [`archive: keep:`](docs/monorepo.md#keeping-the-working-tree-small) and [`tracker`](#the-project-management-system-that-governs-a-yass-folder) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
 
 A yass folder can also keep `branch:`, `archive:` and `tracker:` in an optional `settings.yaml` inside it (`yass/settings.yaml`, `specs/settings.yaml`, or the top of a plans folder kept elsewhere). It's merged with the `yass.yaml` setting by setting; where they differ, `settings.yaml` wins and `yass status` warns. It works the same in the repo and outside it, which is what makes it the place for private settings: they're committed with the private plans, and the public `yass.yaml` only says where those are. `path:` and `ignore:` stay in `yass.yaml`.
 
-### The tracker that governs a yass folder
+### The project management system that governs a yass folder
 
-YASS is files in the repo, and it doesn't replace your tracker. `tracker:`, in the yass folder's `settings.yaml` (or its `yass.yaml`), tells your agent which board or project the yass folder's work belongs to, so it can keep that tracker up to date as changes move. The `yass` binary never calls a tracker; your agent does, through whatever its harness can reach (MCP, an API, a CLI).
+YASS is files in the repo, and it doesn't replace your project management system (Jira, Linear, GitHub Projects, Azure Boards, Trello; [docs/project-management.md](docs/project-management.md) has the workflows). `tracker:`, in the yass folder's `settings.yaml` (or its `yass.yaml`), tells your agent which board or project the yass folder's work belongs to, so it can keep it up to date as changes move. The `yass` binary never calls it; your agent does, through whatever its harness can reach (MCP, an API, a CLI).
 
 ```yaml
 tracker:
@@ -326,7 +326,7 @@ tracker:
     project: PAY
 ```
 
-`yass status` warns about a Trello board that's missing a list or isn't a `trello.com/b/…` link, and never about another tracker's settings. A change's card is its `source:`; with a board set, `yass status <change>` shows it with the column its state puts it in (`card: https://trello.com/c/… (column: Implementing)`), which your agent checks against the real card before moving it. A `tracker.local.md` in a yass folder, where an agent keeps a tracker workflow when its harness has no memory, must be gitignored; `yass status` warns when it isn't.
+`yass status` warns about a Trello board that's missing a list or isn't a `trello.com/b/…` link, and never about another system's settings. A change's card is its `source:`; with a board set, `yass status <change>` shows it with the column its state puts it in (`card: https://trello.com/c/… (column: Implementing)`), which your agent checks against the real card before moving it. A `tracker.local.md` in a yass folder, where an agent keeps a tracker workflow when its harness has no memory, must be gitignored; `yass status` warns when it isn't.
 
 ## Monorepos
 
@@ -358,9 +358,11 @@ YASS is meant to sit next to your harness's plan mode (Claude Code's, or any oth
 - **Plan mode can't write files**, in most harnesses. The playbooks draft there and write once you've approved.
 - **Mid-build, plan mode is a good way to rethink.** Whatever it decides becomes an intent change, stacked under the code like any other.
 
-## What YASS leaves to you
+## YASS inside your workflow
 
-Guardrails, approvals, CI, verification gates, merge strategy, issue tracking and unattended agent loops differ from team to team, so YASS doesn't own them. It gives you places to record their results (acceptance criteria with `verify:`, Decisions with who made them, `source:` links to your tracker) and one optional hook for the rule it cares most about. See [docs/comparison.md](docs/comparison.md) for how YASS relates to OpenSpec, Spec Kit and others.
+YASS covers the inner loop of a product and software development life cycle: shaping, planning and building one change, with progress next to the code. The outer loop stays where your team already runs it, in a project management system like Jira, Linear, GitHub Issues and Projects, GitLab, Azure Boards, Asana or Trello: the backlog, and the board where people outside the repo follow the work. Your agent keeps that system in step at the moments that matter (planning started, a pull request up or merged, building started, done), and everything finer stays in the files. Trello has a built-in workflow; the others get yours, from a one-time interview. The `yass` binary never calls them. See [docs/project-management.md](docs/project-management.md).
+
+Guardrails, approvals, CI, verification gates, merge strategy and unattended agent loops differ from team to team too, so YASS doesn't own them either. It gives you places to record their results (acceptance criteria with `verify:`, Decisions with who made them, `source:` links to your tracker) and one optional hook for the rule it cares most about. See [docs/comparison.md](docs/comparison.md) for how YASS relates to OpenSpec, Spec Kit and others.
 
 ## Examples
 
