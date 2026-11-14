@@ -19,9 +19,9 @@ Project management has the same gap. The workflow an agent learns for Jira or an
 
 ## Requirements
 The local memory
-- **R1** [M1] Each person has one YASS memory per clone: a markdown file in their own user folder, outside every repo. Every worktree of the clone finds the same file. A separate clone has its own, set up again. It's never in the repo, so nothing needs gitignoring.
-- **R2** [M1] Its top fields hold who you are (defaulting to git's `user.name`), your team, and your team's yass folders (one or more, by path). Its body holds your own notes for agents. It holds nothing your team shares: that goes in the team memory (R15).
-- **R3** [M1] A `yass` command prints where the memory is and what it holds, and creates an empty one when there's none. The memory is plain markdown that people can edit by hand.
+- **R1** [M1] Each person has one YASS memory per clone, kept in a global YASS settings file in their own user folder, outside every repo. Every worktree of the clone finds the same entry; a separate clone has its own, set up again. It's never in the repo, so nothing needs gitignoring.
+- **R2** [M1] Each clone's entry holds your team, your team's yass folders (one or more, by path) and your own notes for agents; who you are is kept once, for every repo (defaulting to git's `user.name`). It holds nothing your team shares: that goes in the team memory (R15).
+- **R3** [M1] Agents and people read and change the memory only through the `yass` CLI, never by opening the file: an agent's permissions usually stop at the project's folders. One command prints this clone's memory (and, as data, for agents) and sets its fields; it writes the file safely when two agents save at once.
 - **R4** [M1] `yass-init` sets the memory up as part of setup: it asks who you are and which team (which yass folders) you're on, and writes them. Running it again shows what's there and changes only what you correct.
 - **R5** [M1] The playbooks read the memory at the start of their work, to know who they're working for and where that person's work goes, and from it, which team memory applies.
 
