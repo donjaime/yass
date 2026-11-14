@@ -69,7 +69,7 @@
 │       ├── design.md              <span class="dim">…the hard-to-undo calls (optional)</span>
 │       └── 2026-09-16-offline-queue/  <span class="dim">…and PR-sized pieces</span>
 └── <b>archive/</b>                       <span class="dim">finished changes, as they were</span></pre>
-  <p>That's the whole system: no database, no server, no integrations to set up. One small CLI, six playbooks your agent follows, and an optional git hook. It fits the workflow you already have: plans and progress travel in the same commits and pull requests as the code, and YASS never commits for you.</p>
+  <p>That's the whole system: no database, no server, no integrations to set up. One small CLI, seven playbooks your agent follows, and an optional git hook. It fits the workflow you already have: plans and progress travel in the same commits and pull requests as the code, and YASS never commits for you.</p>
 </section>
 
 <section id="you-say" class="wrap">
@@ -84,6 +84,7 @@
       <tr><td>“Fix the double-tap crash” or “Keep going”</td><td><code>yass-work</code></td><td>builds against the acceptance criteria, ticking boxes and logging as it goes, resuming from the last <b>Next:</b></td></tr>
       <tr><td>“Where are we?”</td><td><code>yass-status</code></td><td>progress, blockers, recent decisions, what's ready to archive</td></tr>
       <tr><td>“Why did we pick SQLite?”</td><td><code>yass-log</code></td><td>the decision, who made it and when, with the code that carried it out</td></tr>
+      <tr><td>“Connect our Trello board”</td><td><code>yass-init</code></td><td>the repo set up, and the board adopted for a yass folder, asking when its lists don't fit</td></tr>
       <tr><td>“Update YASS”</td><td><code>yass-update</code></td><td>a verified newer binary, then the repo upgraded, asking before it downloads</td></tr>
     </tbody>
   </table>
@@ -136,16 +137,18 @@ Part 1, the binary:
 
 Part 2, this repo:
 6. Ask me which options I want: Claude Code files (--claude), playbooks in my user folder rather
-   than this repo (--global), the optional pre-commit hook (--hooks), or keeping the yass folder
-   outside this repo (--path &lt;folder&gt;).
+   than this repo (--global), the optional pre-commit hook (--hooks), or a yass folder with
+   another name or outside this repo (--path &lt;folder&gt;).
 7. Run &lt;folder&gt;/yass init with my options, then yass status to check it works, and show me
-   git status. Don't commit; I'll review it and commit it myself.</code></pre>
+   git status. Don't commit; I'll review it and commit it myself.
+8. Read the yass-init playbook it just installed and offer what's left from it, such as
+   connecting a Trello board to the yass folder.</code></pre>
     </div>
   </div>
   <p>Then put it on your PATH, so you, your agents and the git hook can run <code>yass</code>. The script says whether it is, and if not, prints the line for your shell. For zsh:</p>
 <pre class="copyable" data-source="README.md"><code>echo 'export PATH="$HOME/.local/bin:$PATH"' &gt;&gt; ~/.zshenv</code></pre>
   <h3 class="step">2. Set up a repo</h3>
-  <p>From inside the repo. <code>yass init</code> adds the playbooks, a short section in <code>AGENTS.md</code>, an empty <code>yass/</code> folder and the optional hook; committing them means your teammates get them, and need only the binary.</p>
+  <p>Ask your agent: the Agent Prompt above does both steps, then offers to connect a Trello board. With the playbooks already in place, “set up YASS here” is enough. Or by hand, from inside the repo: <code>yass init</code> adds the playbooks, a short section in <code>AGENTS.md</code>, an empty <code>yass/</code> folder and the optional hook; committing them means your teammates get them, and need only the binary.</p>
 <pre class="copyable" data-source="README.md"><code>yass init
 git add -A &amp;&amp; git commit -m "chore: adopt YASS"</code></pre>
   <p>Then talk to your agent. The <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#set-up-a-repo">options</a> cover Claude Code, the git hook, monorepo folders and keeping plans outside the repo.</p>

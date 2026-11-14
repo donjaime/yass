@@ -1,6 +1,6 @@
 # The playbooks
 
-YASS ships six playbooks, as [Agent Skills](https://agentskills.io) in [`kit/.agents/skills/`](../kit/.agents/skills). Every `yass` binary carries them, and `yass init` writes them to `.agents/skills/` in your repo (project scope); `--claude` also copies them to `.claude/skills/`. With `--global`, they go in your user folder instead. `yass upgrade` brings them up to a newer binary's version. Agents pick one by matching your request against its `description`.
+YASS ships seven playbooks, as [Agent Skills](https://agentskills.io) in [`kit/.agents/skills/`](../kit/.agents/skills). Every `yass` binary carries them, and `yass init` writes them to `.agents/skills/` in your repo (project scope); `--claude` also copies them to `.claude/skills/`. With `--global`, they go in your user folder instead. `yass upgrade` brings them up to a newer binary's version. Agents pick one by matching your request against its `description`.
 
 This page is an index for reviewing what each playbook lets an agent do. The `SKILL.md` files are the source of truth; if this page and a playbook disagree, the playbook wins and this page needs fixing.
 
@@ -11,13 +11,14 @@ This page is an index for reviewing what each playbook lets an agent do. The `SK
 | [`yass-work`](../kit/.agents/skills/yass-work/SKILL.md) | attended or unattended | building the one change it's pointed at | code, progress sections, stacked intent fixes | when it isn't pointed at a change, or isn't confident a plan fix is right |
 | [`yass-status`](../kit/.agents/skills/yass-status/SKILL.md) | report | "where are we?" | nothing | no; it lists what needs one |
 | [`yass-log`](../kit/.agents/skills/yass-log/SKILL.md) | report | "why did we…?", "why does this code…?", release notes, retros | nothing | no |
+| [`yass-init`](../kit/.agents/skills/yass-init/SKILL.md) | attended | "set up YASS here", "connect our Trello board"; the Trello workflow the others follow | `yass init`'s files; a yass folder's `settings.yaml`; lists on a blank board | before options and before committing; when a board's lists don't fit |
 | [`yass-update`](../kit/.agents/skills/yass-update/SKILL.md) | attended | "update YASS", or `yass status`'s version note | the `yass` binary; YASS's files in the repo | before downloading a binary, and before committing |
 
 The usual flow is (plan mode →) shape → plan → work, with `yass-status` along the way and `yass-log` whenever someone asks why. Small changes skip straight to `yass-work`. Each step ends where the next begins: shaping never plans, planning never builds.
 
 **Starting work.** `yass-work` only builds a change it's been pointed at, by name or because the session is already on it. It never picks one because it's in progress. Boxes are `[ ]` not started, `[/]` in progress, `[x]` done, `[-]` dropped. `yass status` marks changes with no Log entry and no box in progress or done as `not started`, and changes whose boxes are all done or dropped as `done`; shaping and planning write neither, so a freshly planned change stays `not started` until someone starts it. In a fully autonomous run, where the harness or human has put the agent in charge, the agent makes that choice and any approvals itself, and records them in Decisions.
 
-**Git.** No playbook commits on its own initiative, and none pushes, merges or opens pull requests. Only `yass-work` touches git, and only to stack an intent fix under the code, when the human or the harness has given it that latitude; otherwise it hands the human the commands. The CLI never touches git. What a good commit looks like (intent apart from code) is in the README rules, the `AGENTS.md` section and the optional hook.
+**Git.** No playbook commits on its own initiative, and none pushes, merges or opens pull requests. `yass-work` touches git only to stack an intent fix under the code, and `yass-update` and `yass-init` only to commit what they upgraded or set up, each when the human or the harness has given it that latitude; otherwise they hand the human the commands. The CLI never touches git. What a good commit looks like (intent apart from code) is in the README rules, the `AGENTS.md` section and the optional hook.
 
 **Plan mode.** `yass-shape`, `yass-plan` and `yass-work` can each start from a plan the harness's plan mode produced, carrying over its decisions instead of asking again, and telling the human what they added beyond it.
 
@@ -70,6 +71,16 @@ Reconstructs decisions from the files and git, and links them to code through `c
 - **Reports:** newest first, grouped by change, with the cited code under each decision, citing file paths and commit shas (and which repo each sha is from). Flags decisions with no author, and moved goalposts: intent edits in the same commit as code when the plans are in the repo; acceptance criteria reworded or dropped after their code's box was marked `[x]` when they're in another folder.
 - **Plans in another folder:** runs git for the plans with `git -C <folder> … -- .` (the folder may share a repo) and for the code here. With no git history, dates decisions only approximately, from the Log headings around them, and says so.
 - **Never:** infers a decision that isn't written down; it says when the record is silent.
+
+## yass-init
+
+Sets a repo up through the agent and connects a yass folder to its tracker. Safe to run again: it checks first and offers only what's missing.
+
+- **Reads:** `yass root -v`, `yass status`; the `AGENTS.md` section, the playbooks, the hook setting; `tracker:` in each yass folder's `settings.yaml` or `yass.yaml`; the board's open lists, through the harness's Trello tool.
+- **Runs:** `yass init` with the options the human picks (`--claude`, `--global`, `--hooks`, `--path` for another folder name or plans outside the repo).
+- **Writes:** what `yass init` writes; the board's five lists when the board is blank; `tracker.trello` (board link, list IDs) in the yass folder's `settings.yaml`, never `yass.yaml`, so private plans keep their board out of the code repo.
+- **Human gates:** asks for options before `yass init`; asks before changing a board whose lists don't fit the five, and changes nothing until answered; commits only with latitude. Never asks for a Trello key or token: with no Trello tool in the harness, it stops.
+- **Also holds** the Trello workflow the other playbooks follow: which moments move a card or add a comment, the check before every move, pieces' cards, and keeping board links out of a public code repo.
 
 ## yass-update
 

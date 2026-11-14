@@ -3,7 +3,7 @@
 Getting YASS takes two steps, like most developer tools:
 
 1. **[Install](#install)** the `yass` binary and put it on your PATH, once per machine. It's a single Go binary with no runtime dependencies.
-2. **[Set up a repo](#set-up-a-repo)** with `yass init`, once per repo, and commit what it writes, so everyone who clones the repo gets it. A repo that [already uses YASS](#joining-a-repo-that-already-uses-yass) needs no setup.
+2. **[Set up a repo](#set-up-a-repo)**, by asking your agent or with `yass init`, once per repo, and commit what it writes, so everyone who clones the repo gets it. A repo that [already uses YASS](#joining-a-repo-that-already-uses-yass) needs no setup.
 
 Later, [upgrading](#upgrading) is the same two steps (`yass update`, then `yass upgrade` in each repo), and [`yass deinit`](#removing-yass) takes YASS back out of a repo.
 
@@ -66,7 +66,9 @@ yass --version
 
 ## Set up a repo
 
-From inside the repo:
+**Ask your agent.** In a repo without YASS, paste [the install prompt](#with-your-agent) into your coding agent: it gets the binary if you need it, asks for your options, runs `yass init`, and then follows the `yass-init` playbook it installed, which offers to connect a tracker. Once the playbooks are there (in the repo, or in your user folder with `--global`), "set up YASS here" or "connect our Trello board" runs `yass-init` again; it checks what's set up and offers only what's missing.
+
+**By hand,** from inside the repo:
 
 ```bash
 yass init
@@ -120,10 +122,12 @@ Part 1, the binary:
 
 Part 2, this repo:
 6. Ask me which options I want: Claude Code files (--claude), playbooks in my user folder rather
-   than this repo (--global), the optional pre-commit hook (--hooks), or keeping the yass folder
-   outside this repo (--path <folder>).
+   than this repo (--global), the optional pre-commit hook (--hooks), or a yass folder with
+   another name or outside this repo (--path <folder>).
 7. Run <folder>/yass init with my options, then yass status to check it works, and show me
    git status. Don't commit; I'll review it and commit it myself.
+8. Read the yass-init playbook it just installed and offer what's left from it, such as
+   connecting a Trello board to the yass folder.
 ```
 
 ## Upgrading

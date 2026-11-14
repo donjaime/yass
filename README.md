@@ -25,7 +25,7 @@ yass/
 └── archive/2026/10/                        finished changes, moved here as they were, by the month they were archived
 ```
 
-That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`, `evict`, `deinit`), six playbooks your agent follows, and an optional git hook.
+That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`, `evict`, `deinit`), seven playbooks your agent follows, and an optional git hook.
 
 YASS doesn't commit for you. The CLI never commits (archiving only stages the move), and the playbooks only commit, branch or rebase when you or your harness have given the agent that latitude; otherwise they hand you the commands. The rules below are about what lands on your main branch, and the hook checks them.
 
@@ -58,7 +58,9 @@ Open a new terminal, and `yass --version` should answer.
 
 ## Set up a repo
 
-From inside the repo:
+Ask your agent: paste [the install prompt](docs/install.md#with-your-agent) into it from inside the repo. It gets the binary if you need one (verified, reading `install.sh` first), asks for your options, runs `yass init`, and then follows the `yass-init` playbook, which offers to connect a Trello board. With the playbooks already there, "set up YASS here" or "connect our Trello board" is enough; `yass-init` is safe to run again.
+
+Or by hand, from inside the repo:
 
 ```bash
 yass init
@@ -66,8 +68,6 @@ git add -A && git commit -m "chore: adopt YASS"
 ```
 
 `yass init` writes the playbooks in `.agents/skills/`, a short section in `AGENTS.md`, an empty `yass/` folder (or a [`yass.yaml`](#keeping-plans-out-of-the-repo) pointing elsewhere, with `--path`) and the optional hook in `tools/yass/githooks/`, and lists them. Add `--claude` for Claude Code, `--hooks` to turn on the hook, and `--global` to put the playbooks in your user folder instead of the repo ([all the options](docs/install.md#set-up-a-repo)). Committing it means teammates get it: joining a repo that already uses YASS needs only the binary.
-
-Rather your agent did both steps? Paste [the install prompt](docs/install.md#with-your-agent) into it. It downloads a release (or builds from source), verifies it, reads `install.sh`, asks you for options, and doesn't commit.
 
 Then talk to your agent:
 
@@ -82,6 +82,7 @@ Then talk to your agent:
 | "Where are we?" | `yass-status` | progress, blockers, recent decisions, what's ready to archive; changes nothing |
 | "Why did we pick SQLite?" | `yass-log` | the decision, who made it and when, from the folders and git, with the code that carried it out |
 | "Why does sync.go merge like this?" | `yass-log` | from the file's commits back to the change and decision that cite them |
+| "Set up YASS here" / "Connect our Trello board" | `yass-init` | checks what's set up, runs `yass init` for what's missing, and adopts a board for a yass folder; safe to run again |
 | "Update YASS" | `yass-update` | checks the binary against the repo and the latest release, gets a verified one (asking first), then upgrades the repo and hands you the diff |
 
 ## Upgrading
