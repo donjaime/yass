@@ -1464,5 +1464,86 @@ has   "run again, there's nothing left to remove" "no YASS playbooks, AGENTS.md 
 y init >/dev/null
 [ -f .agents/skills/yass-work/SKILL.md ] && [ -x tools/yass/githooks/pre-commit ] && grep -q "yass:begin" AGENTS.md && ok "yass init sets it up again" || bad "yass init didn't set the repo up again"
 
+echo "17. trackers: settings and the card view"
+newrepo "$W/e2e/trk"; rm -rf "$W/e2e/trk-plans" "$W/e2e/trk-wt"
+y init --no-agents >/dev/null
+BOARD='tracker:\n  trello:\n    board: https://trello.com/b/AbC123/payments\n    lists:\n      ideas: a1\n      will-do: a2\n      planning: a3\n      implementing: a4\n      done: a5\n'
+printf "$BOARD" > yass.yaml
+hasnt "a whole Trello board in yass.yaml warns about nothing" "warning" y status
+printf "$BOARD" | sed 's/      done: a5//' > yass.yaml
+has   "a list missing warns, naming it" "tracker.trello.lists.done: missing" y status
+run_ok "…without failing" y status
+printf "$BOARD" | sed 's#trello.com/b/AbC123/payments#example.com/board#' > yass.yaml
+has   "a board link that isn't Trello's warns" "isn't a Trello board link" y status
+printf "$BOARD" | sed 's/    lists:/    labels: x\n    lists:/' > yass.yaml
+has   "an unknown key under trello warns" "tracker.trello: unknown setting 'labels'" y status
+printf 'tracker:\n  jira:\n    site: https://acme.atlassian.net\n    project: PAY\n' > yass.yaml
+hasnt "another tracker's settings are the team's own" "warning" y status
+printf "$BOARD" > yass.yaml
+C=$(y new "Card change" --source https://trello.com/c/Xy12/card-change)
+has   "a change from a card shows its card and column: Planning" "^card: https://trello.com/c/Xy12/card-change  \(column: Planning\)" y status card-change
+sub "$C/change.md" '^- \[ \] $' '- [/] Building'
+has   "…Implementing once a box is started" "\(column: Implementing\)" y status card-change
+sub "$C/change.md" '^- \[/\] Building' '- [x] Building'
+has   "…and a done change moves when its archive merges" "\(column: Implementing, until its archive merges: then Done\)" y status card-change
+L=$(y new "Large card" --large --source https://trello.com/c/Lg1/large)
+PC=$(y new "Piece card" --in large-card --source https://trello.com/c/Pc1/piece)
+sub "$PC/change.md" '^- \[ \] $' '- [x] Done'
+has   "a done piece's card is Done" "\(column: Done\)" y status piece-card
+G=$(y new "Issue change" --source gh#41)
+hasnt "a source that isn't a card has no card line" "^card:" y status issue-change
+printf 'branch: main\n' > yass.yaml
+hasnt "no board, no card line" "^card:" y status card-change
+rm yass.yaml
+git add -A; git commit -q -m "chore: adopt YASS"
+
+echo "17b. settings.yaml, and plans kept outside the repo"
+newrepo "$W/e2e/trk2"
+mkdir -p "$W/e2e/trk-plans/changes" "$W/e2e/trk-plans/archive"
+printf 'path: ../trk-plans\n' > yass.yaml
+printf "branch: main\n$BOARD" > "$W/e2e/trk-plans/settings.yaml"
+S=$(y new "Separate card" --source https://trello.com/c/Sp1/separate)
+has   "the plans folder's settings.yaml applies from the code repo" "^card: https://trello.com/c/Sp1/separate" y status separate-card
+hasnt "…and a pointer with only path: gets no note or warning" "^(note|warning)" y status
+git add yass.yaml; git commit -q -m "chore: point at the plans"
+git worktree add -q "$W/e2e/trk-wt" -b wt
+has   "…from a linked worktree" "^card: https://trello.com/c/Sp1/separate" bash -c "cd '$W/e2e/trk-wt' && yass status separate-card"
+git worktree remove --force "$W/e2e/trk-wt"
+printf 'path: .\n' > "$W/e2e/trk-plans/yass.yaml"
+(cd "$W/e2e/trk-plans" && git init -q -b main && git config user.email t@t && git config user.name Sam && git add -A && git commit -q -m plans)
+has   "…and inside the plans folder" "^card: https://trello.com/c/Sp1/separate" bash -c "cd '$W/e2e/trk-plans' && yass status separate-card"
+printf "path: ../trk-plans\nbranch: main\n$BOARD" > yass.yaml; rm "$W/e2e/trk-plans/settings.yaml"
+has   "a yass.yaml git would commit with private settings gets a note" "^note: yass.yaml points to plans outside the repo, and git would commit it with branch:, tracker:, which may be private; check that's intentional, or move them to .*trk-plans/settings.yaml" y status
+hasnt "…not a warning" "^warning" y status
+run_ok "…so --strict passes" y status --strict
+git add yass.yaml; git commit -q -m "chore: settings in the pointer"
+has   "…committed, it still notes it" "git would commit it with branch:, tracker:" y status
+git rm -q --cached yass.yaml; echo yass.yaml > .gitignore; git add .gitignore; git commit -q -m "chore: keep the pointer private"
+hasnt "a gitignored yass.yaml gets no note" "git would commit it" y status
+has   "…and its settings still apply" "^card: https://trello.com/c/Sp1/separate" y status separate-card
+git rm -q --cached .gitignore; rm .gitignore
+printf 'path: ../trk-plans\nbranch: main\n' > yass.yaml; printf 'branch: trunk\npath: elsewhere\n' > "$W/e2e/trk-plans/settings.yaml"
+has   "a setting yass.yaml and settings.yaml disagree on warns" "yass.yaml and .*settings.yaml give branch: different values; settings.yaml's are used" y status
+has   "path: in settings.yaml warns" "settings.yaml: path: and ignore: belong in yass.yaml" y status
+printf 'path: ../trk-plans\n' > yass.yaml; printf 'colour: blue\n' > "$W/e2e/trk-plans/settings.yaml"
+has   "an unknown setting in settings.yaml warns" "settings.yaml: unknown setting 'colour'" y status
+rm "$W/e2e/trk-plans/settings.yaml"
+echo "# workflow" > "$W/e2e/trk-plans/tracker.local.md"
+has   "a tracker.local.md git doesn't ignore warns" "tracker.local.md: keeps this machine's tracker workflow, so git should ignore it" y status
+echo tracker.local.md > "$W/e2e/trk-plans/.gitignore"
+hasnt "…and a gitignored one doesn't" "tracker.local.md" y status
+
+echo "17c. a yass folder under any name"
+newrepo "$W/e2e/trk3"
+y init --path specs --no-agents >/dev/null
+printf "$BOARD" > specs/settings.yaml
+N=$(y new "Named card" --source https://trello.com/c/Nm1/named)
+has   "a folder named specs/ takes changes" "^specs/changes/$TODAY-named-card$" echo "$N"
+has   "…and its settings.yaml's tracker applies" "^card: https://trello.com/c/Nm1/named  \(column: Planning\)" y status named-card
+hasnt "…with nothing to note or warn about" "^(note|warning)" y status
+rm specs/settings.yaml; printf "path: specs\n$BOARD" > yass.yaml
+has   "…and so does a tracker in its yass.yaml" "^card: https://trello.com/c/Nm1/named" y status named-card
+hasnt "…with no note, since the plans are in the repo" "git would commit it" y status
+
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

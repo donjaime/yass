@@ -448,6 +448,9 @@ func showChange(r *Repo, c *Change) {
 			fmt.Printf("%s: %s\n", k, v)
 		}
 	}
+	if link, column := c.card(); link != "" {
+		fmt.Printf("card: %s  (column: %s)\n", link, column)
+	}
 	if c.Deps != nil {
 		if _, waiting := c.blockedBy(); len(waiting) > 0 {
 			fmt.Printf("waiting on: %s\n", labels(waiting))

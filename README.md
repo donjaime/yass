@@ -292,17 +292,40 @@ path: ../my-project-plans        # relative to this file
 - **`yass/` is a link to it.** `yass init` and every `yass` command keep a `yass/` symlink in the checkout pointing to the plans folder, so you, your editor and your agents find them at `yass/` as usual. It's ignored through the clone's `.git/info/exclude`, so it never shows up in `git status` or in commits. Nothing depends on it: a real `yass/` already there is left alone (with a warning), and where symlinks can't be made (Windows without Developer Mode) YASS skips it with a note. Some tools don't follow links by default (`rg` needs `-L`).
 - **Worktrees find the same plans.** A relative path like `../my-project-plans` means "next to the checkout", so from a linked worktree somewhere else YASS looks where the clone's other checkouts see it, and links `yass/` there too. A `yass.yaml` kept out of git is borrowed from the main checkout the same way. If the plans aren't found from any checkout, a worktree never offers to create them: run `yass init` from the main checkout.
 
-- **Commit the `yass.yaml`** so everyone finds the plans the same way (each person sets the variable for their machine), or **gitignore it** to keep even the pointer private. `yass` still reads one at the top of the repo or in the folder you're in.
+- **Commit the `yass.yaml`** so everyone finds the plans the same way (each person sets the variable for their machine), or **gitignore it** to keep even the pointer private. `yass` still reads one at the top of the repo or in the folder you're in. Keep the plans' settings in a `settings.yaml` inside the plans folder (see below), so they're committed with the plans and stay private; when a committed `yass.yaml` pointing outside the repo carries anything besides `path:` and `ignore:` (a `tracker:`, say), `yass status` notes it as possibly private and suggests moving it there.
 - **YASS says when plans are separate.** Plans outside this repo's git work tree (in another repo, or in none) are *separate*; plans inside it, a linked worktree's included, are *inline*. `yass status` ends with `plans: separate (<folder>)`, and notes when that folder's repo has uncommitted files or is behind its upstream as of its last fetch (it never fetches). `yass root -v` prints `inline` or `separate` after each folder.
 - **The folder can be a git repo of its own,** private if you like. Then no commit can mix code and plans, so the hook has nothing to check; commit intent changes there on their own, as usual. Its history is where Decisions get their dates and authors.
 - **Commits name their change.** With a change's plans elsewhere, each code commit for it carries a `yass:` trailer naming the change (`yass: 2026-09-14-offline-sync`), which the hooks add for you (`yass use <change>`, or a branch named after the change); CI can require it. [docs/separate-plans.md](docs/separate-plans.md) has the details and hook managers.
 - **Boxes cite the code they rest on,** since progress can't ride in the same commit as the code: `- [x] Disable Save while saving — code: a1b2c3d`. A box is `[x]` once its code is merged, citing the commit on the main branch, and `[/]` until then. `yass status` warns about a cited commit this repo doesn't have, and about a done box whose code isn't merged. `branch:` in `yass.yaml` says which branch counts (default: `origin/HEAD`, then `main`, then `master`).
 - **Agents follow a routine for it** (`yass-work`): pull the plans before starting, never `yass init` a missing plans folder, `yass use <change>` so commits carry the trailer, code first and plans second, the two linked, and git latitude asked for separately in each repo.
 - **Run your agent from the code repo** and give it the plans folder as an extra directory (Claude Code: `claude --add-dir <folder>`, or `permissions.additionalDirectories`). The `yass/` link is for finding the plans, not for permissions: Claude Code resolves it, treats the files behind it as outside the project, and asks before reading them, even in auto mode. Granting the plans folder is what lets an agent work in it without asking.
-- **A path inside the repo works too,** under any name (`path: planning`), and the hook recognizes it.
+- **A path inside the repo works too,** under any name (`yass init --path specs` makes a `specs/` folder and its `yass.yaml`), and the hook recognizes it.
 - **One team can plan privately in a shared repo.** `yass init private --path ~/plans/private --private` makes a team folder that git never sees: it's listed in the clone's `.git/info/exclude`, and named in the clone's git config (`yass.include`) so YASS still finds it, from the top of the repo and from every worktree. Nothing is written to the repo, so each clone sets it up for itself. `yass paths` leaves it out, since no commit can contain it. To stop: `git config --unset yass.include '^private$'`, then delete the folder.
 
-`yass.yaml` is also where YASS settings go as they're added (`path`, `branch`, [`ignore`](#folders-that-arent-yours) and [`archive: keep:`](docs/monorepo.md#keeping-the-working-tree-small) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
+`yass.yaml` is also where YASS settings go as they're added (`path`, `branch`, [`ignore`](#folders-that-arent-yours), [`archive: keep:`](docs/monorepo.md#keeping-the-working-tree-small) and [`tracker`](#the-tracker-that-governs-a-yass-folder) so far). It doesn't have to point anywhere: without `path:`, the yass folder is the `yass/` next to it, so a `yass.yaml` beside your `yass/` folder just holds settings. A setting your version doesn't know is a warning, not an error.
+
+A yass folder can also keep `branch:`, `archive:` and `tracker:` in an optional `settings.yaml` inside it (`yass/settings.yaml`, `specs/settings.yaml`, or the top of a plans folder kept elsewhere). It's merged with the `yass.yaml` setting by setting; where they differ, `settings.yaml` wins and `yass status` warns. It works the same in the repo and outside it, which is what makes it the place for private settings: they're committed with the private plans, and the public `yass.yaml` only says where those are. `path:` and `ignore:` stay in `yass.yaml`.
+
+### The tracker that governs a yass folder
+
+YASS is files in the repo, and it doesn't replace your tracker. `tracker:`, in the yass folder's `settings.yaml` (or its `yass.yaml`), tells your agent which board or project the yass folder's work belongs to, so it can keep that tracker up to date as changes move. The `yass` binary never calls a tracker; your agent does, through whatever its harness can reach (MCP, an API, a CLI).
+
+```yaml
+tracker:
+  trello:                      # YASS knows this one's shape, and checks it
+    board: https://trello.com/b/AbC123/payments
+    lists:                     # each list's Trello ID
+      ideas: 64f0…
+      will-do: 64f1…
+      planning: 64f2…
+      implementing: 64f3…
+      done: 64f4…
+  jira:                        # anything else is yours: stored as-is, never checked
+    site: https://acme.atlassian.net
+    project: PAY
+```
+
+`yass status` warns about a Trello board that's missing a list or isn't a `trello.com/b/…` link, and never about another tracker's settings. A change's card is its `source:`; with a board set, `yass status <change>` shows it with the column its state puts it in (`card: https://trello.com/c/… (column: Implementing)`), which your agent checks against the real card before moving it. A `tracker.local.md` in a yass folder, where an agent keeps a tracker workflow when its harness has no memory, must be gitignored; `yass status` warns when it isn't.
 
 ## Monorepos
 

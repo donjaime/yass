@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
+	"regexp"
 	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
+
+// SettingsName is the optional settings file inside a yass folder: branch:, archive: and tracker:,
+// merged with its yass.yaml, the folder's winning. It lives with the plans, so private plans keep
+// their settings private (design §2).
+const SettingsName = "settings.yaml"
 
 // ConfigName is the settings file that can stand in for a yass/ folder and point to one elsewhere.
 const ConfigName = "yass.yaml"
@@ -31,12 +38,26 @@ type Config struct {
 		// tree should keep: a soft limit. Past it, yass status says to run yass evict. 0 means the default.
 		Keep int `yaml:"keep"`
 	} `yaml:"archive"`
+	// Tracker names the external tracker that governs the yass folder, one key per tool. trello has a
+	// shape YASS checks (design §1); any other key is the team's own, stored as-is and never checked.
+	// YASS never calls a tracker: the agent does, and reads these to know where.
+	Tracker map[string]any `yaml:"-"` // read from the raw YAML, so a malformed one is a warning, not a broken yass.yaml
+
+	problems []string // what's wrong with settings this version knows, worded for a warning
 }
 
 // DefaultKeep is how many archived changes a yass folder keeps when its yass.yaml doesn't say.
 const DefaultKeep = 2000
 
-var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true, "archive": true}
+var knownSettings = map[string]bool{"path": true, "branch": true, "ignore": true, "archive": true, "tracker": true}
+
+// TrelloLists are the roles of a Trello board's lists, in board order.
+var TrelloLists = []string{"ideas", "will-do", "planning", "implementing", "done"}
+
+var (
+	trelloBoardRE = regexp.MustCompile(`^https://trello\.com/b/[A-Za-z0-9]+(/\S*)?$`)
+	trelloCardRE  = regexp.MustCompile(`^https://trello\.com/c/[A-Za-z0-9]+(/\S*)?$`)
+)
 
 var knownArchiveSettings = map[string]bool{"keep": true}
 
@@ -68,7 +89,100 @@ func loadConfig(file string) (Config, []string, error) {
 		}
 	}
 	sort.Strings(unknown)
+	c.problems = trackerProblems(raw["tracker"])
+	if t, ok := raw["tracker"].(map[string]any); ok {
+		c.Tracker = t
+	}
 	return c, unknown, nil
+}
+
+// trackerProblems checks a tracker: section. Only trello is YASS's; other keys are the team's own.
+func trackerProblems(v any) []string {
+	if v == nil {
+		return nil
+	}
+	t, ok := v.(map[string]any)
+	if !ok {
+		return []string{"tracker: should be a section with one key per tracker (trello:, or your own)"}
+	}
+	tv, has := t["trello"]
+	if !has {
+		return nil
+	}
+	tr, ok := tv.(map[string]any)
+	if !ok {
+		return []string{"tracker.trello: should be a section with board: and lists:"}
+	}
+	var out []string
+	for _, k := range sortedAnyKeys(tr) {
+		if k != "board" && k != "lists" {
+			out = append(out, fmt.Sprintf("tracker.trello: unknown setting '%s' (trello takes board: and lists:)", k))
+		}
+	}
+	switch b, _ := tr["board"].(string); {
+	case strings.TrimSpace(b) == "":
+		out = append(out, "tracker.trello.board: missing; set it to the board's link (https://trello.com/b/…)")
+	case !trelloBoardRE.MatchString(strings.TrimSpace(b)):
+		out = append(out, fmt.Sprintf("tracker.trello.board: '%s' isn't a Trello board link (https://trello.com/b/…)", b))
+	}
+	lists, ok := tr["lists"].(map[string]any)
+	if !ok {
+		return append(out, "tracker.trello.lists: missing; it maps each list ("+strings.Join(TrelloLists, ", ")+") to its Trello ID")
+	}
+	known := map[string]bool{}
+	for _, k := range TrelloLists {
+		known[k] = true
+		if id := fmt.Sprint(lists[k]); lists[k] == nil || strings.TrimSpace(id) == "" {
+			out = append(out, fmt.Sprintf("tracker.trello.lists.%s: missing; set it to the list's Trello ID", k))
+		}
+	}
+	for _, k := range sortedAnyKeys(lists) {
+		if !known[k] {
+			out = append(out, fmt.Sprintf("tracker.trello.lists: unknown list '%s' (the lists are %s)", k, strings.Join(TrelloLists, ", ")))
+		}
+	}
+	return out
+}
+
+func sortedAnyKeys(m map[string]any) []string {
+	out := make([]string, 0, len(m))
+	for k := range m {
+		out = append(out, k)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// overlay is a yass.yaml's settings with a settings.yaml's on top: each one the folder sets wins.
+// It also names the settings the two give different values.
+func overlay(pointer, folder Config) (Config, []string) {
+	var differ []string
+	if b := strings.TrimSpace(folder.Branch); b != "" {
+		if p := strings.TrimSpace(pointer.Branch); p != "" && p != b {
+			differ = append(differ, "branch:")
+		}
+		pointer.Branch = b
+	}
+	if k := folder.Archive.Keep; k > 0 {
+		if pointer.Archive.Keep > 0 && pointer.Archive.Keep != k {
+			differ = append(differ, "archive:")
+		}
+		pointer.Archive.Keep = k
+	}
+	if folder.Tracker != nil {
+		if pointer.Tracker != nil && !reflect.DeepEqual(pointer.Tracker, folder.Tracker) {
+			differ = append(differ, "tracker:")
+		}
+		pointer.Tracker = folder.Tracker
+	}
+	return pointer, differ
+}
+
+// trello is the Trello board these settings name, if they name one.
+func (c Config) trello() string {
+	tr, _ := c.Tracker["trello"].(map[string]any)
+	b, _ := tr["board"].(string)
+	return strings.TrimSpace(b)
 }
 
 // resolvePath expands environment variables and ~ in p, and makes it absolute relative to base.

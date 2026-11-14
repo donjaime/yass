@@ -105,14 +105,30 @@ type Root struct {
 	// Included: a team folder git never sees, named in the clone's git config (yass.include)
 	Included bool
 	Queue    []string // the changes queue.md ranks, top first, as written
+	settled  *Config  // settings(), once read
+}
+
+// settings are the yass folder's settings: its yass.yaml's, with its settings.yaml's on top (design §2).
+func (root *Root) settings() Config {
+	if root.settled == nil {
+		var s Config
+		if root.Config != "" {
+			s, _, _ = loadConfig(root.Config)
+		}
+		if f := filepath.Join(root.Dir, SettingsName); isFile(f) {
+			if own, _, err := loadConfig(f); err == nil {
+				s, _ = overlay(s, own)
+			}
+		}
+		root.settled = &s
+	}
+	return *root.settled
 }
 
 // keep is how many archived changes the yass folder should keep in its working tree (a soft limit).
 func (root *Root) keep() int {
-	if root.Config != "" {
-		if c, _, err := loadConfig(root.Config); err == nil && c.Archive.Keep > 0 {
-			return c.Archive.Keep
-		}
+	if k := root.settings().Archive.Keep; k > 0 {
+		return k
 	}
 	return DefaultKeep
 }
@@ -640,6 +656,9 @@ func (r *Repo) findRoots() {
 		for _, k := range unknown {
 			r.warn("%s: unknown setting '%s' (a newer yass may know it)", r.disp(f), k)
 		}
+		for _, p := range cfg.problems {
+			r.warn("%s: %s", r.disp(f), p)
+		}
 		if err != nil {
 			r.warn("%s: %v", r.disp(f), err)
 			continue
@@ -692,6 +711,11 @@ func (r *Repo) findRoots() {
 	}
 	if len(r.Roots) == 0 && len(r.Warnings) == warned {
 		r.borrowConfig()
+	}
+	for _, root := range r.Roots { // a settings.yaml's branch: counts too
+		if b := strings.TrimSpace(root.settings().Branch); b != "" {
+			root.Branch = b
+		}
 	}
 	sort.SliceStable(r.Roots, func(i, j int) bool {
 		a, b := r.Roots[i].Owner, r.Roots[j].Owner
@@ -842,6 +866,7 @@ func (r *Repo) archivedPieces() {
 }
 
 func (r *Repo) check() {
+	r.checkSettings()
 	known := map[string]bool{}
 	addKnown := func() {
 		for _, c := range append(append([]*Change{}, r.Active...), r.Archived...) {

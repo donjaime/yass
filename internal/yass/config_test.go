@@ -3,7 +3,10 @@ package yass
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"gopkg.in/yaml.v3"
 )
 
 func TestResolvePath(t *testing.T) {
@@ -73,5 +76,64 @@ func TestArchiveKeep(t *testing.T) {
 	}
 	if k := (&Root{}).keep(); k != DefaultKeep {
 		t.Fatalf("keep without a yass.yaml = %d, want %d", k, DefaultKeep)
+	}
+}
+
+const trelloOK = `tracker:
+  trello:
+    board: https://trello.com/b/AbC123/payments
+    lists:
+      ideas: 64f0a1
+      will-do: 64f0a2
+      planning: 64f0a3
+      implementing: 64f0a4
+      done: 64f0a5
+`
+
+func TestTrackerSettings(t *testing.T) {
+	for name, tc := range map[string]struct {
+		yaml string
+		want []string
+	}{
+		"a whole trello board":                         {trelloOK, nil},
+		"other trackers are the team's own, any shape": {"tracker:\n  jira:\n    site: https://acme.atlassian.net\n    project: PAY\n    boards: [1, 2]\n  acme-pm: anything\n", nil},
+		"a list missing": {strings.Replace(trelloOK, "      done: 64f0a5\n", "", 1),
+			[]string{"tracker.trello.lists.done: missing; set it to the list's Trello ID"}},
+		"an empty list ID": {strings.Replace(trelloOK, "done: 64f0a5", "done: ''", 1),
+			[]string{"tracker.trello.lists.done: missing; set it to the list's Trello ID"}},
+		"not a board link": {strings.Replace(trelloOK, "https://trello.com/b/AbC123/payments", "https://trello.com/c/AbC123", 1),
+			[]string{"tracker.trello.board: 'https://trello.com/c/AbC123' isn't a Trello board link (https://trello.com/b/…)"}},
+		"no board": {strings.Replace(trelloOK, "    board: https://trello.com/b/AbC123/payments\n", "", 1),
+			[]string{"tracker.trello.board: missing; set it to the board's link (https://trello.com/b/…)"}},
+		"unknown keys under trello and lists": {strings.Replace(trelloOK, "    lists:\n", "    labels: x\n    lists:\n      backlog: 1\n", 1),
+			[]string{"tracker.trello: unknown setting 'labels' (trello takes board: and lists:)",
+				"tracker.trello.lists: unknown list 'backlog' (the lists are ideas, will-do, planning, implementing, done)"}},
+		"no lists": {"tracker:\n  trello:\n    board: https://trello.com/b/AbC123\n",
+			[]string{"tracker.trello.lists: missing; it maps each list (ideas, will-do, planning, implementing, done) to its Trello ID"}},
+		"not a section": {"tracker: trello\n", []string{"tracker: should be a section with one key per tracker (trello:, or your own)"}},
+	} {
+		var raw map[string]any
+		if err := yaml.Unmarshal([]byte(tc.yaml), &raw); err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		if got := trackerProblems(raw["tracker"]); strings.Join(got, "\n") != strings.Join(tc.want, "\n") {
+			t.Errorf("%s: problems %q; want %q", name, got, tc.want)
+		}
+	}
+}
+
+func TestSettingsOverlay(t *testing.T) {
+	board := map[string]any{"trello": map[string]any{"board": "https://trello.com/b/AbC123"}}
+	pointer := Config{Branch: "main", Tracker: map[string]any{"jira": "PAY"}}
+	pointer.Archive.Keep = 5
+	s, differ := overlay(pointer, Config{Branch: "trunk", Tracker: board})
+	if s.Branch != "trunk" || s.Archive.Keep != 5 || s.trello() != "https://trello.com/b/AbC123" {
+		t.Errorf("overlay = branch %q keep %d board %q; want the folder's branch and tracker, the pointer's keep", s.Branch, s.Archive.Keep, s.trello())
+	}
+	if strings.Join(differ, " ") != "branch: tracker:" {
+		t.Errorf("differ = %v; want branch: and tracker:", differ)
+	}
+	if s, differ := overlay(pointer, Config{Branch: "main"}); s.Branch != "main" || s.Archive.Keep != 5 || s.Tracker["jira"] != "PAY" || len(differ) != 0 {
+		t.Errorf("the same value, or none, changes nothing and differs in nothing: %+v %v", s, differ)
 	}
 }
