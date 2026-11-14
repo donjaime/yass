@@ -3,6 +3,7 @@ package yass
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,24 +11,28 @@ import (
 	"strings"
 )
 
-// The personal memory (design §1, §2): one markdown file per clone, in the user's own folder, that
-// says who you are, your team and your yass folders. Every worktree of a clone shares its git common
-// dir, so they all find the same file; another clone gets its own. Nothing about it is in the repo.
+// The personal memory (design §1, §2): one global settings.json in the user's config folder, with an
+// entry per clone, read and written only by `yass me`. Agents run the CLI instead of opening the file,
+// since their file permissions usually stop at the project's folders. A clone is keyed by its git
+// common dir, which every worktree shares; another clone gets its own entry.
 
-// Me is what the personal memory's frontmatter says.
+// SettingsFile is the global settings file's name, in the user's config folder.
+const SettingsFile = "settings.json"
+
+// Me is this clone's personal memory: who you are, and your team's yass folders here.
 type Me struct {
-	File    string
-	Name    string
-	Team    string
-	Folders []string // yass folders by path from the repo top, as yass status prints them
-	Unknown []string // keys the binary doesn't read
-	Exists  bool
+	File    string   `json:"-"`
+	Clone   string   `json:"clone"`
+	Repo    string   `json:"repo"`
+	Name    string   `json:"name"`
+	Team    string   `json:"team"`
+	Folders []string `json:"folders"`
+	Notes   string   `json:"notes"`
+	Saved   bool     `json:"saved"` // whether this clone has an entry yet
 }
 
-var meKeys = map[string]bool{"name": true, "team": true, "folders": true}
-
-// userConfigDir is where YASS keeps a person's files: $YASS_CONFIG_DIR, else %APPDATA%\yass on Windows,
-// else ${XDG_CONFIG_HOME:-~/.config}/yass.
+// userConfigDir is where YASS keeps a person's files: $YASS_CONFIG_DIR, else %APPDATA%\yass on
+// Windows, else ${XDG_CONFIG_HOME:-~/.config}/yass.
 func userConfigDir() (string, error) {
 	if d := os.Getenv("YASS_CONFIG_DIR"); d != "" {
 		return d, nil
@@ -47,98 +52,172 @@ func userConfigDir() (string, error) {
 	return filepath.Join(home, ".config", "yass"), nil
 }
 
-// memoryFile is the personal memory's path for the clone dir is in: clones/<repo>-<id>.md, where <id>
-// is the first 8 hex characters of a SHA-256 of the clone's git common dir.
-func memoryFile(top string) (string, error) {
-	common := gitCommonDir(top)
-	if common == "" {
-		return "", fmt.Errorf("the personal memory is per clone, so it needs a git repo")
-	}
-	dir, err := userConfigDir()
-	if err != nil {
-		return "", err
-	}
+// cloneKey names a clone: the first 8 hex characters of a SHA-256 of its git common dir.
+func cloneKey(common string) string {
 	sum := sha256.Sum256([]byte(filepath.Clean(common)))
-	name := filepath.Base(filepath.Dir(common)) // the main checkout, for worktrees too
-	if filepath.Base(common) != ".git" {
-		name = strings.TrimSuffix(filepath.Base(common), ".git") // a bare repo
-	}
-	return filepath.Join(dir, "clones", fmt.Sprintf("%s-%s.md", name, hex.EncodeToString(sum[:])[:8])), nil
+	return hex.EncodeToString(sum[:])[:8]
 }
 
-// loadMe reads the personal memory for this repo's clone. No file is a Me with Exists false.
-func loadMe(top string) (*Me, error) {
-	f, err := memoryFile(top)
+// settings is the global file, kept as raw JSON so keys YASS doesn't know survive a write.
+type settings struct {
+	file string
+	raw  map[string]json.RawMessage
+}
+
+func readSettings() (*settings, error) {
+	dir, err := userConfigDir()
 	if err != nil {
 		return nil, err
 	}
-	m := &Me{File: f}
-	b, err := os.ReadFile(f)
+	s := &settings{file: filepath.Join(dir, SettingsFile), raw: map[string]json.RawMessage{}}
+	b, err := os.ReadFile(s.file)
+	if os.IsNotExist(err) {
+		return s, nil
+	}
 	if err != nil {
-		return m, nil
+		return nil, err
 	}
-	m.Exists = true
-	meta, _ := frontmatter(string(b))
-	m.Name, m.Team = meta["name"], meta["team"]
-	for _, p := range strings.Split(meta["folders"], ",") {
-		if p = strings.Trim(strings.TrimSpace(p), `"'`); p != "" {
-			m.Folders = append(m.Folders, filepath.ToSlash(filepath.Clean(p)))
-		}
+	if err := json.Unmarshal(b, &s.raw); err != nil {
+		return nil, fmt.Errorf("%s isn't valid JSON: %v", s.file, err)
 	}
-	for _, k := range sortedKeys(keySet(meta)) {
-		if !meKeys[k] {
-			m.Unknown = append(m.Unknown, k)
-		}
-	}
-	return m, nil
+	return s, nil
 }
 
-func keySet(m map[string]string) map[string]bool {
-	out := map[string]bool{}
-	for k := range m {
-		out[k] = true
+// clones is the per-clone part, each entry kept raw for the same reason.
+func (s *settings) clones() map[string]map[string]json.RawMessage {
+	out := map[string]map[string]json.RawMessage{}
+	if c, ok := s.raw["clones"]; ok {
+		json.Unmarshal(c, &out)
 	}
 	return out
 }
 
-// meTemplate is a new personal memory: who you are from git, no folders yet (yass-init fills them in).
-func meTemplate(name string) string {
-	return `---
-name: ` + name + `
-team:
-folders: []
----
-# Notes for agents
-<!-- Yours alone, for this clone: who you are and which yass folders are your team's (folders:, by
-     path from the repo top, as yass status prints them; the first is where yass new puts a change from
-     the repo root). Anything you'd tell an agent every session goes here. What your team shares goes
-     in its yass folder's team.md instead. -->
-`
+// write saves the file atomically: a temp file in the same folder, then a rename, so two agents
+// saving at once can't leave it half written.
+func (s *settings) write() error {
+	if err := os.MkdirAll(filepath.Dir(s.file), 0o755); err != nil {
+		return err
+	}
+	b, err := json.MarshalIndent(s.raw, "", "  ")
+	if err != nil {
+		return err
+	}
+	f, err := os.CreateTemp(filepath.Dir(s.file), ".settings-*.json")
+	if err != nil {
+		return err
+	}
+	if _, err := f.Write(append(b, '\n')); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return err
+	}
+	if err := f.Close(); err != nil {
+		os.Remove(f.Name())
+		return err
+	}
+	return os.Rename(f.Name(), s.file)
+}
+
+// loadMe reads this clone's memory. With no entry yet, Saved is false and the name comes from git.
+func loadMe(top string) (*Me, *settings, error) {
+	common := gitCommonDir(top)
+	if common == "" {
+		return nil, nil, fmt.Errorf("the personal memory is per clone, so it needs a git repo")
+	}
+	s, err := readSettings()
+	if err != nil {
+		return nil, nil, err
+	}
+	m := &Me{File: s.file, Clone: cloneKey(common), Repo: filepath.Dir(filepath.Clean(common))}
+	if filepath.Base(common) != ".git" {
+		m.Repo = filepath.Clean(common) // a bare repo
+	}
+	json.Unmarshal(s.raw["name"], &m.Name)
+	if e, ok := s.clones()[m.Clone]; ok {
+		m.Saved = true
+		json.Unmarshal(e["team"], &m.Team)
+		json.Unmarshal(e["folders"], &m.Folders)
+		json.Unmarshal(e["notes"], &m.Notes)
+	}
+	if m.Name == "" {
+		n, _ := git(top, "config", "user.name")
+		m.Name = strings.TrimSpace(n)
+	}
+	for i, f := range m.Folders {
+		m.Folders[i] = filepath.ToSlash(filepath.Clean(strings.TrimSpace(f)))
+	}
+	if m.Folders == nil {
+		m.Folders = []string{}
+	}
+	return m, s, nil
+}
+
+// saveMe writes this clone's entry, and the name, keeping everything else in the file.
+func saveMe(m *Me, s *settings) error {
+	name, _ := json.Marshal(m.Name)
+	s.raw["name"] = name
+	clones := s.clones()
+	e := clones[m.Clone]
+	if e == nil {
+		e = map[string]json.RawMessage{}
+	}
+	for k, v := range map[string]any{"repo": m.Repo, "team": m.Team, "folders": m.Folders, "notes": m.Notes} {
+		b, _ := json.Marshal(v)
+		e[k] = b
+	}
+	clones[m.Clone] = e
+	cb, _ := json.Marshal(clones)
+	s.raw["clones"] = cb
+	return s.write()
 }
 
 func cmdMe(a *args) error {
 	r := findRepo()
-	m, err := loadMe(r.Top)
+	m, s, err := loadMe(r.Top)
 	if err != nil {
 		return err
 	}
-	if !m.Exists {
-		name, _ := git(r.Top, "config", "user.name")
-		if err := os.MkdirAll(filepath.Dir(m.File), 0o755); err != nil {
+	_, setName := a.v["name"]
+	_, setTeam := a.v["team"]
+	_, setFolders := a.v["folders"]
+	_, setNotes := a.v["notes"]
+	if setName || setTeam || setFolders || setNotes {
+		if setName {
+			m.Name = strings.TrimSpace(a.v["name"])
+		}
+		if setTeam {
+			m.Team = strings.TrimSpace(a.v["team"])
+		}
+		if setNotes {
+			m.Notes = a.v["notes"]
+		}
+		if setFolders {
+			m.Folders = []string{}
+			for _, f := range strings.Split(a.v["folders"], ",") {
+				if f = strings.TrimSpace(f); f != "" {
+					m.Folders = append(m.Folders, filepath.ToSlash(filepath.Clean(f)))
+				}
+			}
+			if _, unknown := r.myRoots(m); len(unknown) > 0 {
+				return fmt.Errorf("not a yass folder here: %s (yass root lists them)", strings.Join(unknown, ", "))
+			}
+		}
+		if err := saveMe(m, s); err != nil {
 			return err
 		}
-		if err := os.WriteFile(m.File, []byte(meTemplate(strings.TrimSpace(name))), 0o644); err != nil {
-			return err
-		}
-		fmt.Printf("created %s\n", m.File)
-	} else {
-		fmt.Println(m.File)
+		m.Saved = true
 	}
-	b, err := os.ReadFile(m.File)
-	if err != nil {
-		return err
+	if a.b["json"] {
+		b, _ := json.MarshalIndent(m, "", "  ")
+		fmt.Println(string(b))
+		return nil
 	}
-	fmt.Print("\n" + string(b))
+	saved := ""
+	if !m.Saved {
+		saved = "  (not saved yet: set a field, e.g. yass me --folders <yass folder>)"
+	}
+	fmt.Printf("%s, this clone (%s)%s\n", m.File, m.Clone, saved)
+	fmt.Printf("name:    %s\nteam:    %s\nfolders: %s\nnotes:   %s\n", m.Name, m.Team, strings.Join(m.Folders, ", "), m.Notes)
 	return nil
 }
 
@@ -164,18 +243,18 @@ func (r *Repo) myRoots(m *Me) (mine []*Root, unknown []string) {
 	return mine, unknown
 }
 
-// checkMe notes keys the memory has that the binary doesn't read (it's your own file) and warns
-// about folders it names that aren't yass folders here.
+// checkMe warns about folders the memory names that aren't yass folders here (a hand edit, or a
+// folder since removed), and about a settings file that can't be read.
 func (r *Repo) checkMe() *Me {
-	m, err := loadMe(r.Top)
-	if err != nil || !m.Exists {
-		return m
-	}
-	for _, k := range m.Unknown {
-		r.note("%s: '%s' isn't something yass reads (it reads name:, team: and folders:)", m.File, k)
+	m, _, err := loadMe(r.Top)
+	if err != nil {
+		if gitCommonDir(r.Top) != "" {
+			r.warn("%v", err)
+		}
+		return nil
 	}
 	if _, unknown := r.myRoots(m); len(unknown) > 0 {
-		r.warn("%s: folders: %s isn't a yass folder here", m.File, strings.Join(unknown, ", "))
+		r.warn("%s: folders: %s isn't a yass folder here (yass me --folders sets them)", m.File, strings.Join(unknown, ", "))
 	}
 	return m
 }

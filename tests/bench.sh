@@ -84,8 +84,7 @@ check "yass status, with $BRANCHES branches" "$(ms "$YASS_BIN" status)" 1000
 branches refs/remotes/origin/remote- "$REMOTES"
 echo "  + $REMOTES remote branches with recent work"
 check "yass status, with $REMOTES remote branches more" "$(ms "$YASS_BIN" status)" 2000
-"$YASS_BIN" me >/dev/null; MEF="$("$YASS_BIN" me | head -1)"
-sed -i.bak 's/^folders: \[\]$/folders: [teams\/t001]/' "$MEF"; rm -f "$MEF.bak"
+"$YASS_BIN" me --folders teams/t001 >/dev/null
 check "yass status, just your work (a memory naming one folder)" "$(ms "$YASS_BIN" status)" 2000
 
 echo "trailers: a code repo with $COMMITS commits, its plans kept apart"

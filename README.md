@@ -136,7 +136,7 @@ yass new "<title>"              a small change
          [--source gh#41] [--follows <archived>] [--platforms "ios, android"] [--goal "…"]
 yass status [<change>]          what's in flight, progress, next steps, what's blocked, not started or done,
                                 and the unmerged branches working on each; just your work once
-                                yass me names your yass folders
+                                yass me --folders names yours
             [--all]             …everyone's work
             [--brief]           …or one change's progress in a line, for commits and pull requests
             [--archived] [--strict] [--since 14d|DATE] [--no-branches]
@@ -144,8 +144,9 @@ yass archive <change>           move a finished change to archive/<YYYY>/<MM>/ (
 yass evict                      move the oldest archived months into git history, when past keep:
 yass decisions                  past decisions, active and archived, newest first, 50 at a time
                [--since D] [--until D] [--about "words"] [--change <c>] [--cites <sha>] [--limit N] [--json]
-yass me                         your personal memory for this clone (who you are, your yass folders):
-                                print it, creating it the first time; it lives in your user folder
+yass me                         your personal memory for this clone: who you are, your team and its
+                                yass folders, notes for agents (kept in your user folder; agents use this)
+        [--team T] [--folders a,b] [--notes "…"] [--name N] [--json]
 yass root                       print the yass folder(s) this repo uses
 yass paths [--only A...B]       the repo paths that are YASS's, as globs; --only exits 0 for a
                                 plans-only commit range, so CI can skip builds and tests

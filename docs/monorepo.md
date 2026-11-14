@@ -129,18 +129,16 @@ Each team gets its own yass folder (`yass init services/search`), so its changes
 
 ### Just your work
 
-Most people open their agent at the repo root, so YASS needs to know which team's folder is theirs. Each person keeps a personal memory for each clone: a markdown file in their own user folder (`~/.config/yass/clones/`, or `$XDG_CONFIG_HOME/yass/clones/`; `%APPDATA%\yass\clones\` on Windows), never in the repo. Every worktree of the clone shares it, and another clone is set up again. `yass me` prints it, creating it the first time; `yass-init` fills it in:
+Most people open their agent at the repo root, so YASS needs to know which team's folder is theirs. Each person keeps a personal memory for each clone, in one settings file in their own config folder (`~/.config/yass/settings.json`, or `$XDG_CONFIG_HOME/yass/`; `%APPDATA%\yass\` on Windows), never in the repo. Every worktree of the clone shares its entry, and another clone starts empty. Agents and people go through `yass me`, never the file: an agent's permissions usually stop at the project's folders, but it can always run `yass`. `yass-init` fills it in:
 
-```markdown
----
-name: Sam Rivera
-team: search
-folders: [services/search]
----
-# Notes for agents
+```bash
+yass me                                                    # this clone's memory
+yass me --team search --folders services/search --notes "small PRs, tests first"
+yass me --json                                             # the same, as data for agents
+yass me --name "Sam Rivera"                                # your name, for every repo
 ```
 
-With `folders:` set, `yass status` lists just your work:
+With your folders set, `yass status` lists just your work:
 - the changes in your folders;
 - changes elsewhere that wait on one of yours, through `blocked:`;
 - changes on an unmerged branch with your commits, matched by your git email.
