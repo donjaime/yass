@@ -1420,9 +1420,7 @@ printf 'path: ../trk-plans\n' > yass.yaml; printf 'colour: blue\n' > "$W/e2e/trk
 has   "an unknown setting in settings.yaml warns" "settings.yaml: unknown setting 'colour'" y status
 rm "$W/e2e/trk-plans/settings.yaml"
 echo "# workflow" > "$W/e2e/trk-plans/tracker.local.md"
-has   "a tracker.local.md git doesn't ignore warns" "tracker.local.md: keeps this machine's tracker workflow, so git should ignore it" y status
-echo tracker.local.md > "$W/e2e/trk-plans/.gitignore"
-hasnt "…and a gitignored one doesn't" "tracker.local.md" y status
+hasnt "a tracker.local.md is just a file now: yass status says nothing about it" "tracker.local.md" y status
 
 echo "17c. a yass folder under any name"
 newrepo "$W/e2e/trk3"
