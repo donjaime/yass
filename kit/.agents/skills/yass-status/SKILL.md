@@ -8,13 +8,13 @@ description: Report where YASS work stands. Summarize progress across active cha
 `yass` is the YASS CLI, on your PATH. This playbook only reads; it changes no files. Be brief: the human wants decisions, not narration.
 
 1. **Gather** (quietly):
-   - `yass status`, then `yass status <change>` for every change that isn't `not started`: its open boxes show which items are `[/]` (in progress), and it's where blocked and nearly done changes show their detail.
+   - `yass me`, to know whose work this is. When it names their folders (teams), `yass status` lists just their work: report that by default, and say how much else is in flight; with no folders, everything is theirs. `yass status --all` when they ask about everyone's, or the whole repo. Then `yass status <change>` for every change that isn't `not started`: its open boxes show which items are `[/]` (in progress), and it's where blocked and nearly done changes show their detail.
    - What happened recently (ask since when, or use a week): `git log --since=<date> -- <folder>` for each folder `yass root` prints (for one outside the repo, `git -C <folder> log --since=<date>`, if it's in a git repo) and the Log entries dated since then.
    - Decisions recorded in that time (the `yass-log` playbook does this well).
    - With a Trello board (`tracker:` in a yass folder's `settings.yaml` or `yass.yaml`) and a Trello tool to read it: the cards in Will Do, and, for each change with a card, whether the card is in the column `yass status <change>` says it should be. Only read the board; never move or comment from here. Another tracker: report what its remembered workflow says to (from memory, or the yass folder's `tracker.local.md`), read-only too.
    - With plans kept apart from the code (`yass root -v` says `separate`), pull them first, and note what `yass status` says about them being behind or uncommitted. Run in a code repo, `yass status <change>` lists the change's merged code from commits' `yass:` trailers.
 2. **One screen:**
-   1. Progress per change (boxes ticked, pieces done), one line each, in the order `yass status` lists them: a yass folder's `queue.md` ranks its changes, top first. Keep changes in progress apart from ones that are planned but `not started`, and name the items marked `[/]`: that's what's actively being worked on.
+   1. Whose work this is (from `yass me`), or that it's everyone's. Then progress per change (boxes ticked, pieces done), one line each, in the order `yass status` lists them: a yass folder's `queue.md` ranks its changes, top first. Keep changes in progress apart from ones that are planned but `not started`, and name the items marked `[/]`: that's what's actively being worked on.
    2. Blocked changes and the reason, and changes `waiting on:` others (say whether those are moving).
    3. Decisions made recently, with who made them, so the human can object.
    4. Changes `yass status` marks `done`: ready to archive.

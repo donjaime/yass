@@ -51,6 +51,7 @@ git add -A; run_ok "adopting commit" git commit -q -m "chore: adopt YASS"
 has   "the AGENTS.md section names yass-init for setup and trackers" "yass-init" cat AGENTS.md
 has   "…and yass-update for versions out of step" "yass-update" cat AGENTS.md
 has   "…and says not every pull request needs a change" "Not every pull request needs a change" cat AGENTS.md
+has   "…and to start with yass me" "run .yass me." cat AGENTS.md
 y init >/dev/null
 [ -z "$(git status --porcelain)" ] && ok "init run again on a set-up repo changes no file" || bad "a second init changed: $(git status --porcelain | tr '\n' ' ')"
 echo "# My rules" > AGENTS.md; y init >/dev/null
@@ -1442,10 +1443,10 @@ S=$(cd services/search && yass new "Faster search"); R1=$(y new "Root thing"); R
 WEB=$(cd services/web && yass new "Web waits"); sub "$WEB/change.md" '^blocked:$' "blocked: $(basename "$S")"
 git add -A; git commit -q -m "chore: adopt YASS"
 has   "with no memory, status lists everyone's work" "root-thing" y status
-has   "…and notes how to see just yours" "^note: this repo has 3 yass folders; set yours with .yass me --folders" y status
+hasnt "…and says nothing about the memory: teams are optional" "yass me|^note" y status
 MEFILE="$W/config/settings.json"
-has   "yass me shows this clone's memory: your git name, no folders, not saved yet" "^name: +Sam$" y me
-has   "…naming the settings file in the config folder" "^$MEFILE, this clone \([0-9a-f]{8}\)  \(not saved yet" y me
+has   "yass me shows this clone's memory: your git name, no folders, nothing saved" "^name: +Sam$" y me
+has   "…naming the settings file in the config folder" "^$MEFILE, this clone \([0-9a-f]{8}\)  \(nothing saved for this clone yet\)$" y me
 [ ! -e "$MEFILE" ] && ok "…and writes nothing until a field is set" || bad "yass me wrote the settings file without being asked"
 fails "a folder that isn't a yass folder here is refused, naming it" "not a yass folder here: nope" y me --folders nope
 run_ok "setting the team and folders saves them" y me --team search --folders services/search --notes "small PRs"
@@ -1472,7 +1473,6 @@ has   "…a change waiting on one of yours" "web-waits" echo "$OUT"
 has   "…and one on a branch you've committed to" "root-mine" echo "$OUT"
 hasnt "…but not the rest" "root-thing" echo "$OUT"
 has   "…saying what it left out" "^yours: services/search/yass/; 1 more change\(s\) in 1 other yass folder\(s\): yass status --all$" echo "$OUT"
-hasnt "…and no note about setting it up" "set yours with" echo "$OUT"
 has   "--all shows everyone's work" "root-thing" y status --all
 hasnt "…without the closing line" "^yours:" y status --all
 has   "naming a change shows it, yours or not" "^Root thing$" y status root-thing
@@ -1480,8 +1480,6 @@ has   "yass new from the repo root puts the change in your folder" "^services/se
 has   "…inside a team folder, that team's" "^services/web/yass/changes/$TODAY-for-the-web$" bash -c "cd services/web && yass new 'For the web'"
 has   "…and a piece goes in its change's folder" "^yass/changes/$TODAY-root-thing/$TODAY-a-piece$" y new "A piece" --in root-thing
 git worktree remove --force "$W/e2e/me-wt"
-newrepo "$W/e2e/me-one"; y init --no-agents >/dev/null
-hasnt "a repo with one yass folder gets no note about it" "set yours with" y status
 
 echo; echo "passed: $pass  failed: $fail"
 [ "$fail" -eq 0 ]

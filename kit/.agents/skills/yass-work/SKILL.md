@@ -13,7 +13,7 @@ description: Work on a YASS change you've been pointed at. For work with no chan
 
 **Say where the change stands.** A commit or pull request for a change can show its overall progress, so a reviewer, or `git log` later, sees the whole arc and not just this step: `yass status <change> --brief` prints a line like `offline-sync: 2/3 pieces done, 14/20 boxes · offline-queue: 6/6 boxes, done`. It fits a commit message's body and the top of a pull request's description; a title can carry a short form, like `(offline-sync 2/3)`. Use what helps your team: it's a suggestion, not a step.
 
-1. **Orient.** Find the change you were pointed at: named in the request (names can be shortened: `yass status queue`), or the one this session is already working on. Nothing else counts.
+1. **Orient.** Run `yass me` to know who you're working for and which yass folders are theirs. Find the change you were pointed at: named in the request (names can be shortened: `yass status queue`), or the one this session is already working on. Nothing else counts.
    - **Not pointed at one?** Show `yass status` and ask which. Unattended, stop and say so.
    - **Directing your own work?** If the harness or the human has put you in charge of choosing (a fully autonomous run), the choice is yours: pick deliberately, and before you start a `not started` change, check that its plan has been approved or approve it yourself as you've been allowed to. Record the choice, and any approval, in its `## Decisions` with `(<you>)` as who.
    - **No change yet? Decide whether it needs one.** Not every pull request does.

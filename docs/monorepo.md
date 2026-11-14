@@ -143,7 +143,7 @@ With your folders set, `yass status` lists just your work:
 - changes elsewhere that wait on one of yours, through `blocked:`;
 - changes on an unmerged branch with your commits, matched by your git email.
 
-It ends with how much it left out; `yass status --all` shows everyone's, and naming a change always shows it. `yass new` run at the repo root puts the change in your first folder; inside a team's folder, that folder. Without a memory, `yass status` shows everything and, in a repo with more than one yass folder, notes how to narrow it.
+It ends with how much it left out; `yass status --all` shows everyone's, and naming a change always shows it. `yass new` run at the repo root puts the change in your first folder; inside a team's folder, that folder. Without a memory, or with no folders in it, `yass status` shows everything, as it always has: teams are optional, so a solo developer with several yass folders (public and private plans, say) sets nothing.
 
 ### Who reviews plans: CODEOWNERS
 

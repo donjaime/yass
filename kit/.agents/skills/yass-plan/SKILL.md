@@ -10,7 +10,7 @@ description: Plan a YASS change. Write plan.md (approach, acceptance criteria pe
 Planning mostly runs on its own. The human made the big calls while shaping; turn the approved PRD into a plan without a back-and-forth, and ask only when the PRD leaves a real choice open. It ends at a written plan: it never starts building. The change stays `not started` until someone points `yass-work` at it. Record calls in `## Decisions` (or `design.md`), not the Log; the first Log entry marks the start of work.
 
 ## Write the plan
-1. Read the change's `prd.md`, the code it touches, and its docs. If this session already has a plan (from the harness's plan mode, or a plan file the human points you to), start from it: its approach, file-by-file steps and risks become the plan's Approach, pieces and design calls. Don't redo research it already did; check that it still matches the code and the PRD.
+1. Run `yass me` (who you're planning for, and their yass folders: new pieces go with their change). Read the change's `prd.md`, the code it touches, and its docs. If this session already has a plan (from the harness's plan mode, or a plan file the human points you to), start from it: its approach, file-by-file steps and risks become the plan's Approach, pieces and design calls. Don't redo research it already did; check that it still matches the code and the PRD.
    - **No change folder yet?** If the harness plan is for something large, run `yass-shape` first (it can start from the same plan). If it's small, `yass new "<title>"` and turn the plan into its Goal, Acceptance and Steps; it doesn't need a `plan.md`.
 2. **Approach:** the shape of the solution, in a few paragraphs. Point at existing modules and docs rather than restating them.
 3. **Acceptance,** per milestone:
