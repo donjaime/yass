@@ -45,7 +45,7 @@ When the change's yass folder names a Trello board (`tracker:` in its `settings.
 - **Building starts:** check the card is in Planning, then move it to Implementing. A piece with its own card moves the same way. If the card is anywhere else, someone may have claimed it: don't move it or comment; tell the human where it is and ask. Unattended, stop, and say so in the Log.
 - **A pull request** for the change: comment on its card with the link when it's up for review, and again when it merges or closes.
 - **Done:** a piece's card moves to Done when the piece is done and its pull request merged; a top-level change's, when its archive merges. Each time, check it's in Implementing first.
-- **A new small change, or a piece, with no card:** offer to create one in the column its state implies.
+- **No card:** for a new top-level change, ask whether to create one, and create it only on a yes. Never create a card for a piece: it rolls up to its change's card.
 - **Plans kept elsewhere:** never put a board or card link in the code repo (commits, pull request descriptions). The plans link the card.
 - **Another tracker** (any other key under `tracker:`): at these same moments, do what the workflow you remember for it says: from your harness's memory, or the yass folder's `tracker.local.md` when it's there (read it first). Remember none? Run `yass-init`'s interview first, or ask.
 

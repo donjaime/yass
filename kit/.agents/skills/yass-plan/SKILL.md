@@ -35,7 +35,7 @@ For anything bigger than one pull request:
 ## With a tracker
 When the change's yass folder names a Trello board (`tracker:` in its `settings.yaml`, or its `yass.yaml`), follow the Trello workflow in the `yass-init` playbook. For planning:
 - **Planning starts** on a card still in Will Do (a small change planned straight from a card): move it to Planning with a comment, as `yass-shape` does. If it's already in Planning from shaping, leave it; anywhere else, stop and ask.
-- **Pieces:** when you create a piece, look for a card that clearly covers it and make that card its `source:`; if two might fit, ask. With none, offer to create one in Planning. A piece's card moves like a top-level change's.
+- **Pieces:** when you create a piece, look for a card that clearly covers it and make that card its `source:`; if two might fit, ask. With none, leave it: pieces roll up to their change's card, and agents never create cards for them. A piece's card moves like a top-level change's.
 - **The plan's pull request** gets a comment on the change's card when it's up for review, with the link, and another when it merges, saying the plan is accepted.
 - **A card that changed:** when the human says so, read it and propose plan revisions here.
 - **Another tracker** (any other key under `tracker:`): at these same moments, do what the workflow you remember for it says: from your harness's memory, or the yass folder's `tracker.local.md` when it's there (read it first). Remember none? Run `yass-init`'s interview first, or ask.

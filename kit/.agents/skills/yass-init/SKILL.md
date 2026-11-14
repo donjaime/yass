@@ -50,7 +50,7 @@ For Jira or anything else, YASS has no workflow of its own: it learns yours. Wha
    - how work maps: one issue per top-level change? Pieces as sub-tasks, stories under an epic, or nothing? Which issue types?
    - which status or transition matches each moment YASS has: planning starts, the plan's pull request is up and merges, building starts, a code pull request is up and merges or closes, a piece is done, the change is archived;
    - what to comment, when, and what to leave alone (fields, assignees, sprints, anything their process owns);
-   - whether an issue should be created when a change has none, and how.
+   - whether, and how, to create an issue for a new top-level change that has none (pieces never get one: they roll up to their change's);
 3. **Write it down as a workflow:** the same moments as the Trello table below, each with what to do in their tracker, plus any rule they gave. Show it to them and fix what they correct.
 4. **Remember it, outside YASS:**
    - **In your harness's memory,** when you have one you can write to (a memory tool, or a memory folder your instructions name), scoped to this repo. Most harnesses have one.
@@ -63,7 +63,7 @@ For Jira or anything else, YASS has no workflow of its own: it learns yours. Wha
 The lifecycle playbooks then do what this workflow says at each moment, with the same check before each change of status: the issue should be where the last moment left it; if it's elsewhere, someone may have picked it up, so stop and ask.
 
 ## The Trello workflow
-The other playbooks follow this whenever a change's yass folder has a Trello board. The card is the change's `source:`; `yass status <change>` prints it with the column the change's state puts it in (`card: <link>  (column: Planning)`). The card hears only about the moments below. Everything finer (boxes, the Log, decisions) stays in the change's files.
+The other playbooks follow this whenever a change's yass folder has a Trello board. Work flows from the board into YASS: changes start from cards and keep them moving, and a card is added only for a top-level change the human says yes to. The card is the change's `source:`; `yass status <change>` prints it with the column the change's state puts it in (`card: <link>  (column: Planning)`). The card hears only about the moments below. Everything finer (boxes, the Log, decisions) stays in the change's files.
 
 | When | Move the card | Comment |
 |---|---|---|
@@ -77,9 +77,9 @@ The other playbooks follow this whenever a change's yass folder has a Trello boa
 | A piece is done and its pull request merged | to Done | |
 
 - **A card worked without a change** (its intent was unambiguous enough to skip YASS): check it's in Will Do, then move it to Implementing; comment on its pull request when it's up and when it merges or closes; move it to Done when it merges. Planning is skipped.
-- **One card per top-level change.** A piece can have its own card, which moves the same way as its piece. When a new piece clearly covers an existing card, make that card its `source:`; when two might fit, ask.
+- **One card per top-level change.** A piece can have its own card, which moves the same way as its piece. When a new piece, or change, clearly covers a card that already exists, make that card its `source:`, so the same work isn't tracked twice; when two might fit, ask.
 - **Starting from a card:** asked to shape or plan one, create the change with the card's title and its link as `source:` (`yass new "<card title>" --source <card link>`).
-- **No card yet:** when a change or piece is created in a folder with a board and has no card, offer to create one in the column its state implies. If they decline, leave the board alone.
+- **No card:** a new top-level change with no card, in a folder with a board: ask whether to create one, and create it, in the column its state implies, only on a yes. A piece never gets a card created for it: it rolls up to its change's card, so decomposing a card's work adds no noise to the board. Otherwise never create cards, issues or lists.
 - **Check before every move (best effort).** Just before moving a card, read which list it's in now. It should be in the column before the move: Will Do before Planning, Planning before Implementing, Implementing before Done. If it's anywhere else, someone (another agent, or a person) has probably claimed or moved it already: don't move it or comment, tell the human where it is, and ask. Trello can't move a card only if it's still where you saw it, so this catches most clashes, not all; say so if asked.
 - **A card changed on Trello:** when the human says so, read the card (description, comments, checklists), compare it with the change's PRD and plan, and propose revisions through `yass-shape` or `yass-plan`. Nothing flows from the board on its own.
 - **Privacy:** with plans kept outside the repo, never put a board or card link in the code repo (commits, pull request descriptions, `AGENTS.md`). Link the card from the plans.

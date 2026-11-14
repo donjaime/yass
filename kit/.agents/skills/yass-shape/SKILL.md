@@ -27,7 +27,7 @@ Shaping is a conversation. It's where a human decides what to build and why, so 
 
 ## With a tracker
 When the change's yass folder names a Trello board (`tracker:` in its `settings.yaml`, or its `yass.yaml`), follow the Trello workflow in the `yass-init` playbook. For shaping:
-- **From a card:** asked to shape one, create the change with the card's title and link (`yass new "<card title>" --large --source <card link>`). No card yet: offer to create one in Planning.
+- **From a card:** asked to shape one, create the change with the card's title and link (`yass new "<card title>" --large --source <card link>`). A new change with no card: ask whether to create one in Planning, and create it only on a yes.
 - **Planning starts:** check the card is still in Will Do, then move it to Planning with a comment that planning has begun, naming the change folder. If it's anywhere else, someone may have claimed it: don't move it or comment; tell the human where it is, and ask.
 - **The PRD's pull request** gets a comment on the card when it's up for review, with the link, and another when it merges, saying the plan is accepted. Nothing else goes on the card.
 - **A card that changed:** when the human says so, read it and propose PRD revisions here.
