@@ -11,7 +11,19 @@ description: Work on a YASS change you've been pointed at. For work with no chan
 
 **Git is up to whoever is driving.** Don't commit, branch, rebase, push or open a pull request unless the human or your harness has given you that latitude; pushing and pull requests are public. If you have it, do it yourself (plain `git`, or a stacking tool like `gh stack` if the repo uses one). If you don't, and someone's watching, give them the exact commands to run. Either way, keep the work shaped so that intent and code can land separately. "Separately" means apart from code: if the team squash-merges, that's a pull request with no code in it, which can still hold other intent, progress or an archive move.
 
-**Say where the change stands.** A commit or pull request for a change can show its overall progress, so a reviewer, or `git log` later, sees the whole arc and not just this step: `yass status <change> --brief` prints a line like `offline-sync: 2/3 pieces done, 14/20 boxes · offline-queue: 6/6 boxes, done`. It fits a commit message's body and the top of a pull request's description; a title can carry a short form, like `(offline-sync 2/3)`. Use what helps your team: it's a suggestion, not a step.
+**Write pull requests and commits for people.** A reviewer hasn't memorized the plan, so lead with what a person needs, and put YASS's codes last:
+- **Title:** what changes, in plain words. No criterion IDs, milestone codes or change-folder names.
+- **Description:** first the intent, in a few sentences (what changes for people, and why). Then what changed and how you checked it, in words a reviewer can follow without the plan open: describe behavior, not plan bullets. Then anything they should look at closely, or that's left.
+- **Last, the tracking block,** collapsed so it stays out of the way:
+  ```
+  <details><summary>YASS tracking</summary>
+
+  Change: 2026-09-14-offline-sync/2026-09-16-offline-queue (delivers AC1, AC3)
+  offline-sync: 2/3 pieces done, 14/20 boxes · offline-queue: 6/6 boxes, done
+  </details>
+  ```
+  The progress line is `yass status <change> --brief`; with plans kept elsewhere, the block also carries the `yass:` trailer line. `yass-log` and squash merges rely on it, so keep it, just not first.
+- **Commit messages** follow the same order: a plain subject, the why in the body, the codes at the end.
 
 1. **Orient.** Run `yass me` to know who you're working for and which yass folders are theirs. Find the change you were pointed at: named in the request (names can be shortened: `yass status queue`), or the one this session is already working on. Nothing else counts.
    - **Not pointed at one?** Show `yass status` and ask which. Unattended, stop and say so.
@@ -75,7 +87,7 @@ When `yass root -v` says `separate` (a `yass.yaml` points outside this repo), pl
 - **Commit the code first, then the plans.** The code commit carries the trailer; the plans commit marks boxes and cites the code commits they rest on: `- [/] Disable Save while saving — code: a1b2c3d`. Name them in the Log entry too.
 - **`[x]` waits for the merge.** A box is done when its code is on the main branch: cite the commit there (after a squash merge, the squash commit). Until then it's `[/]`, citing the branch commits. `yass status` warns about a cited commit it can't find, and about a done box whose code isn't merged (`branch:` in `yass.yaml` says which branch counts).
 - **Boxes with no code** (a decision, a manual check) need no citation.
-- **Cross-link them.** The code pull request names the change and its progress (`yass status <change> --brief`) and carries the `yass:` trailer line in its description, so a squash merge keeps it; the plans commit or pull request names the code's.
+- **Cross-link them.** The code pull request's tracking block (see "Write pull requests and commits for people") names the change, its progress (`yass status <change> --brief`) and carries the `yass:` trailer line, so a squash merge keeps it; the plans commit or pull request names the code's. Never a board or card link in the code repo: the plans link the card.
 - **Latitude is per repo.** Being allowed to commit, push or open pull requests in the code repo says nothing about the plans repo, and the other way round; without it in one, show the human that repo's commands.
 - **Intent changes go where the plans live,** as their own commit or pull request in that folder's repo, linked from the code's pull request. There's nothing to stack under the code; keep building against the revised plan once you're confident, as above.
 - **The plans stay on one branch** there, usually main.
