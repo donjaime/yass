@@ -38,6 +38,7 @@ When the change's yass folder names a Trello board (`tracker:` in its `settings.
 - **Pieces:** when you create a piece, look for a card that clearly covers it and make that card its `source:`; if two might fit, ask. With none, offer to create one in Planning. A piece's card moves like a top-level change's.
 - **The plan's pull request** gets a comment on the change's card when it's up for review, with the link, and another when it merges, saying the plan is accepted.
 - **A card that changed:** when the human says so, read it and propose plan revisions here.
+- **Another tracker** (any other key under `tracker:`): at these same moments, do what the workflow you remember for it says: from your harness's memory, or the yass folder's `tracker.local.md` when it's there (read it first). Remember none? Run `yass-init`'s interview first, or ask.
 
 ## Plan mode
 Harness plan modes (Claude Code's, and others') usually can't write files. Research and draft there; once the human approves the plan and you can write again, write it into the change as above.

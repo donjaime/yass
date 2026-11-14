@@ -30,6 +30,7 @@ When the change's yass folder names a Trello board (`tracker:` in its `settings.
 - **Planning starts:** check the card is still in Will Do, then move it to Planning with a comment that planning has begun, naming the change folder. If it's anywhere else, someone may have claimed it: don't move it or comment; tell the human where it is, and ask.
 - **The PRD's pull request** gets a comment on the card when it's up for review, with the link, and another when it merges, saying the plan is accepted. Nothing else goes on the card.
 - **A card that changed:** when the human says so, read it and propose PRD revisions here.
+- **Another tracker** (any other key under `tracker:`): at these same moments, do what the workflow you remember for it says: from your harness's memory, or the yass folder's `tracker.local.md` when it's there (read it first). Remember none? Run `yass-init`'s interview first, or ask.
 
 ## Plan mode
 Harness plan modes (Claude Code's, and others') usually can't write files. Research and draft there; once the human approves the plan and you can write again, create the change as above. The harness plan lives with the session, the change folder lives with the repo.
