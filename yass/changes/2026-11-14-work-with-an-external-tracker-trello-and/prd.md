@@ -41,8 +41,8 @@ The Trello workflow (the playbooks)
 
 Other trackers
 - **R14** [M2] `yass.yaml` can hold open-ended key/value settings for any other tracker (a Jira project, a board or team link, whatever the workflow needs). YASS stores them and doesn't interpret them.
-- **R15** [M2] For a tracker other than Trello, `yass-init` interviews the human about their organization's workflow (project, team, issue types, which transitions and comments, when) and saves the answers to the agent harness's memory, outside YASS: not in `yass.yaml`, not in the playbooks. The other playbooks follow that memory at the same moments as R8–R10.
-- **R19** [M2] Only when the agent can tell for sure that its harness has no persistent memory, it saves the workflow instead to a gitignored local file in the yass folder; when it can't tell, it asks the human. Every playbook that touches the tracker reads that file when it exists.
+- **R15** [M2] For a tracker other than Trello, `yass-init` interviews the human about their organization's workflow (project, team, issue types, which transitions and comments, when) and saves the answers to the agent harness's memory, outside YASS: not in `yass.yaml`, not in the playbooks. The other playbooks follow that memory at the same moments as R8–R10. *(Superseded by `2026-11-14-verify-yass-for-multi-team-repos-is` R11: the workflow always goes in the yass folder's team memory.)*
+- **R19** [M2] Only when the agent can tell for sure that its harness has no persistent memory, it saves the workflow instead to a gitignored local file in the yass folder; when it can't tell, it asks the human. Every playbook that touches the tracker reads that file when it exists. *(Superseded by `2026-11-14-verify-yass-for-multi-team-repos-is` R11: the workflow always goes in the yass folder's team memory.)*
 
 Docs
 - **R16** [M1] The README, docs and landing page say that YASS is files in the repo and fits inside a workflow with an external tracker without replacing it. A new doc covers the Trello workflow and how other trackers are set up.
