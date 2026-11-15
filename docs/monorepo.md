@@ -207,10 +207,11 @@ git config alias.codelog '!f() { yass paths | sed "s/^/:(exclude,glob)/" | xargs
 
 ## Squash merges
 
-A squash merge folds a pull request into one commit on main. YASS's rules are about commits: intent (a PRD, a design, plan text, a change's Goal or Acceptance), an archive move and a `queue.md` reorder each land apart from code, and progress (boxes, Log, Decisions) lands with the code it describes. With squash merges, "apart from code" means a pull request apart from code:
+A squash merge folds a pull request into one commit on main. YASS's rules are about commits: intent (a PRD, a design, plan text, a change's Goal or Acceptance) and a `queue.md` reorder each land apart from code, and progress (boxes, Log, Decisions) lands with the code it describes. Archiving a finished change is the last of its progress, so it rides with the code that finishes it. With squash merges, "apart from code" means a pull request apart from code:
 
-- **A plan revision, an archive move or a queue reorder goes in a pull request with no code in it.** It can share that pull request with other intent, progress or an archive: a PRD revision with its plan, or a change's last progress with its archive move. These are the pull requests [the recipes above](#plan-only-commits-run-no-ci) let skip build and tests.
+- **A plan revision or a queue reorder goes in a pull request with no code in it.** It can share that pull request with other intent, progress or an archive: a PRD revision with its plan, or a change's last progress with its archive move. These are the pull requests [the recipes above](#plan-only-commits-run-no-ci) let skip build and tests.
 - **Progress goes in the pull request of the code it describes,** as it would in a single commit.
+- **The archive move goes in the pull request that ticks the change's last box,** as its last commit, so finishing a change doesn't cost a pull request of its own. If review reopens the work, take that commit off the branch and archive again once it's done. A change finished earlier, or an archive that evicts old months, gets a pull request with no code.
 
 The hook checks commit by commit, so it can't see a pull request that will squash an intent commit and a code commit together; keeping them apart is up to whoever opens it. How you get there (separate branches, a stack of pull requests, a stacking tool) is your team's call.
 

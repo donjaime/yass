@@ -9,7 +9,7 @@ description: Work on a YASS change you've been pointed at. For work with no chan
 
 **Work only on the change you've been pointed at.** Picking what to build next is a decision, and it belongs to whoever is directing the work, not to this playbook. Being in progress isn't a reason to pick a change: several can be, and a freshly planned one (`not started` in `yass status`) may still be waiting for someone to approve its plan.
 
-**Git is up to whoever is driving.** Don't commit, branch, rebase, push or open a pull request unless the human or your harness has given you that latitude; pushing and pull requests are public. If you have it, do it yourself (plain `git`, or a stacking tool like `gh stack` if the repo uses one). If you don't, and someone's watching, give them the exact commands to run. Either way, keep the work shaped so that intent and code can land separately. "Separately" means apart from code: if the team squash-merges, that's a pull request with no code in it, which can still hold other intent, progress or an archive move.
+**Git is up to whoever is driving.** Don't commit, branch, rebase, push or open a pull request unless the human or your harness has given you that latitude; pushing and pull requests are public. If you have it, do it yourself (plain `git`, or a stacking tool like `gh stack` if the repo uses one). If you don't, and someone's watching, give them the exact commands to run. Either way, keep the work shaped so that intent and code can land separately. "Separately" means apart from code: if the team squash-merges, that's a pull request with no code in it, which can still hold other intent or progress. Archiving a change isn't intent: it rides with the code that finishes it (step 8).
 
 **Write pull requests and commits for people.** A reviewer hasn't memorized the plan, so lead with what a person needs, and put YASS's codes last:
 - **Title:** what changes, in plain words. No criterion IDs, milestone codes or change-folder names.
@@ -50,7 +50,10 @@ description: Work on a YASS change you've been pointed at. For work with no chan
    - Did: …
    - Next: …
    ```
-8. **Finish.** Merging a branch doesn't finish a change; a large change spans many branches. When every box is done or dropped (`yass status` says `done`), run `yass archive <change>` (it prints how to commit the move). Commit it apart from code; with squash merges, in a pull request with no code, which can carry the change's last progress too. Pieces are archived with their change.
+8. **Finish.** Merging a branch doesn't finish a change; a large change spans many branches. When every box is done or dropped (`yass status` says `done`), run `yass archive <change>` (it prints how to commit the move). Pieces are archived with their change.
+   - **Archive in the pull request that ticks the last box,** as its last commit, even when that pull request has code: one review builds, finishes and archives the change.
+   - **If review reopens the work,** take the archive commit off the branch, make the edits, and archive again. Never edit under `archive/`.
+   - **On its own** when the change was already finished on main, or when the archive evicts old months (`yass archive` says so): that's a commit, and with squash merges a pull request, without code.
    - A Step you no longer need can be dropped (`[-]`) any time, with a reason in Decisions.
 
 ## With a tracker

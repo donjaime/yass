@@ -211,7 +211,12 @@ echo "code7" >> app.txt; N=$(y new "Brand new"); git add -A
 hasnt "a new change + code: silent" "heads-up" git commit -q -m "feat: with new change"
 git add -A; git commit -q -m "progress" >/dev/null 2>&1 || true
 y archive hook-demo --force >/dev/null; echo "code8" >> app.txt; git add -A
-has   "archiving + code: warns" "archive a change in its own commit" git commit -q -m "feat: archive and code"
+hasnt "archiving + code: silent" "heads-up" git commit -q -m "feat: archive and code"
+G=$(y new "Goalpost"); P=$(y new "Prd move" --large); git add -A; git commit -q -m "yass: two more"
+y archive goalpost --force >/dev/null; sub "yass/archive/$MONTH/$TODAY-goalpost/change.md" '^# Goalpost' '# Goalposts, moved'; echo "code8b" >> app.txt; git add -A
+has   "archiving + code + an edited title: warns" "title, Goal or Acceptance changed" git commit -q -m "feat: archive and retitle"
+y archive prd-move --force >/dev/null; echo "- **R9** new" >> "yass/archive/$MONTH/$TODAY-prd-move/prd.md"; echo "code8c" >> app.txt; git add -A
+has   "archiving + code + an edited PRD: warns" "prd.md is intent" git commit -q -m "feat: archive and prd"
 y archive brand-new --force >/dev/null; git add -A
 hasnt "archiving alone: silent" "heads-up" git commit -q -m "yass: archive brand-new"
 echo "x" > "yass/archive/$MONTH/$TODAY-fix-double-tap-save/notes.md"; git add -A
@@ -1087,6 +1092,13 @@ A="yass/archive/$MONTH/$TODAY-three-pieces/plan.md"
 [ "$(grep -cE '^- \[x\] AC(1|2|4) ' "$A")" = 3 ] && ok "…and ticks them in the archived plan.md" || bad "AC1, AC2 and AC4 aren't all ticked in $A"
 has   "…and nothing else changes in it" "^AC1,AC1,AC2,AC2,AC4,AC4$" bash -c "diff '$W/plan.orig' '$A' | grep -E '^[<>]' | grep -oE 'AC[0-9]+' | sort | paste -sd, -"
 hasnt "the archive commit passes the hook" "heads-up|append-only" git commit -q -m "yass: archive three-pieces"
+L2=$(y new "Two pieces" --large); printf '### M1\n- [ ] AC1 (R1) Given a piece — verify: e2e\n' >> "$L2/plan.md"
+Q1=$(y new "Piece a" --in two-pieces); sub "$Q1/change.md" '^- \[ \] $' '- [ ] Delivers AC1 in [plan.md](../plan.md)\n- [ ] Work a'
+git add -A; git commit -q -m "yass: plan two-pieces"
+sub "$Q1/change.md" '^- \[ \] ' '- [x] '; echo "code a" >> app.txt
+has   "archive says its commit can ride in the pull request that finishes the change" "last commit of the pull request that finishes the change, or on its own: git commit" y archive two-pieces
+git add -A
+hasnt "the commit that finishes the last piece can archive the whole change" "heads-up|append-only" git commit -q -m "feat: piece a, and archive two-pieces"
 hasnt "main's whole history passes the hook" "." yass hook --range "$BASE..HEAD"
 
 echo "39. sparse checkouts and assets"

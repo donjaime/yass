@@ -12,5 +12,5 @@ Planned work lives in the yass folder's `changes/`, one dated folder per change:
 - When `yass status` notes that the `yass` binary and this repo's YASS files are out of step, or someone asks to update YASS: `yass-update`.
 - A plan from plan mode can become a change: `yass-shape` for large work, `yass-plan` or `yass-work` for small.
 - Never edit the archive (`archive/` in the yass folder); only `yass evict` removes from it. Follow-up work is a new change with `follows: <archived folder>`.
-- Finished means every box is checked; then `yass archive <change>`, in its own commit, apart from code (with squash merges, a pull request without code).
+- Finished means every box is checked; then `yass archive <change>`, as the last commit of the pull request that ticks the last box, code or not. A change finished earlier is archived in a pull request of its own.
 <!-- yass:end -->
