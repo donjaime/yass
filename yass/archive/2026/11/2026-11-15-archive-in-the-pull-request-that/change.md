@@ -4,6 +4,7 @@ source:
 follows: 
 blocked:
 created: 2026-11-15T17:05:37Z
+archived: 2026-11-15T17:14:49Z
 ---
 # Archive in the pull request that finishes a change
 
