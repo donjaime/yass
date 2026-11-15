@@ -27,21 +27,22 @@ section() { ID="$1" perl -0777 -ne 'print $1 if /<section id="\Q$ENV{ID}\E"[^>]*
 slugs() { perl -ne 'if (/^#{1,6}\s+(.*?)\s*$/) { $h = lc $1; $h =~ s/[^\w\- ]//g; $h =~ s/ /-/g; print "$h\n" }' "$1"; }
 
 echo "Sections"
-for id in idea pdlc spec-driven folder you-say install teams; do
+for id in install idea folder you-say teams; do
   if grep -q "<section id=\"$id\"" "$PAGE"; then ok "#$id"; else bad "#$id is missing"; fi
 done
 if grep -q 'class="hero"' "$PAGE" && perl -0777 -ne 'exit !(/<header class="hero">.*?href="#install".*?<\/header>/s)' "$PAGE"; then
   ok "the hero links to #install"; else bad "the hero doesn't link to #install"; fi
-ORDER="idea pdlc spec-driven folder you-say install teams"
+ORDER="install idea folder you-say teams"
 got="$(perl -ne 'print "$1 " while /<section id="([^"]+)"/g' "$PAGE" | sed 's/ $//')"
 if [ "$got" = "$ORDER" ]; then ok "sections come in order: $ORDER"; else bad "sections should come in order: $ORDER (got: $got)"; fi
-if perl -0777 -ne 'exit !(/<p class="lede">[^<]*project management system/s)' "$PAGE"; then ok "the lede says where YASS fits (project management system)"; else bad "the lede doesn't name the project management system"; fi
-pdlc="$(section pdlc)"
-for w in Jira Linear "GitHub Issues" Trello Planning Implementing Done "archive/"; do
-  if grep -qF "$w" <<<"$pdlc"; then ok "#pdlc mentions $w"; else bad "#pdlc doesn't mention $w"; fi
+if perl -0777 -ne 'exit !(/<p class="lede">[^<]*bridge between your project management system and your code/s)' "$PAGE"; then ok "the lede calls YASS the bridge between project management and code"; else bad "the lede doesn't say: bridge between your project management system and your code"; fi
+if perl -0777 -ne 'exit !(/<p class="actions">\s*<a[^>]*href="#install">Install<\/a>\s*<a[^>]*href="#idea">Why YASS<\/a>\s*<a[^>]*href="https:\/\/github\.com\/donjaime\/yass">GitHub<\/a>/s)' "$PAGE"; then ok "the hero's buttons are Install, Why YASS, GitHub"; else bad "the hero's buttons should be Install (#install), Why YASS (#idea), GitHub, in that order"; fi
+factory="$(section teams)"
+if grep -qF '<h2>For building software factories.</h2>' <<<"$factory"; then ok "#teams is headed For building software factories"; else bad "#teams isn't headed: For building software factories."; fi
+for w in "solo developer" "large organization" Jira Linear "GitHub Issues" Trello Planning Implementing Done "archive/"; do
+  if grep -qF "$w" <<<"$factory"; then ok "#teams mentions $w"; else bad "#teams doesn't mention $w"; fi
 done
-if grep -qF 'blob/main/docs/project-management.md"' <<<"$pdlc"; then ok "#pdlc links docs/project-management.md"; else bad "#pdlc has no link to docs/project-management.md"; fi
-if grep -qF 'blob/main/docs/comparison.md"' <<<"$(section spec-driven)"; then ok "#spec-driven links docs/comparison.md"; else bad "#spec-driven has no link to docs/comparison.md"; fi
+if grep -qF 'blob/main/docs/project-management.md"' <<<"$factory"; then ok "#teams links docs/project-management.md"; else bad "#teams has no link to docs/project-management.md"; fi
 folder="$(section folder)"
 for f in change.md prd.md plan.md design.md archive/; do
   if grep -qF "$f" <<<"$folder"; then ok "#folder shows $f"; else bad "#folder doesn't show $f"; fi
@@ -53,6 +54,10 @@ for spec in terminal:Terminal "source:From Source" "agent:Agent Prompt"; do
     ok "#$id has its heading and commands in the HTML"; else bad "#$id is missing, or has no <h3>$name</h3> and <pre>"; fi
   if grep -qF "aria-controls=\"$id\">$name</button>" <<<"$install"; then ok "the $name tab controls #$id"; else bad "no $name tab controlling #$id"; fi
 done
+for id in install-terminal install-source; do
+  if ID="$id" perl -0777 -e '$_ = <STDIN>; exit !(/<div class="panel" id="\Q$ENV{ID}\E">(?:(?!<\/div>).)*<pre[^>]*>(?:(?!<\/div>).)*<code>yass init<\/code>/s)' <<<"$install"; then ok "#$id shows yass init after its command"; else bad "#$id should show yass init after its command"; fi
+done
+if grep -qF '.zshenv' "$PAGE"; then bad "the page carries the by-hand PATH line; install.sh prints it"; else ok "no by-hand PATH text on the page"; fi
 if grep -q '<div class="tablist" hidden>' <<<"$install"; then ok "the tab bar is hidden without JavaScript"; else bad "the tab bar should start hidden, so the page works without JavaScript"; fi
 yousay="$(section you-say)"
 for s in yass-init yass-shape yass-plan yass-work yass-status yass-log yass-update; do
@@ -208,7 +213,7 @@ if [ "$SELF" = 1 ]; then
   elif grep -q "assets/favicon.svg is still a placeholder" <<<"$o"; then ok "--deploy with a placeholder fails, naming it"
   else bad "--deploy with a placeholder failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
   if bash "$0" --root "$T/r" >/dev/null 2>&1; then ok "without --deploy, placeholders pass"; else bad "without --deploy, placeholders should pass"; fi
-  copy; edit "$T/r/site/index.html" '<section id="pdlc"' '<section id="pdlc-moved"'; edit "$T/r/site/index.html" '<section id="teams"' '<section id="pdlc"'; edit "$T/r/site/index.html" '<section id="pdlc-moved"' '<section id="teams"'
+  copy; edit "$T/r/site/index.html" '<section id="idea"' '<section id="idea-moved"'; edit "$T/r/site/index.html" '<section id="folder"' '<section id="idea"'; edit "$T/r/site/index.html" '<section id="idea-moved"' '<section id="folder"'
   if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "sections out of order should fail"
   elif grep -q "sections should come in order" <<<"$o"; then ok "sections out of order fail"
   else bad "sections out of order failed for another reason"; fi

@@ -187,3 +187,6 @@ footer p { margin: 4px 0; }
 @media (min-width: 760px) { .cards.two { grid-template-columns: repeat(2, 1fr); } }
 .card ul { margin: 0; padding-left: 1.1em; color: var(--muted); }
 .card li + li { margin-top: 6px; }
+main section.compact { padding-top: 40px; padding-bottom: 40px; }
+.compact .tabs { margin: 8px 0 12px; }
+.compact .panel pre { margin: 10px 0; }
