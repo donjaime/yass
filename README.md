@@ -40,7 +40,13 @@ YASS doesn't commit for you. The CLI never commits (archiving only stages the mo
 
 ## Install
 
-Like most developer tools, YASS takes two steps: install the `yass` binary, once per machine, then [set up each repo](#set-up-a-repo) you use it in. [docs/install.md](docs/install.md) has every way in, with the details.
+Like most developer tools, YASS takes two steps: install the `yass` binary, once per machine, then [set up each repo](#set-up-a-repo) you use it in. The quickest way does both: paste this into your coding agent, from inside the repo.
+
+```text
+Install YASS and set it up in this repo by following https://raw.githubusercontent.com/donjaime/yass/main/INSTALL.md. Ask me before changing anything.
+```
+
+Your agent follows [`INSTALL.md`](INSTALL.md) (read it first, if you like): it verifies the download, reads `install.sh`, asks before each step that changes anything, never edits your shell files or commits, and ends by offering to connect your project management system. To do it by hand instead, [docs/install.md](docs/install.md) has every way in, with the details; the script is the shortest:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash
@@ -58,7 +64,7 @@ Open a new terminal, and `yass --version` should answer.
 
 ## Set up a repo
 
-Ask your agent: paste [the install prompt](docs/install.md#with-your-agent) into it from inside the repo. It gets the binary if you need one (verified, reading `install.sh` first), asks for your options, runs `yass init`, and then follows the `yass-init` playbook, which offers to connect a Trello board. With the playbooks already there, "set up YASS here" or "connect our Trello board" is enough; `yass-init` is safe to run again.
+Ask your agent: [the prompt above](#install) gets the binary if you need one, asks for your options, runs `yass init`, and then follows the `yass-init` playbook, which offers to connect your project management system (a Trello board, Jira, Linear…). With the playbooks already there, "set up YASS here" or "connect our Trello board" is enough; `yass-init` is safe to run again.
 
 Or by hand, from inside the repo:
 

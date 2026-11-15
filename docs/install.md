@@ -98,37 +98,13 @@ Its files are committed, so you need only the binary: [install](#install) it and
 
 ### With your agent
 
-Paste this into your coding agent from inside the repo you want to set up. It does both steps the way a careful person would: verifies the download, reads the script, and asks before running anything.
+Paste this into your coding agent from inside the repo you want to set up:
 
 ```text
-Install YASS (https://github.com/donjaime/yass) and set it up in this repository. Go step by step,
-show me what you find, and don't run anything that changes files until I say so.
-
-Part 1, the binary:
-1. Work out this machine's OS (darwin, linux or windows) and CPU (amd64 or arm64).
-2. In a temporary folder, download yass_<os>_<arch>.tar.gz (.zip on Windows) and checksums.txt
-   from https://github.com/donjaime/yass/releases/latest/download/.
-   If I've said "from source" instead: clone https://github.com/donjaime/yass, check out the
-   latest release tag, and build it with `go build -o bin/yass ./cmd/yass` (Go 1.24 or later);
-   skip step 3.
-3. Check the archive's SHA-256 against its line in checksums.txt. If the GitHub CLI is installed,
-   also run `gh attestation verify <archive> --repo donjaime/yass`. Stop if either check fails.
-4. Unpack it and read install.sh in full. Tell me what it will do: it should only copy the yass
-   binary into a folder (~/.local/bin, or the one passed to --bin-dir) and say whether that folder
-   is on my PATH. Point out anything that looks unexpected.
-5. Ask me where to put the binary, then once I say go, run install.sh (with --bin-dir <folder>
-   if I picked another). If the folder isn't on my PATH, show me the line that adds it
-   (install.sh prints one); don't edit my shell files.
-
-Part 2, this repo:
-6. Ask me which options I want: Claude Code files (--claude), playbooks in my user folder rather
-   than this repo (--global), the optional pre-commit hook (--hooks), or a yass folder with
-   another name or outside this repo (--path <folder>).
-7. Run <folder>/yass init with my options, then yass status to check it works, and show me
-   git status. Don't commit; I'll review it and commit it myself.
-8. Read the yass-init playbook it just installed and offer what's left from it, such as
-   connecting a Trello board to the yass folder.
+Install YASS and set it up in this repo by following https://raw.githubusercontent.com/donjaime/yass/main/INSTALL.md. Ask me before changing anything.
 ```
+
+[`INSTALL.md`](../INSTALL.md) holds the steps your agent follows, so you can read them first. It does both steps the way a careful person would: verifies the download, reads the script, and asks before running anything. It never edits your shell files or commits, and it ends by offering what's left from the `yass-init` playbook, such as connecting your project management system.
 
 ## Upgrading
 

@@ -121,6 +121,7 @@ pre {
 }
 pre.tree b { color: var(--accent); font-weight: 600; }
 pre.copyable { white-space: pre; }
+pre.copyable.prompt { white-space: pre-wrap; overflow-wrap: anywhere; }
 .codebox { position: relative; }
 .codebox pre { padding-top: 44px; }
 .copy {
