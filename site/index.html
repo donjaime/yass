@@ -94,17 +94,21 @@
 
 <section id="install" class="wrap">
   <h2>Install</h2>
-  <p>Two steps, like most tools: install the <code>yass</code> binary, once per machine, then set up each repo you use it in.</p>
-  <h3 class="step">1. Install the binary</h3>
+  <p>Paste one line into your coding agent, from inside the repo you want to set up. It installs the <code>yass</code> binary and sets up the repo, asking you before each step that changes anything.</p>
   <div class="tabs">
     <div class="tablist" hidden>
+      <button type="button" id="tab-agent" aria-controls="install-agent">Agent Prompt</button>
       <button type="button" id="tab-terminal" aria-controls="install-terminal">Terminal</button>
       <button type="button" id="tab-source" aria-controls="install-source">From Source</button>
-      <button type="button" id="tab-agent" aria-controls="install-agent">Agent Prompt</button>
+    </div>
+    <div class="panel" id="install-agent">
+      <h3>Agent Prompt</h3>
+<pre class="copyable prompt" data-source="INSTALL.md"><code>Install YASS and set it up in this repo by following https://raw.githubusercontent.com/donjaime/yass/main/INSTALL.md. Ask me before changing anything.</code></pre>
+      <p>Your agent verifies the download, reads the install script, runs <code>yass init</code> with the options you pick, and offers to connect your project management system. It never edits your shell files or commits. <a href="https://github.com/donjaime/yass/blob/main/INSTALL.md">Read the steps it follows</a> first.</p>
     </div>
     <div class="panel" id="install-terminal">
       <h3>Terminal</h3>
-      <p>Downloads the latest release for your machine, checks its checksum, and puts <code>yass</code> in <code>~/.local/bin</code>. It does nothing else (<a href="https://github.com/donjaime/yass/blob/main/install.sh">read the script</a> first).</p>
+      <p>Installs just the binary: downloads the latest release for your machine, checks its checksum, and puts <code>yass</code> in <code>~/.local/bin</code> (<a href="https://github.com/donjaime/yass/blob/main/install.sh">read the script</a> first).</p>
 <pre class="copyable" data-source="README.md"><code>curl -fsSL https://raw.githubusercontent.com/donjaime/yass/main/install.sh | bash</code></pre>
       <p class="note">Rather check each step? Install <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-a-release">from a release</a>, with checksums and signed build provenance.</p>
     </div>
@@ -113,46 +117,14 @@
       <p>With Go 1.24 or later. This puts <code>yass</code> in <code>$(go env GOPATH)/bin</code>; or <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#from-source">build a clone</a>.</p>
 <pre class="copyable" data-source="docs/install.md"><code>go install github.com/donjaime/yass/cmd/yass@latest</code></pre>
     </div>
-    <div class="panel" id="install-agent">
-      <h3>Agent Prompt</h3>
-      <p>Paste this into your coding agent, from inside the repo you want to set up. It does both steps: it verifies the download, reads the install script, and asks before changing anything.</p>
-<pre class="copyable" data-source="docs/install.md"><code>Install YASS (https://github.com/donjaime/yass) and set it up in this repository. Go step by step,
-show me what you find, and don't run anything that changes files until I say so.
-
-Part 1, the binary:
-1. Work out this machine's OS (darwin, linux or windows) and CPU (amd64 or arm64).
-2. In a temporary folder, download yass_&lt;os&gt;_&lt;arch&gt;.tar.gz (.zip on Windows) and checksums.txt
-   from https://github.com/donjaime/yass/releases/latest/download/.
-   If I've said "from source" instead: clone https://github.com/donjaime/yass, check out the
-   latest release tag, and build it with `go build -o bin/yass ./cmd/yass` (Go 1.24 or later);
-   skip step 3.
-3. Check the archive's SHA-256 against its line in checksums.txt. If the GitHub CLI is installed,
-   also run `gh attestation verify &lt;archive&gt; --repo donjaime/yass`. Stop if either check fails.
-4. Unpack it and read install.sh in full. Tell me what it will do: it should only copy the yass
-   binary into a folder (~/.local/bin, or the one passed to --bin-dir) and say whether that folder
-   is on my PATH. Point out anything that looks unexpected.
-5. Ask me where to put the binary, then once I say go, run install.sh (with --bin-dir &lt;folder&gt;
-   if I picked another). If the folder isn't on my PATH, show me the line that adds it
-   (install.sh prints one); don't edit my shell files.
-
-Part 2, this repo:
-6. Ask me which options I want: Claude Code files (--claude), playbooks in my user folder rather
-   than this repo (--global), the optional pre-commit hook (--hooks), or a yass folder with
-   another name or outside this repo (--path &lt;folder&gt;).
-7. Run &lt;folder&gt;/yass init with my options, then yass status to check it works, and show me
-   git status. Don't commit; I'll review it and commit it myself.
-8. Read the yass-init playbook it just installed and offer what's left from it, such as
-   connecting a Trello board to the yass folder.</code></pre>
-    </div>
   </div>
-  <p>Then put it on your PATH, so you, your agents and the git hook can run <code>yass</code>. The script says whether it is, and if not, prints the line for your shell. For zsh:</p>
+  <h3 class="step">Installed the binary by hand?</h3>
+  <p>Put it on your PATH, so you, your agents and the git hook can run <code>yass</code>; the script prints the line for your shell. For zsh:</p>
 <pre class="copyable" data-source="README.md"><code>echo 'export PATH="$HOME/.local/bin:$PATH"' &gt;&gt; ~/.zshenv</code></pre>
-  <h3 class="step">2. Set up a repo</h3>
-  <p>Ask your agent: the Agent Prompt above does both steps, then offers to connect a Trello board. With the playbooks already in place, “set up YASS here” is enough. Or by hand, from inside the repo: <code>yass init</code> adds the playbooks, a short section in <code>AGENTS.md</code>, an empty <code>yass/</code> folder and the optional hook; committing them means your teammates get them, and need only the binary.</p>
+  <p>Then set up each repo from inside it, and commit what it writes, so teammates need only the binary. <code>yass init</code> adds the playbooks, a short section in <code>AGENTS.md</code>, an empty <code>yass/</code> folder and the optional hook (<a href="https://github.com/donjaime/yass/blob/main/docs/install.md#set-up-a-repo">its options</a>); “set up YASS here” or “connect our Jira project” then gets your agent to finish the job.</p>
 <pre class="copyable" data-source="README.md"><code>yass init
 git add -A &amp;&amp; git commit -m "chore: adopt YASS"</code></pre>
-  <p>Then talk to your agent. The <a href="https://github.com/donjaime/yass/blob/main/docs/install.md#set-up-a-repo">options</a> cover Claude Code, the git hook, monorepo folders and keeping plans outside the repo.</p>
-  <p class="note"><strong>Upgrading</strong> is the same two steps: <code>yass update</code> for a newer binary, verified, then <code>yass upgrade</code> in each repo, and commit (<a href="https://github.com/donjaime/yass/blob/main/docs/install.md#upgrading">how it works</a>). <strong>Trying it out?</strong> <code>yass deinit</code> takes YASS back out of a repo, keeping your plans unless you delete them (<a href="https://github.com/donjaime/yass/blob/main/docs/install.md#removing-yass">removing YASS</a>).</p>
+  <p class="note"><strong>Upgrading</strong> is two steps: <code>yass update</code> for a newer binary, verified, then <code>yass upgrade</code> in each repo, and commit (<a href="https://github.com/donjaime/yass/blob/main/docs/install.md#upgrading">how it works</a>). <strong>Trying it out?</strong> <code>yass deinit</code> takes YASS back out of a repo, keeping your plans unless you delete them (<a href="https://github.com/donjaime/yass/blob/main/docs/install.md#removing-yass">removing YASS</a>).</p>
 </section>
 
 <section id="teams" class="wrap">

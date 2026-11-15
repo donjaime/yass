@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Checks the landing page in site/: install text matches the docs, links and anchors resolve,
+# Checks the landing page in site/: install text matches the docs, one install prompt (INSTALL.md) quoted everywhere, links and anchors resolve,
 # required sections and assets are there, nothing external loads, and the page stays small.
 # With --deploy, also fails while any asset is still a placeholder (pages.yml runs it that way).
 # Usage: tests/site.sh [--deploy] [--root DIR]    (DIR: a repo copy to check instead of this one)
@@ -80,6 +80,29 @@ for c in "$lede" "$idea"; do
   if [ -n "$c" ] && grep -qF "$c" <<<"$lead"; then ok "the lead-in says what the page does: ${c:0:50}…"; else bad "the README lead-in doesn't say: ${c:-?}"; fi
 done
 
+echo "One install prompt"
+# PROMPT: the line people paste, from INSTALL.md's first text block; the steps live only in INSTALL.md
+RAW="https://raw.githubusercontent.com/donjaime/yass/main/INSTALL.md"
+PROMPT="$(perl -0777 -ne 'print $1 if /```text\n(.*?)\n```/s' "$ROOT/INSTALL.md" 2>/dev/null)"
+if [ -z "$PROMPT" ]; then bad "INSTALL.md has no \`\`\`text block with the one-line prompt"; else
+  if [ "$(wc -l <<<"$PROMPT" | tr -d ' ')" = 1 ] && [ "${#PROMPT}" -lt 200 ]; then ok "the prompt is one line of ${#PROMPT} characters"; else bad "the prompt should be one line under 200 characters (${#PROMPT})"; fi
+  if grep -qF "$RAW" <<<"$PROMPT"; then ok "the prompt names INSTALL.md's URL"; else bad "the prompt doesn't name $RAW"; fi
+  if grep -qF "Ask me before changing anything" <<<"$PROMPT"; then ok "the prompt asks the agent to ask first"; else bad "the prompt doesn't say: Ask me before changing anything"; fi
+  for spec in "README.md:](INSTALL.md)" "docs/install.md:](../INSTALL.md)"; do
+    f="${spec%%:*}"; link="${spec#*:}"
+    if grep -qxF "$PROMPT" "$ROOT/$f"; then ok "$f quotes the prompt"; else bad "$f doesn't quote INSTALL.md's prompt word for word"; fi
+    if grep -qF "$link" "$ROOT/$f"; then ok "$f links INSTALL.md"; else bad "$f doesn't link INSTALL.md"; fi
+  done
+fi
+for f in README.md docs/install.md site/index.html; do
+  if grep -qE 'Part 1, the binary|Part 2, this repo' "$ROOT/$f"; then bad "$f carries INSTALL.md's steps; link INSTALL.md instead"; else ok "$f leaves the steps to INSTALL.md"; fi
+done
+if perl -0777 -e '$_ = <STDIN>; exit !(/<div class="tablist" hidden>\s*<button[^>]*aria-controls="install-agent"/s && /<\/div>\s*<div class="panel" id="install-agent">/s)' <<<"$install"; then
+  ok "Agent Prompt is the first tab and panel"; else bad "Agent Prompt should be the first tab and the first panel"; fi
+agent="$(ID=install-agent perl -0777 -e '$_ = <STDIN>; print $1 if /<div class="panel" id="install-agent">(.*?)<\/div>/s' <<<"$install")"
+if grep -qF 'data-source="INSTALL.md"' <<<"$agent" && grep -qF 'href="https://github.com/donjaime/yass/blob/main/INSTALL.md"' <<<"$agent"; then
+  ok "the Agent Prompt panel quotes INSTALL.md and links it"; else bad "the Agent Prompt panel should quote INSTALL.md (data-source) and link it"; fi
+
 echo "Install text matches its source"
 n=0
 while IFS= read -r -d '' rec; do
@@ -158,10 +181,18 @@ if [ "$SELF" = 1 ]; then
   T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
   copy() { rm -rf "$T/r"; mkdir -p "$T/r"; (cd "$ROOT" && tar --exclude=./.git --exclude=./private --exclude=./bin -cf - .) | (cd "$T/r" && tar -xf -); }
   edit() { P="$2" R="$3" perl -0777 -i -pe 's/\Q$ENV{P}\E/$ENV{R}/' "$1"; }
-  copy; edit "$T/r/docs/install.md" "Go step by step" "Go one step at a time"
-  if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "an edited agent prompt in docs/install.md should fail"
-  elif grep -q "doesn't match docs/install.md" <<<"$o"; then ok "an edited agent prompt in docs/install.md fails, naming the block"
-  else bad "an edited agent prompt failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
+  copy; edit "$T/r/README.md" "Ask me before changing anything." "Ask me first."
+  if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "an edited prompt in the README should fail"
+  elif grep -q "README.md doesn't quote INSTALL.md's prompt" <<<"$o"; then ok "an edited prompt in the README fails, naming it"
+  else bad "an edited prompt in the README failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
+  copy; printf '\n### Part 1, the binary\n' >> "$T/r/docs/install.md"
+  if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "INSTALL.md's steps copied into docs/install.md should fail"
+  elif grep -q "docs/install.md carries INSTALL.md's steps" <<<"$o"; then ok "INSTALL.md's steps copied into docs/install.md fail"
+  else bad "copied steps failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
+  copy; edit "$T/r/INSTALL.md" "Ask me before changing anything." "Ask me first."
+  if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "an edited prompt in INSTALL.md alone should fail"
+  elif grep -q "doesn't match INSTALL.md" <<<"$o"; then ok "an edited prompt in INSTALL.md alone fails, naming the page's block"
+  else bad "an edited prompt in INSTALL.md failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
   copy; printf '\n<!-- yass-placeholder -->\n' >> "$T/r/site/assets/favicon.svg"
   if o="$(bash "$0" --root "$T/r" --deploy 2>&1)"; then bad "--deploy with a placeholder should fail"
   elif grep -q "assets/favicon.svg is still a placeholder" <<<"$o"; then ok "--deploy with a placeholder fails, naming it"
