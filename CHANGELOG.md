@@ -1,9 +1,16 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (2026-11-15)
+Less ceremony where it doesn't pay: work can be shaped and then land as plain pull requests, a finished change is archived in the pull request that finishes it, and installing is one line to your agent.
 - **Archive in the pull request that finishes a change.** The pull request that ticks a change's last box can carry its archive move as its last commit, even with code, so finishing a change no longer costs a pull request of its own. The hook stops warning about an archive move next to code, and still warns when the moved files' intent was edited on the way (a title, Goal, acceptance criterion, PRD, design or plan text), when anything already archived is touched, and when months are evicted or migrated alongside code. A separate archive pull request still works. `yass archive` prints the new guidance.
 - **Shape it, then just open pull requests.** `yass-shape` now decides where work lands at the end of the conversation: a PRD, a `change.md`, or, when a folder wouldn't add value, a short brief you approve that lands as plain pull requests leading with it. No change folder, no separate intent review, no boxes; the card still moves through your board. The gradient is now four steps: just a pull request; shaped, then plain pull requests; one `change.md`; a PRD with a plan and pieces.
 - **Install with one line to your agent.** Paste "Install YASS and set it up in this repo by following …/INSTALL.md. Ask me before changing anything." into your coding agent: it follows the steps in the new [`INSTALL.md`](INSTALL.md), the same careful ones as before (verify the download, read `install.sh`, ask first, never edit shell files or commit). The README, docs/install.md and the YASS page lead with that line and link the file instead of copying the steps.
+- **Trailers only for changes kept outside the repo.** A `yass:` trailer links a code commit to a change whose plans live elsewhere. `yass-work` no longer asks for `yass: none` on every commit with no change: a commit with no change, or for a change in the repo's own yass folder, gets no trailer. `none` is only for teams whose CI runs `yass hook --range … --require-trailers`.
+- **The README and the YASS page say why:** YASS is the bridge between your project management system and your code, so you review the plan, not just the diff.
+
+Migrating:
+- **Run `yass upgrade`** for the updated playbooks (`yass-shape`, `yass-work`, `yass-init`) and `AGENTS.md` section. Nothing else to set up.
+- **The hook is quieter in one place:** a commit with code that also archives a finished change no longer gets a heads-up. If your CI runs `yass hook --range … --strict`, pull requests that archive with their last code now pass. Teammates on an older `yass` still get the old heads-up for such a commit; keeping the archive move as its own commit avoids it.
 
 ## 0.5.0 (2026-11-14)
 Large changes and many teams in one repo, and plans kept outside it, with less ceremony: parent criteria close themselves, `yass status` shows who's working on what, and commits name a change kept elsewhere for you. And YASS fits inside your team's wider product development life cycle: your agent keeps your project management system (Trello, Jira, Linear, GitHub Projects…) in step with the changes.
