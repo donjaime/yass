@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Shape it, then just open pull requests.** `yass-shape` now decides where work lands at the end of the conversation: a PRD, a `change.md`, or, when a folder wouldn't add value, a short brief you approve that lands as plain pull requests leading with it. No change folder, no separate intent review, no boxes; the card still moves through your board. The gradient is now four steps: just a pull request; shaped, then plain pull requests; one `change.md`; a PRD with a plan and pieces.
 - **Install with one line to your agent.** Paste "Install YASS and set it up in this repo by following …/INSTALL.md. Ask me before changing anything." into your coding agent: it follows the steps in the new [`INSTALL.md`](INSTALL.md), the same careful ones as before (verify the download, read `install.sh`, ask first, never edit shell files or commit). The README, docs/install.md and the YASS page lead with that line and link the file instead of copying the steps.
 
 ## 0.5.0 (2026-11-14)
