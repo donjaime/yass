@@ -4,6 +4,7 @@ source: Jaime, 2026-11-15: the copies in .agents/skills and .claude/skills track
 follows: 
 blocked:
 created: 2026-11-15T17:44:30Z
+archived: 2026-11-15T18:11:54Z
 ---
 # Link this repo's playbooks to kit
 
