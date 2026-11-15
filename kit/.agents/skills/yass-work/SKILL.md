@@ -13,6 +13,7 @@ description: Build a YASS change you've been pointed at. Resume from its Log, bu
 
 1. **Orient.** `yass me` says who you're working for and which yass folders are theirs. Your change is the one named in the request (names can be shortened: `yass status queue`) or the one this session is already on. Nothing else counts.
    - **Pointed at none:** show `yass status` and ask which.
+   - **Pointed at a `not started` change:** a human naming it is the go-ahead to build its plan. If you can see the plan is still in review (its pull request is open, or it's only on a branch), say so before you start.
    - **Work that has no change:** see "Work with no change" below.
    - **Put in charge of choosing** (a fully autonomous run): pick deliberately. Before starting a `not started` change, check its plan was approved, or approve it yourself if you've been allowed to. Record the choice, and any approval, in its `## Decisions` with yourself as who.
 2. **Load.** `yass status <change>` lists its files and open boxes. Read `change.md` and resume from the last **Next:** in its Log. For a piece, also read the parent's `prd.md` and `plan.md`.
@@ -33,6 +34,7 @@ description: Build a YASS change you've been pointed at. Resume from its Log, bu
    ```
 9. **Finish.** A merged branch doesn't finish a change; every box done or dropped does (`yass status` says `done`). Then run `yass archive <change>`. Pieces are archived with their change.
    - The archive is the last commit of the pull request that ticks the last box, code or not, so one review builds, finishes and archives.
+   - Take the tracking block's progress line (`yass status <change> --brief`) before you archive: `yass status` no longer finds the change afterwards.
    - If review reopens the work, take the archive commit off the branch, make the edits, and archive again. Never edit under `archive/`.
    - It goes on its own (with squash merges, a pull request without code) when the change was already finished on main, or when `yass archive` says it evicts old months.
 

@@ -1,6 +1,6 @@
 # The Trello workflow
 
-The other playbooks follow this whenever a change's yass folder has a Trello board. The card is the change's `source:`; `yass status <change>` prints it with the column the change's state puts it in (`card: <link>  (column: Planning)`). The card hears only about these moments. Everything finer (boxes, the Log, decisions) stays in the change's files.
+The other playbooks follow this whenever a change's yass folder has a Trello board. The card is the change's `source:`; `yass status <change>` prints it with the column the change's state puts it in (`card: <link>  (column: Planning)`). That's where the card should be, not where it is: only the board says where it is. The card hears only about these moments. Everything finer (boxes, the Log, decisions) stays in the change's files.
 
 | When | Move the card | Comment |
 |---|---|---|
