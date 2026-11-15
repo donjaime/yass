@@ -12,7 +12,7 @@ Building software sits inside a bigger product development life cycle. Ideas wai
 YASS covers the inner loop: one change, shaped, planned and built, with progress next to the code. It doesn't replace your project management system. It fits inside it. Your agent keeps the system up to date at the few moments people outside the repo care about, and everything finer stays in the files.
 
 - **The `yass` binary never calls your project management system.** Your agent does, through whatever its harness can reach: a connector (MCP), an API, a CLI. The binary only checks the settings and says where a change's card should be.
-- **Work flows from your project management system into YASS.** Changes start from its cards and issues, and keep them moving. YASS adds a card only for a top-level change you say yes to, never for the pieces you break it into, so the board holds what your team put there.
+- **Work flows from your project management system into YASS.** Changes start from its cards and issues, and keep them moving. YASS adds a card only for a top-level change you say yes to, never for the pieces you break it into, so the board holds what your team put there. Not every card needs a change folder: one you think through with your agent and land as plain pull requests still moves through the board (Planning while you shape it, Implementing while it's built, Done when its last pull request merges).
 - **Files stay the source of truth.** Nothing on the board changes your plans on its own. When something changes there, tell your agent, and it proposes how to revise the plan.
 - **Ask your agent to connect it.** "Connect our Trello board", or "connect Jira", runs the [`yass-init`](../kit/.agents/skills/yass-init/SKILL.md) playbook.
 

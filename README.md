@@ -34,7 +34,7 @@ You stay in charge of git: YASS never commits, pushes or opens a pull request un
 ## The rules
 
 1. **YASS describes change, not the current system.** Your code and its docs say what exists today. YASS says what you're changing, why, and how it went. A project that uses YASS from day one ends up with an archive that tells the story of every change worth reviewing (the small stuff is in its pull requests); a project that adopts it later just starts recording from there.
-2. **A change is a folder, and ceremony scales with scope,** starting from none. A simple or unambiguous change is one pull request whose description says what and why; your agent decides, and asks when it isn't sure. A bug fix worth agreeing on first is one `change.md`. A new feature, component or system adds `prd.md` and `plan.md`, maybe `design.md`, and splits into PR-sized pieces inside it.
+2. **A change is a folder, and ceremony scales with scope,** starting from none. A simple or unambiguous change is one pull request whose description says what and why; your agent decides, and asks when it isn't sure. Work worth thinking through, but not worth the bookkeeping, is shaped with your agent into a short brief and lands as plain pull requests that lead with it. A bug fix worth agreeing on first is one `change.md`. A new feature, component or system adds `prd.md` and `plan.md`, maybe `design.md`, and splits into PR-sized pieces inside it.
 3. **Progress travels with the code.** Marking boxes in progress or done and appending to `## Log` and `## Decisions` go in the same commits as the code they describe.
 4. **Intent changes get their own commit.** The PRD, the design, the plan's text, and a change's title, Goal and Acceptance, including dropping an acceptance criterion. If the plan turns out wrong, change it on purpose, in a commit someone can review, not quietly next to the code. Mid-build, that means a stacked branch: the intent change underneath, the code rebased on top, so work keeps moving and decisions can still be reviewed apart from execution.
 5. **Done means every box is checked.** Then `yass archive` moves the folder to `archive/<YYYY>/<MM>/`. Finishing is separate from merging: a large change spans many branches and pull requests, and feedback can reopen the plan before it's done.
@@ -85,6 +85,7 @@ Then talk to your agent:
 | "Fix the double-tap crash" | `yass-work` | a small change: goal, acceptance, build, tick, log |
 | "Keep going" | `yass-work` | the change this session is already on; `yass-work` never picks one by itself |
 | "Let's build offline sync" | `yass-shape` | a conversation that ends in a PRD you approve |
+| "Shape this card, then just open a pull request" | `yass-shape`, then `yass-work` | a conversation that ends in a short brief you approve; no change folder, and the brief leads the pull request |
 | "Plan it" | `yass-plan` | approach, acceptance criteria, PR-sized pieces, without much back-and-forth; nothing gets built yet |
 | "Work on offline-queue" | `yass-work` | builds that change, resuming from its Log's last **Next:**; a wrong plan gets fixed on a branch underneath the code |
 | "Where are we?" | `yass-status` | progress, blockers, recent decisions, what's ready to archive; changes nothing |
