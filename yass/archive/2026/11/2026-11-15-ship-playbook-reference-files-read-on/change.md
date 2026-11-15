@@ -4,6 +4,7 @@ source: Jaime, 2026-11-15: an audit of the playbooks for clarity and token cost;
 follows: 
 blocked:
 created: 2026-11-15T20:24:05Z
+archived: 2026-11-15T20:31:30Z
 ---
 # Ship playbook reference files, read on demand
 
