@@ -1310,7 +1310,9 @@ c -m "feat: for the separate plans" >/dev/null; has "a repo with both kinds of p
 has   "yass use on a change in this repo says its commits carry no trailer" "2026-06-01-local's plans are in this repo, so its commits don't carry a trailer" y use 2026-06-01-local
 c -m "feat: for the local plans" >/dev/null; [ -z "$(trailer)" ] && ok "…and none is added" || bad "an inline change got a trailer"
 y use --clear >/dev/null
-newrepo "$W/e2e/trail-inline"; y init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
+# Set up by 0.5.0, not by this build: a build past the last tag reports a newer version than 0.6.0,
+# and yass upgrade refuses files written by a newer yass.
+newrepo "$W/e2e/trail-inline"; "$(vbin 0.5.0)" init --hooks >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
 rm tools/yass/githooks/prepare-commit-msg tools/yass/githooks/commit-msg; git add -A; git commit -q -m "older install: pre-commit only"
 sub tools/yass/githooks/pre-commit '^# yass-version: .*$' '# yass-version: 0.1.0'
 has   "yass upgrade adds the trailer hooks to an older install" "wrote tools/yass/githooks/commit-msg" "$(vbin 0.6.0)" upgrade
