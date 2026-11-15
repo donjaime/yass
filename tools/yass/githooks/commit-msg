@@ -1,5 +1,5 @@
 #!/bin/sh
-# yass-version: 0.6.0
+# yass-version: 0.6.1
 # YASS commit-msg hook: with plans kept apart from the code, checks the commit names its change in a
 # `yass:` trailer. A heads-up by default; with `trailers: require` in yass.yaml, it refuses the commit.
 # It does nothing when plans are in the repo.
