@@ -172,3 +172,21 @@ td code { white-space: nowrap; }
 
 footer { padding-top: 40px; padding-bottom: 56px; border-top: 1px solid var(--line); color: var(--muted); }
 footer p { margin: 4px 0; }
+
+/* How a change moves: each board stage beside what's in the repo then. */
+.flow { list-style: none; padding: 0; margin: 32px 0; display: grid; gap: 12px; counter-reset: stage; }
+.flow li {
+  display: grid; gap: 8px 20px;
+  background: var(--bg-alt); border: 1px solid var(--line); border-radius: 12px; padding: 16px 20px;
+}
+@media (min-width: 760px) { .flow li { grid-template-columns: 9.5em 1fr 1fr; align-items: start; } }
+.flow .stage { font-weight: 800; color: var(--accent); counter-increment: stage; }
+.flow .stage::before { content: counter(stage) ". "; color: var(--muted); font-weight: 600; }
+.flow li > div { color: var(--muted); }
+.flow .side { display: block; color: var(--ink); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
+@media (min-width: 760px) { .cards.two { grid-template-columns: repeat(2, 1fr); } }
+.card ul { margin: 0; padding-left: 1.1em; color: var(--muted); }
+.card li + li { margin-top: 6px; }
+main section.compact { padding-top: 40px; padding-bottom: 40px; }
+.compact .tabs { margin: 8px 0 12px; }
+.compact .panel pre { margin: 10px 0; }

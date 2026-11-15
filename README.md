@@ -2,7 +2,7 @@
 
 **A sassy "yes" to building with coding agents, without losing the plot.**
 
-YASS keeps the plan, progress and decisions for the changes worth reviewing in plain files next to your code, so people and agents can plan and build together.
+YASS is the bridge between your project management system and your code: the missing link for your software factory. It keeps the plan, progress and decisions for each change in plain files next to the code, so people and agents can plan and build together.
 
 **Describe the change, not the whole system.** Your code, docs and READMEs are the source of truth for what exists. YASS doesn't write it down a second time: it specs only what needs to change, keeps that next to the code, in plain markdown that agents and humans both read. It's lightweight project management for people and coding agents.
 
