@@ -27,11 +27,21 @@ section() { ID="$1" perl -0777 -ne 'print $1 if /<section id="\Q$ENV{ID}\E"[^>]*
 slugs() { perl -ne 'if (/^#{1,6}\s+(.*?)\s*$/) { $h = lc $1; $h =~ s/[^\w\- ]//g; $h =~ s/ /-/g; print "$h\n" }' "$1"; }
 
 echo "Sections"
-for id in idea folder you-say install; do
+for id in idea pdlc spec-driven folder you-say install teams; do
   if grep -q "<section id=\"$id\"" "$PAGE"; then ok "#$id"; else bad "#$id is missing"; fi
 done
 if grep -q 'class="hero"' "$PAGE" && perl -0777 -ne 'exit !(/<header class="hero">.*?href="#install".*?<\/header>/s)' "$PAGE"; then
   ok "the hero links to #install"; else bad "the hero doesn't link to #install"; fi
+ORDER="idea pdlc spec-driven folder you-say install teams"
+got="$(perl -ne 'print "$1 " while /<section id="([^"]+)"/g' "$PAGE" | sed 's/ $//')"
+if [ "$got" = "$ORDER" ]; then ok "sections come in order: $ORDER"; else bad "sections should come in order: $ORDER (got: $got)"; fi
+if perl -0777 -ne 'exit !(/<p class="lede">[^<]*project management system/s)' "$PAGE"; then ok "the lede says where YASS fits (project management system)"; else bad "the lede doesn't name the project management system"; fi
+pdlc="$(section pdlc)"
+for w in Jira Linear "GitHub Issues" Trello Planning Implementing Done "archive/"; do
+  if grep -qF "$w" <<<"$pdlc"; then ok "#pdlc mentions $w"; else bad "#pdlc doesn't mention $w"; fi
+done
+if grep -qF 'blob/main/docs/project-management.md"' <<<"$pdlc"; then ok "#pdlc links docs/project-management.md"; else bad "#pdlc has no link to docs/project-management.md"; fi
+if grep -qF 'blob/main/docs/comparison.md"' <<<"$(section spec-driven)"; then ok "#spec-driven links docs/comparison.md"; else bad "#spec-driven has no link to docs/comparison.md"; fi
 folder="$(section folder)"
 for f in change.md prd.md plan.md design.md archive/; do
   if grep -qF "$f" <<<"$folder"; then ok "#folder shows $f"; else bad "#folder doesn't show $f"; fi
@@ -198,6 +208,10 @@ if [ "$SELF" = 1 ]; then
   elif grep -q "assets/favicon.svg is still a placeholder" <<<"$o"; then ok "--deploy with a placeholder fails, naming it"
   else bad "--deploy with a placeholder failed for another reason"; sed 's/^/       /' <<<"$(grep FAIL <<<"$o")"; fi
   if bash "$0" --root "$T/r" >/dev/null 2>&1; then ok "without --deploy, placeholders pass"; else bad "without --deploy, placeholders should pass"; fi
+  copy; edit "$T/r/site/index.html" '<section id="pdlc"' '<section id="pdlc-moved"'; edit "$T/r/site/index.html" '<section id="teams"' '<section id="pdlc"'; edit "$T/r/site/index.html" '<section id="pdlc-moved"' '<section id="teams"'
+  if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "sections out of order should fail"
+  elif grep -q "sections should come in order" <<<"$o"; then ok "sections out of order fail"
+  else bad "sections out of order failed for another reason"; fi
   copy; edit "$T/r/site/index.html" 'docs/install.md#from-a-release' 'docs/install.md#no-such-heading'
   if o="$(bash "$0" --root "$T/r" 2>&1)"; then bad "a link to a missing heading should fail"
   elif grep -q "has no heading for #no-such-heading" <<<"$o"; then ok "a link to a missing heading fails"

@@ -26,7 +26,7 @@
   <div class="wrap hero-inner">
     <img class="emblem" src="assets/emblem.webp" alt="" title="A sassy “yes” to building with coding agents." width="240" height="240">
     <h1><span class="wordmark" title="A sassy “yes” to building with coding agents.">YASS<span class="bang">!</span></span> <span class="sub-header">Yet Another Spec System.</span></h1>
-    <p class="lede">YASS keeps the plan, progress and decisions for the changes worth reviewing in plain files next to your code, so people and agents can plan and build together.</p>
+    <p class="lede">YASS sits between your project management system and your code. It keeps the plan, progress and decisions for each change worth reviewing in plain files next to the code, so people and agents can plan and build together, and your board stays in step.</p>
     <p class="actions">
       <a class="button primary" href="#install">Install</a>
       <a class="button" href="https://github.com/donjaime/yass">GitHub</a>
@@ -55,6 +55,58 @@
   </div>
 </section>
 
+<section id="pdlc" class="wrap">
+  <h2>It fits the process you already have.</h2>
+  <p>Your team already runs its product development life cycle in a project management system: Jira, Linear, GitHub Issues, Trello or another. Ideas wait in a backlog, some get picked, shaped, planned and built, and people outside the code follow along on the board. YASS doesn't replace any of that. It picks up where the board stops: a card worth reviewing becomes a change folder next to the code, and your agent moves the card at the few moments people outside the repo care about.</p>
+  <ol class="flow">
+    <li>
+      <span class="stage">Ideas, Will Do</span>
+      <div><b class="side">On the board</b> The backlog, and what your team plans to work on next.</div>
+      <div><b class="side">In the repo</b> Nothing yet. The board holds what your team put there.</div>
+    </li>
+    <li>
+      <span class="stage">Planning</span>
+      <div><b class="side">On the board</b> The card moves when shaping starts, and gets a comment when the plan is up for review, then accepted.</div>
+      <div><b class="side">In the repo</b> A change folder: the why and what in <code>prd.md</code>, the how and acceptance criteria in <code>plan.md</code>, reviewed in a pull request of their own.</div>
+    </li>
+    <li>
+      <span class="stage">Implementing</span>
+      <div><b class="side">On the board</b> The card moves when building starts, and each pull request is linked as it goes up and merges.</div>
+      <div><b class="side">In the repo</b> The code, with ticked boxes, decisions and a log for the next person or agent, all in the same commits.</div>
+    </li>
+    <li>
+      <span class="stage">Done</span>
+      <div><b class="side">On the board</b> The card moves when the change is archived.</div>
+      <div><b class="side">In the repo</b> The change moves to <code>archive/</code>: the record of what changed, and why.</div>
+    </li>
+  </ol>
+  <p>Everything finer, every box, decision and log entry, stays in the files, so the board stays readable. The <code>yass</code> binary never calls your project management system: your agent does, through the connector or CLI it already has. Trello works out of the box. For Jira, Linear and the rest, <code>yass-init</code> asks once how your team works and writes it down for every teammate's agent. <a href="https://github.com/donjaime/yass/blob/main/docs/project-management.md">YASS and your project management system</a></p>
+</section>
+
+<section id="spec-driven" class="wrap">
+  <h2>Spec-driven, without a second spec.</h2>
+  <p>Spec-driven development has agents build from a written spec instead of a chat. YASS agrees, and differs in two directions: it specifies less, and it connects to more.</p>
+  <div class="cards two">
+    <div class="card">
+      <h3>Like spec-driven tools</h3>
+      <ul>
+        <li>A change is specified before it's built: why and what, then how, with acceptance criteria the agent builds against and ticks off.</li>
+        <li>The plan is reviewed as its own pull request, apart from the code.</li>
+        <li>Large work is broken into smaller parts the agent builds one at a time.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Unlike most of them</h3>
+      <ul>
+        <li>No description of the current system to keep in sync: the code and its docs are that, and a change describes only what it changes.</li>
+        <li>No fixed process: a bug fix is one file, a new system gets a PRD, a plan and pieces, and the playbooks run when you ask.</li>
+        <li>It doesn't stop at the repo: work flows in from your project management system, and the board follows it out.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">Weighing OpenSpec, GitHub Spec Kit, Kiro and others? <a href="https://github.com/donjaime/yass/blob/main/docs/comparison.md">See how YASS compares</a>.</p>
+</section>
+
 <section id="folder" class="wrap">
   <h2>A change is a folder.</h2>
   <p>Each change worth reviewing gets a dated folder. Progress, decisions and a log travel in it, in the same commits as the code they describe. Unambiguous work, like a typo fix or a mechanical cleanup, skips it: that's just a good pull request.</p>
@@ -69,7 +121,7 @@
 │       ├── design.md              <span class="dim">…the hard-to-undo calls (optional)</span>
 │       └── 2026-09-16-offline-queue/  <span class="dim">…and PR-sized pieces</span>
 └── <b>archive/</b>                       <span class="dim">finished changes, as they were</span></pre>
-  <p>That's the whole system: no database, no server, no integrations to set up: if your team runs a project management system (Jira, Linear, Trello…), your agent keeps it in step. One small CLI, seven playbooks your agent follows, and an optional git hook. It fits the workflow you already have: plans and progress travel in the same commits and pull requests as the code, and YASS never commits for you.</p>
+  <p>That's the whole system: no database, no server, no integrations to set up. One small CLI, seven playbooks your agent follows, and an optional git hook. It fits the workflow you already have: plans and progress travel in the same commits and pull requests as the code, and YASS never commits for you.</p>
 </section>
 
 <section id="you-say" class="wrap">
@@ -84,7 +136,7 @@
       <tr><td>“Fix the double-tap crash” or “Keep going”</td><td><code>yass-work</code></td><td>builds against the acceptance criteria, ticking boxes and logging as it goes, resuming from the last <b>Next:</b></td></tr>
       <tr><td>“Where are we?”</td><td><code>yass-status</code></td><td>progress, blockers, recent decisions, what's ready to archive</td></tr>
       <tr><td>“Why did we pick SQLite?”</td><td><code>yass-log</code></td><td>the decision, who made it and when, with the code that carried it out</td></tr>
-      <tr><td>“Connect our Trello board”</td><td><code>yass-init</code></td><td>the repo set up, and the board adopted for a yass folder, asking when its lists don't fit</td></tr>
+      <tr><td>“Connect our Trello board” or “Connect Jira”</td><td><code>yass-init</code></td><td>the repo set up, and your project management system connected: a Trello board adopted, or your team's workflow for the others written down once</td></tr>
       <tr><td>“Update YASS”</td><td><code>yass-update</code></td><td>a verified newer binary, then the repo upgraded, asking before it downloads</td></tr>
     </tbody>
   </table>
