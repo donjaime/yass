@@ -42,7 +42,7 @@ If the work outgrows that while it's built (more pull requests than a small stac
 
 ## With a tracker
 When the yass folder has a `tracker:` (in its `settings.yaml` or `yass.yaml`), update it at these moments and no others: shaping starts on a card, it's decided the work lands as plain pull requests, and the PRD's pull request goes up and merges. Asked to shape a card, start from its title and description, and give the change the card's title and link (`--source <card link>`). When the human says a card changed, read it and propose PRD revisions.
-- **Trello:** what to move and say, and the check before every move, are in `yass-init`'s "The Trello workflow". Read that section; the rest of that playbook is setup.
+- **Trello:** what to move and say, and the check before every move, are in `trello.md` in the `yass-init` playbook's folder (next to this playbook's). Read that file; the playbook itself is setup.
 - **Another tracker:** do what the yass folder's `team.md` says under `## Project management`. None there? Run `yass-init`'s interview first, or ask.
 
 ## Revising an active change's PRD

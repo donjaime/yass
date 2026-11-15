@@ -601,13 +601,18 @@ same=1; for f in "$ROOT"/kit/.agents/skills/*/SKILL.md; do
   n="$(basename "$(dirname "$f")")"
   diff -q <(grep -v -e '^metadata:$' -e '^  yass-version: ' ".agents/skills/$n/SKILL.md") "$f" >/dev/null || same=0
 done
+refs=0; for f in "$ROOT"/kit/.agents/skills/*/*.md; do [ "$(basename "$f")" = SKILL.md ] && continue
+  refs=$((refs+1)); diff -q ".agents/skills/$(basename "$(dirname "$f")")/$(basename "$f")" "$f" >/dev/null 2>&1 || same=0
+done
+[ "$refs" -ge 2 ] && ok "the kit carries reference files beside playbooks ($refs)" || bad "no reference files in kit/"
 diff -q <(grep -v '^# yass-version: ' tools/yass/githooks/pre-commit) "$ROOT/kit/tools/yass/githooks/pre-commit" >/dev/null || same=0
 [ -x tools/yass/githooks/pre-commit ] || same=0
-[ "$same" = 1 ] && ok "every playbook and an executable hook, each matching its source in kit/ but for the version stamp" || bad "an installed file is missing, not executable, or differs from kit/ beyond its stamp"
+[ "$same" = 1 ] && ok "every playbook, its reference files and an executable hook, each matching its source in kit/ but for the version stamp" || bad "an installed file is missing, not executable, or differs from kit/ beyond its stamp"
 [ "$(stamps | wc -l | tr -d " ")" = 1 ] && stamps | grep -qE " $VR$" && ok "the playbooks, the AGENTS.md marker and the hook all carry the binary's version" || bad "stamps: $(stamps | tr "\n" " ")"
 newrepo "$W/e2e/alone-claude"; printf '# Our rules\n' > CLAUDE.md
 yass init --claude --hooks >/dev/null; yass init --claude >/dev/null
 [ -f .claude/skills/yass-work/SKILL.md ] && ok "--claude copies the playbooks for Claude Code" || bad "no .claude/skills"
+cmp -s .claude/skills/yass-init/trello.md "$ROOT/kit/.agents/skills/yass-init/trello.md" && ok "…with their reference files" || bad "no reference files in .claude/skills"
 has   "…imports AGENTS.md at the top of CLAUDE.md" "^@AGENTS.md$" head -1 CLAUDE.md
 has   "…once, keeping what was there" "^1 1$" bash -c 'echo "$(grep -c "@AGENTS.md" CLAUDE.md) $(grep -c "# Our rules" CLAUDE.md)"'
 newrepo "$W/e2e/alone-claude2"; yass init --claude >/dev/null
@@ -615,6 +620,8 @@ has   "…and writes a CLAUDE.md when there's none" "^@AGENTS.md$" cat CLAUDE.md
 newrepo "$W/e2e/alone-global"; H="$W/e2e/alone-home"; rm -rf "$H"
 GL_OUT="$(HOME="$H" yass init --global --claude)"
 [ -f "$H/.agents/skills/yass-work/SKILL.md" ] && [ -f "$H/.claude/skills/yass-work/SKILL.md" ] && ok "--global puts the playbooks (and Claude's) in the user folder" || bad "no user-folder playbooks"
+[ -f "$H/.agents/skills/yass-work/plans-elsewhere.md" ] && [ -f "$H/.claude/skills/yass-init/trello.md" ] && ok "…with their reference files" || bad "no reference files in the user folder"
+has   "…and lists them" "wrote .*alone-home/.agents/skills/yass-init/trello.md \(outside version control\)" echo "$GL_OUT"
 [ ! -e .agents ] && [ ! -e .claude ] && ok "…none in the repo" || bad "--global wrote playbooks into the repo"
 [ -x tools/yass/githooks/pre-commit ] && ok "…while the hook still goes in the repo" || bad "no hook with --global"
 newrepo "$W/e2e/alone-skillsdir"; SD="$W/e2e/alone-skills"; rm -rf "$SD"
@@ -651,6 +658,7 @@ has   "…keeping what was there" "# Web rules" cat apps/web/AGENTS.md
 [ -d apps/web/yass/changes ] && ok "…along with its planning" || bad "no apps/web/yass"
 [ "$(cksum < AGENTS.md)" = "$ROOT_AGENTS" ] && ok "…and the root AGENTS.md is untouched" || bad "--agents changed the root AGENTS.md"
 has   "it lists what it wrote" "wrote apps/web/.agents/skills/yass-work/SKILL.md" echo "$WEB_OUT"
+has   "…reference files too" "wrote apps/web/.agents/skills/yass-work/plans-elsewhere.md" echo "$WEB_OUT"
 echo "Ours" > .agents/skills/yass-plan/SKILL.md; rm .agents/skills/yass-log/SKILL.md
 REINIT="$("$(vbin 0.5.0)" init)"
 has   "re-running init writes what's missing" "wrote .agents/skills/yass-log/SKILL.md" echo "$REINIT"
@@ -669,7 +677,12 @@ printf '# Ours, before\n\n%s\n\n# Ours, after\n' "$(cat AGENTS.md)" > AGENTS.md;
 "$Y4" new "Keep me" >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
 KEEP="$(cat yass/changes/*-keep-me/change.md | cksum) $(grep -c 'Ours' AGENTS.md) $(grep -c 'Our Claude notes' CLAUDE.md)"
 echo "edited" > .agents/skills/yass-work/SKILL.md; git rm -rq .agents/skills/yass-init; git commit -qam "edit a playbook, lose one"
+# as an older yass left it: no reference files, but for one somebody edited
+find .agents .claude -name '*.md' ! -name SKILL.md -delete; echo "ours" > .claude/skills/yass-init/trello.md; git add -A; git commit -qm "no reference files"
 UP="$("$Y5" upgrade)"
+has   "upgrade adds the reference files an older install lacks" "wrote .agents/skills/yass-work/plans-elsewhere.md" echo "$UP"
+cmp -s .agents/skills/yass-init/trello.md "$ROOT/kit/.agents/skills/yass-init/trello.md" && ok "…beside a playbook it adds, too" || bad "no trello.md beside the added yass-init"
+cmp -s .claude/skills/yass-init/trello.md "$ROOT/kit/.agents/skills/yass-init/trello.md" && ok "…and replaces a hand-edited one" || bad "a hand-edited reference file survived the upgrade"
 [ -f .agents/skills/yass-init/SKILL.md ] && [ -f .claude/skills/yass-init/SKILL.md ] && ok "upgrade writes yass-init beside the other playbooks" || bad "upgrade left yass-init out"
 has   "upgrade says what it upgraded, from and to" "upgraded YASS's files from 0.4.0.* to 0.5.0" echo "$UP"
 has   "…and lists each file" "wrote .claude/skills/yass-work/SKILL.md" echo "$UP"
@@ -681,8 +694,13 @@ has   "a hand edit is replaced, and the diff shows it" "^-edited$" git diff -- .
 git add -A; git commit -qm "chore: upgrade YASS"
 has   "at the binary's version, it's already up to date" "already up to date: YASS's files are at 0.5.0" "$Y5" upgrade
 [ -z "$(git status --porcelain)" ] && ok "…and changes nothing" || bad "an up-to-date upgrade changed files"
+rm .agents/skills/yass-work/plans-elsewhere.md
+has   "…but writes back a reference file that went missing" "^wrote .agents/skills/yass-work/plans-elsewhere.md$" "$Y5" upgrade
+[ -z "$(git status --porcelain)" ] && ok "…and nothing else" || bad "restoring a reference file changed other files"
+rm .agents/skills/yass-work/plans-elsewhere.md
 fails "an older binary refuses, naming the newer version and the fix" "written by yass 0.5.0, newer than this one \(0.4.0\); .yass update. gets that version" "$Y4" upgrade
-[ -z "$(git status --porcelain)" ] && ok "…and writes nothing" || bad "a refused upgrade changed files"
+[ "$(git status --porcelain)" = " D .agents/skills/yass-work/plans-elsewhere.md" ] && ok "…and writes nothing, not even a missing reference file" || bad "a refused upgrade changed files: $(git status --porcelain)"
+git checkout -q -- .agents
 fails "a binary with no version refuses to upgrade, saying how to get a versioned build" "has no version .*Go 1.24" "$YDEV" upgrade
 newrepo "$W/e2e/up-dev"; run_fail "…or to init" "$YDEV" init
 [ ! -e AGENTS.md ] && ok "…writing nothing" || bad "an unversioned init wrote files"
@@ -691,6 +709,8 @@ has   "init labels files outside version control" "wrote .*up-home/.agents/skill
 GUP="$(HOME="$H" "$Y5" upgrade)"
 has   "upgrade upgrades user-folder playbooks, labeled outside version control" "up-home/.agents/skills/yass-work/SKILL.md \(outside version control\)" echo "$GUP"
 has   "…to the new version" "yass-version: \"0.5.0\"" cat "$H/.agents/skills/yass-work/SKILL.md"
+rm "$H/.agents/skills/yass-init/trello.md"
+has   "…and writes back a reference file missing there" "up-home/.agents/skills/yass-init/trello.md \(outside version control\)" env HOME="$H" "$Y5" upgrade
 [ ! -e .agents ] && ok "…without adding repo copies" || bad "upgrade added repo playbooks"
 newrepo "$W/e2e/up-legacy"
 for f in "$ROOT"/kit/.agents/skills/*/SKILL.md; do n="$(basename "$(dirname "$f")")"
@@ -1357,15 +1377,16 @@ echo "49. yass deinit takes YASS back out of a repo"
 newrepo "$W/e2e/deinit"; printf '# Mine\n\nOur own notes.\n' > AGENTS.md
 y init --claude --hooks >/dev/null; y init apps/web --agents --claude >/dev/null
 mkdir -p .agents/skills/yass-mine .husky; printf -- '---\nname: yass-mine\n---\nnot YASS'"'"'s\n' > .agents/skills/yass-mine/SKILL.md
+echo "mine" > .agents/skills/yass-mine/notes.md
 printf 'yass hook\n' > .husky/pre-commit; git add -A; git commit -q -m "chore: adopt YASS"; HEAD0=$(git rev-parse HEAD)
 H="$W/e2e/deinit-home"; US="$W/e2e/deinit-user"; rm -rf "$H" "$US"; mkdir -p "$H" "$US"; cp -R .agents/skills/yass-work "$US/"
 OUT="$(env HOME="$H" YASS_SKILLS_DIR="$US" yass deinit)"
-for p in .agents/skills/yass-work .agents/skills/yass-init .claude/skills/yass-init apps/web/.agents/skills/yass-plan tools/yass/githooks/pre-commit tools/yass/githooks/commit-msg; do
+for p in .agents/skills/yass-work .agents/skills/yass-init/trello.md .claude/skills/yass-work/plans-elsewhere.md .agents/skills/yass-init .claude/skills/yass-init apps/web/.agents/skills/yass-plan tools/yass/githooks/pre-commit tools/yass/githooks/commit-msg; do
   [ ! -e "$p" ] && ok "removes $p" || bad "$p is still there"
 done
 has   "…listing what it removed" "^removed \.agents/skills/yass-work$" echo "$OUT"
 [ ! -e tools ] && [ ! -e .claude ] && ok "…and the folders it leaves empty" || bad "empty folders left: $(ls -d tools .claude 2>/dev/null)"
-[ -f .agents/skills/yass-mine/SKILL.md ] && ok "a yass-* skill that isn't YASS's stays" || bad "removed a skill that isn't YASS's"
+[ -f .agents/skills/yass-mine/SKILL.md ] && [ -f .agents/skills/yass-mine/notes.md ] && ok "a yass-* skill that isn't YASS's stays, with its files" || bad "removed a skill that isn't YASS's, or one of its files"
 has   "the root AGENTS.md keeps its own text" "Our own notes" cat AGENTS.md
 hasnt "…without the YASS section" "yass:begin" cat AGENTS.md
 has   "…and says so" "^removed the YASS section of AGENTS.md$" echo "$OUT"
