@@ -1,6 +1,6 @@
 ---
 name: yass-update
-description: Update YASS on this machine and in this repo. Check the yass binary's version against the repo's and the latest release, get a verified binary with `yass update` (asking first), then `yass upgrade` the repo and hand back the diff. Use for "update YASS", "upgrade yass", "is yass up to date?", or when `yass status` notes that the binary and the repo's YASS files are out of step.
+description: Update YASS on this machine and in this repo. Compares the yass binary, the repo's YASS files and the latest release, gets a verified binary with `yass update` (asking first), then runs `yass upgrade` on the repo and hands back the diff. Use for "update YASS", "is yass up to date?", or when `yass status` notes that the binary and the repo's YASS files are out of step.
 ---
 
 # yass-update
