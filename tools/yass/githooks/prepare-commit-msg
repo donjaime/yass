@@ -1,5 +1,5 @@
 #!/bin/sh
-# yass-version: 0.6.0
+# yass-version: 0.6.1
 # YASS prepare-commit-msg hook: with plans kept apart from the code, adds a `yass:` trailer naming
 # the commit's change (from `yass use`, else the branch name, else earlier commits on the branch).
 # It never overwrites a trailer you wrote, skips merges, and does nothing when plans are in the repo.
