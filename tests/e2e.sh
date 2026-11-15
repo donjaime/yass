@@ -713,7 +713,6 @@ has   "upgrade from a monorepo folder upgrades every copy in the repo" "wrote ap
 hasnt "…leaving none at the old version" "0.4.0" bash -c 'grep -rh "yass-version\|yass:begin" --include=SKILL.md --include=AGENTS.md --include=pre-commit apps services tools .agents AGENTS.md'
 [ -f apps/web/.agents/skills/yass-log/SKILL.md ] && ok "…and adds a playbook missing from a skills folder" || bad "missing playbook not added"
 has   "…but leaves folders yass.yaml ignores alone" "0.4.0" cat vendor/x/.agents/skills/yass-work/SKILL.md
-
 echo "27. yass status knows the versions"
 Y4="$(vbin 0.4.0)"; Y5="$(vbin 0.5.0)"; Y6="$(vbin 0.6.0)"
 newrepo "$W/e2e/st"; "$Y5" init >/dev/null; git add -A; git commit -q -m "chore: adopt YASS"
@@ -723,6 +722,15 @@ has   "a newer binary hears yass upgrade would upgrade the repo" "note: YASS's f
 hasnt "the same version says nothing about versions" "YASS's files" "$Y5" status
 newrepo "$W/e2e/st-none"; "$Y5" init --no-agents >/dev/null
 hasnt "…nor does a repo with no YASS files" "YASS's files" "$Y6" status
+newrepo "$W/e2e/st-ign"; "$Y5" init --hooks >/dev/null; SH="$W/e2e/st-ign-home"; rm -rf "$SH"; mkdir -p "$SH"
+mkdir -p src; mv .agents/skills src/skills; for f in src/skills/*/SKILL.md; do sub "$f" '^  yass-version: .*\n' ''; done
+if ln -s ../src/skills .agents/skills 2>/dev/null && [ -f .agents/skills/yass-work/SKILL.md ]; then
+git add -A; git commit -q -m "chore: adopt YASS, playbooks kept in src/"
+has   "unstamped playbooks behind .agents/skills count as older" "older than this yass" env HOME="$SH" "$Y5" status
+printf 'ignore:\n  - src\n' > yass.yaml
+hasnt "…but not when yass.yaml ignores the folder they're really in, as yass upgrade does" "YASS's files" env HOME="$SH" "$Y5" status
+has   "…and upgrade agrees there's nothing to do" "already up to date" env HOME="$SH" "$Y5" upgrade
+else echo "  skip ignored playbooks behind a link (no symlinks here)"; fi
 
 echo "28. --hooks leaves existing hooks alone"
 newrepo "$W/e2e/hk-none"

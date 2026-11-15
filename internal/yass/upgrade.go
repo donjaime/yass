@@ -204,7 +204,8 @@ func outsideNote(outside bool) string {
 
 // stampedFiles are the YASS files at the repo root that carry a version stamp: the AGENTS.md
 // section, the playbooks in .agents/ and .claude/, the hook; and, with user, the user folder's
-// playbooks. Only the root, so it stays fast in large repos.
+// playbooks. Only the root, so it stays fast in large repos. Playbooks in a folder yass.yaml ignores
+// aren't among them: yass upgrade wouldn't touch them either.
 func stampedFiles(r *Repo, user bool) []string {
 	var paths []string
 	if ap := filepath.Join(r.Top, "AGENTS.md"); strings.Contains(read(ap), "<!-- yass:begin") {
@@ -216,7 +217,12 @@ func stampedFiles(r *Repo, user bool) []string {
 	}
 	for _, d := range dirs {
 		m, _ := filepath.Glob(filepath.Join(d, "yass-*", "SKILL.md"))
-		paths = append(paths, m...)
+		for _, p := range m {
+			// like yass upgrade, leave out what yass.yaml ignores; by real location, as ignore: is kept
+			if len(r.Ignored) == 0 || !r.ignored(canon(p)) {
+				paths = append(paths, p)
+			}
+		}
 	}
 	if hp := filepath.Join(r.Top, filepath.FromSlash(HookPath), "pre-commit"); exists(hp) {
 		paths = append(paths, hp)

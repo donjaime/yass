@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Fix: `yass status` no longer counts playbooks in a folder `yass.yaml` ignores when it compares the repo's YASS files with the binary's version. `yass upgrade` already skipped them, so the note could ask for an upgrade that then did nothing.
+
 ## 0.6.0 (2026-11-15)
 Less ceremony where it doesn't pay: work can be shaped and then land as plain pull requests, a finished change is archived in the pull request that finishes it, and installing is one line to your agent.
 - **Archive in the pull request that finishes a change.** The pull request that ticks a change's last box can carry its archive move as its last commit, even with code, so finishing a change no longer costs a pull request of its own. The hook stops warning about an archive move next to code, and still warns when the moved files' intent was edited on the way (a title, Goal, acceptance criterion, PRD, design or plan text), when anything already archived is touched, and when months are evicted or migrated alongside code. A separate archive pull request still works. `yass archive` prints the new guidance.
