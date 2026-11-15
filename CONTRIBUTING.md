@@ -11,9 +11,15 @@ install.sh                          installs the yass binary (yass init and yass
 kit/                                what `yass init` and `yass upgrade` put in a repo, embedded in the binary (kit/embed.go)
 kit/tools/yass/githooks/pre-commit  the optional hook: a shim that runs `yass hook`
 kit/.agents/skills/                 the playbooks (Agent Skills format), unstamped; `yass.yaml` ignores kit/
+.agents/skills  .claude/skills      symlinks to kit/.agents/skills, so agents working here follow the playbooks as they're edited
 .goreleaser.yaml                    release builds; .github/workflows/ runs CI and releases
 docs/  examples/  tests/
 ```
+
+## The playbooks here are links
+This repo doesn't keep installed copies of the playbooks: `.agents/skills` and `.claude/skills` are symlinks to `kit/.agents/skills`. Edit a playbook in `kit/` and your agent follows the edit in its next session; the playbooks may then be ahead of the `yass` on your PATH, so build one from the checkout (`go build -o bin/yass ./cmd/yass`) when they name something new. `yass upgrade` here only updates the `AGENTS.md` section and the hook scripts, and `yass status` only compares their versions: `yass.yaml` ignores `kit/`, so its playbooks stay unstamped. The install and upgrade flows are tested in scratch repos by `tests/e2e.sh`.
+
+On Windows, git only makes symlinks with Developer Mode on (or as an administrator) and `core.symlinks` set, before cloning: `git clone -c core.symlinks=true …`. Without that, the two links are checked out as small text files and your agent finds no YASS skills here; the build, the tests and the CLI don't need them.
 
 ## Principles
 - **No state outside the files.** Everything the CLI knows comes from folders, checkboxes and, if there is one, `yass.yaml`. Add a setting there only when a team genuinely needs to choose; the defaults should be enough for most.
