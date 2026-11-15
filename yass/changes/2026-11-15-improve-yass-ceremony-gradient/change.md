@@ -15,7 +15,7 @@ YASS's ceremony has a rung it was missing, and its playbooks reach it naturally.
 ## Acceptance
 <!-- Intent. Observable checks, one behavior each, e.g.
 - [ ] Given …, when …, then … — verify: <test, flow, or manual steps> -->
-- [ ] AC1 Given a request to shape something, when an agent follows `yass-shape`, then it interviews before drafting: one question at a time, each with its recommended answer; it answers from the code, the docs or the card instead of asking where it can; it takes decisions in the order they depend on each other; and it stops when another answer wouldn't change the outcome — verify: manual: review `kit/.agents/skills/yass-shape/SKILL.md`, and a trial shaping run by a headless agent, summarized in the Log
+- [ ] AC1 Given a request to shape something, when an agent follows `yass-shape`, then it interviews before drafting, in rounds: each round asks every question that doesn't depend on one still unanswered, numbered, each with its recommended answer and worded so that "yes" accepts it; it finds facts itself (the code, the docs, the card) instead of asking for them; and it stops when no decision is left assumed, or another answer wouldn't change the outcome — verify: manual: review `kit/.agents/skills/yass-shape/SKILL.md`, and a trial shaping run by a headless agent, summarized in the Log
 - [ ] AC2 Given the shaping conversation has settled what and why, when `yass-shape` decides where the work lands, then it picks among a PRD in a large change, a small change's `change.md`, and plain pull requests with no change; it says what points to a folder (someone outside the conversation must approve the intent, the work will span sessions or agents, or it's hard to undo) and what points to plain pull requests (the person deciding is in the conversation, and it fits a pull request or a small stack); it asks when that's ambiguous; and unattended it creates a folder — verify: manual: review the playbook
 - [ ] AC3 Given the work lands as plain pull requests, then `yass-shape` writes a short brief (the problem, what changes, what's out of scope, how we'll know it worked), gets the person's go-ahead in the conversation, creates no change folder, and hands the brief to `yass-work` — verify: manual: review the playbook, and the trial run of AC1 ending this way with no folder created
 - [ ] AC4 Given a brief from shaping and no change, when an agent follows `yass-work`, then it builds from the brief with no boxes, Log, Decisions or separate intent commits; the pull request's description leads with the brief (for a stack, the bottom one carries the whole brief and each one above says its part); commits say `yass: none` where plans are kept elsewhere; and work that came from the project management system is no longer said to need a change — verify: manual: review `kit/.agents/skills/yass-work/SKILL.md`
@@ -25,7 +25,7 @@ YASS's ceremony has a rung it was missing, and its playbooks reach it naturally.
 
 ## Steps
 <!-- Progress. Your working checklist: add, reorder and mark freely: [ ] not started, [/] in progress, [x] done, [-] dropped. -->
-- [ ] Read grill-me's source before borrowing from it
+- [x] Read grill-me's source before borrowing from it
 - [ ] The ceremony path: `yass-shape` landing and brief, `yass-work` case, Trello row, README, AGENTS.md section, docs, CHANGELOG (first pull request)
 - [ ] The interview in `yass-shape` (second pull request, stacked)
 - [ ] Trial run with a headless agent
@@ -37,6 +37,7 @@ YASS's ceremony has a rung it was missing, and its playbooks reach it naturally.
 - Two pull requests in one stack: the ceremony path, then the interview - they're separable and review differently (claude, 2026-11-15; for review)
 - No CLI change - everything here is playbook and doc text (claude, 2026-11-15; for review)
 - Goal and acceptance criteria approved (Jaime, 2026-11-15)
+- AC1 revised before any code: the interview runs in rounds, not one question at a time - grill-me's source (mattpocock/skills, `grilling`, MIT) asks every question whose prerequisites are settled in one round, each with a recommended answer worded so "yes" accepts; that's fewer round trips for the same rigor. Ideas borrowed, no text copied (claude, 2026-11-15; for review)
 
 ## Log
 <!-- Progress. Append before you stop, so anyone can resume:
