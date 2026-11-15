@@ -4,6 +4,7 @@ source: https://trello.com/c/Vu1njypz
 follows: 
 blocked:
 created: 2026-11-15T14:51:37Z
+archived: 2026-11-15T16:42:18Z
 ---
 # Improve YASS ceremony gradient
 
