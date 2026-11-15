@@ -56,7 +56,7 @@ Not every pull request needs one. Pick the least ceremony that fits:
 
 ## With a tracker
 When the change's yass folder has a `tracker:` (in its `settings.yaml` or `yass.yaml`; `yass status <change>` then prints its `card:`), update it at these moments and no others: building starts, each code pull request goes up and merges or closes, and the change or piece is done. Work without a change has its own rows.
-- **Trello:** what to move and say, and the check before every move, are in `yass-init`'s "The Trello workflow". Read that section; the rest of that playbook is setup.
+- **Trello:** what to move and say, and the check before every move, are in `trello.md` in the `yass-init` playbook's folder (next to this playbook's). Read that file; the playbook itself is setup.
 - **Another tracker:** do what the yass folder's `team.md` says under `## Project management`. None there? Run `yass-init`'s interview first, or ask.
 
 ## Intent changes mid-build
@@ -64,7 +64,7 @@ Building often shows the plan is wrong. Don't quietly fix it next to the code, a
 
 1. **Reason it out.** Write down what should change in the PRD, design, plan, Goal or Acceptance, and why.
 2. **Not confident?** Set `blocked: <reason>` in the frontmatter, say what and why in the Log, and stop for a human.
-3. **Confident?** Put the intent edit on its own branch, cut from where your work branched off, with the reason in `change.md` `## Decisions`. Then rebase your work onto it and keep building against the new plan. Reviewers see the intent change in its own pull request, below the code that depends on it, and can reject it without untangling anything. (Plans in another folder work differently: see below.)
+3. **Confident?** Put the intent edit on its own branch, cut from where your work branched off, with the reason in `change.md` `## Decisions`. Then rebase your work onto it and keep building against the new plan. Reviewers see the intent change in its own pull request, below the code that depends on it, and can reject it without untangling anything. (Plans in another folder work differently: see `plans-elsewhere.md`.)
    ```bash
    git switch -c <work-branch>-intent <base>     # with your in-progress work committed or stashed
    # edit prd.md / design.md / plan.md / Goal / Acceptance, and add the Decision
@@ -77,14 +77,4 @@ Building often shows the plan is wrong. Don't quietly fix it next to the code, a
 5. **Unattended without git latitude:** leave the edits in place, put the commands in the Log's **Next:**, and stop.
 
 ## Plans in another folder
-When `yass root -v` says `separate` (a `yass.yaml` points outside this repo), plans and code are committed separately, often in different repos, so nothing can carry progress in the same commit as the code:
-
-- **Pull the plans first** (`git -C <plans folder> pull --ff-only`), unless their repo has no upstream. `yass status` notes when they're behind or have uncommitted files.
-- **If the plans folder isn't there, stop and say so.** Never run `yass init` to fix it: that creates an empty plans folder only this checkout sees. The human clones the plans where `yass.yaml` expects them, or sets the variable its `path:` uses. From a linked worktree, YASS already looks in the clone's other checkouts.
-- **Name the change in every code commit.** `yass use <change>` when you start (`--ac ac2,ac5` adds the criteria you're working toward) makes the hooks add a `yass: <change>` trailer; it's per worktree. Without the hooks, write the trailer yourself. A commit that belongs to no change, or to a change in this repo, gets none.
-- **Commit the code first, then the plans.** The plans commit marks boxes and cites the code commits they rest on (`- [/] Disable Save while saving — code: a1b2c3d`), and the Log entry names them too. Boxes with no code (a decision, a manual check) need no citation.
-- **`[x]` waits for the merge.** A box is done when its code is on the main branch (`branch:` in `yass.yaml` says which): cite the commit there, which after a squash merge is the squash commit. Until then it's `[/]`, citing the branch commits.
-- **Cross-link them.** The code pull request's tracking block names the change, so a squash merge keeps it; the plans commit or pull request names the code's. Never put a board or card link in the code repo.
-- **Latitude is per repo:** being allowed to commit or push in one says nothing about the other.
-- **Intent changes go where the plans live,** as their own commit or pull request there, linked from the code's pull request. There's nothing to stack under the code.
-- **The plans stay on one branch** there, usually main.
+When `yass root -v` says `separate` (a `yass.yaml` points outside this repo), plans and code are committed separately, and the routine changes. Read `plans-elsewhere.md`, beside this file, before you load the change. Otherwise skip it.

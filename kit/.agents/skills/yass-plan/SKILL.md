@@ -34,7 +34,7 @@ For anything bigger than one pull request. A small change needs neither pieces n
 
 ## With a tracker
 When the yass folder has a `tracker:` (in its `settings.yaml` or `yass.yaml`), update it at these moments and no others: planning starts on a card that shaping hasn't already moved, and the plan's pull request goes up and merges. For each new piece, look for a card that clearly covers it and make that its `source:`; if two might fit, ask; with none, leave it, and never create one. When the human says a card changed, read it and propose plan revisions.
-- **Trello:** what to move and say, and the check before every move, are in `yass-init`'s "The Trello workflow". Read that section; the rest of that playbook is setup.
+- **Trello:** what to move and say, and the check before every move, are in `trello.md` in the `yass-init` playbook's folder (next to this playbook's). Read that file; the playbook itself is setup.
 - **Another tracker:** do what the yass folder's `team.md` says under `## Project management`. None there? Run `yass-init`'s interview first, or ask.
 
 ## Revise the plan

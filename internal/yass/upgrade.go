@@ -46,7 +46,7 @@ var (
 
 // upgradeTarget is one file yass upgrade looks after.
 type upgradeTarget struct {
-	path, kind string // kind: skill, agents or hook
+	path, kind string // kind: skill, ref (a playbook's reference file), agents or hook
 	outside    bool   // not in the repo, so not under version control (user-folder playbooks)
 }
 
@@ -92,6 +92,9 @@ func findYassFiles(r *Repo) []upgradeTarget {
 	for _, d := range dirs {
 		for _, n := range names {
 			found = append(found, upgradeTarget{path: filepath.Join(d, n, "SKILL.md"), kind: "skill", outside: skillDirs[d]})
+			for _, ref := range kitRefs(n) {
+				found = append(found, upgradeTarget{path: filepath.Join(d, n, ref), kind: "ref", outside: skillDirs[d]})
+			}
 		}
 	}
 	sort.SliceStable(found, func(i, j int) bool { return found[i].path < found[j].path })
@@ -108,6 +111,10 @@ func newText(t upgradeTarget) string {
 	case "hook":
 		b, _ := kitFile(HookPath + "/" + filepath.Base(t.path))
 		return stampHook(b, v)
+	}
+	if t.kind == "ref" {
+		b, _ := kitFile(".agents/skills/" + filepath.Base(filepath.Dir(t.path)) + "/" + filepath.Base(t.path))
+		return b
 	}
 	_, text := kitSkills()
 	return stampSkill(text[filepath.Base(filepath.Dir(t.path))], v)
@@ -140,11 +147,21 @@ func upgradeFiles() (int, error) {
 	var write []upgradeTarget
 	from := map[string]bool{}
 	for _, t := range targets {
-		stamp := ""
-		if exists(t.path) {
-			stamp = readStamp(t.path)
+		// a reference file has no stamp of its own: it follows its playbook's, and is written back
+		// when it's missing
+		stamped := t.path
+		if t.kind == "ref" {
+			stamped = filepath.Join(filepath.Dir(t.path), "SKILL.md")
 		}
-		switch upgradeAction(stamp, binVersion) {
+		stamp := ""
+		if exists(stamped) {
+			stamp = readStamp(stamped)
+		}
+		action := upgradeAction(stamp, binVersion)
+		if t.kind == "ref" && action == actKeep && !exists(t.path) {
+			action = actWrite
+		}
+		switch action {
 		case actNewer:
 			fmt.Fprintf(os.Stderr, "yass: %s was written by yass %s, newer than this one (%s); `yass update` gets that version, then run yass upgrade\n",
 				r.disp(t.path), stamp, binVersion)

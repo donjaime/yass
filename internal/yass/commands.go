@@ -153,6 +153,9 @@ YASS is set up. Next:
 `)
 	}
 	for _, p := range kw.kept {
+		if b := filepath.Base(p); strings.HasSuffix(b, ".md") && b != "SKILL.md" && b != "AGENTS.md" {
+			continue // a playbook's reference file: no stamp of its own, it follows its SKILL.md
+		}
 		if olderThanBinary(readStamp(p)) {
 			fmt.Printf("note: YASS's files here are older than this yass (%s); `yass upgrade` updates them\n", binVersion)
 			break

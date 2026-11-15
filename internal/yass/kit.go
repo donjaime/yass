@@ -77,6 +77,20 @@ func kitSkills() (names []string, text map[string]string) {
 	return names, text
 }
 
+// kitRefs lists a playbook's reference files: the markdown files beside its SKILL.md, which an
+// agent reads only when the playbook points at them. They carry no stamp of their own and follow
+// their playbook's.
+func kitRefs(skill string) []string {
+	entries, _ := fs.ReadDir(kit.FS, ".agents/skills/"+skill)
+	var out []string
+	for _, e := range entries {
+		if n := e.Name(); !e.IsDir() && n != "SKILL.md" && strings.HasSuffix(n, ".md") {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
 // kitFile reads one file the binary carries.
 func kitFile(p string) (string, error) {
 	b, err := kit.FS.ReadFile(p)
@@ -136,6 +150,17 @@ func (w *kitWriter) agentFiles(dir string, claude, global bool) error {
 		if claude {
 			if err := w.place(filepath.Join(claudeSkills, n, "SKILL.md"), stamped, 0); err != nil {
 				return err
+			}
+		}
+		for _, ref := range kitRefs(n) {
+			text, _ := kitFile(".agents/skills/" + n + "/" + ref)
+			if err := w.place(filepath.Join(skills, n, ref), text, 0); err != nil {
+				return err
+			}
+			if claude {
+				if err := w.place(filepath.Join(claudeSkills, n, ref), text, 0); err != nil {
+					return err
+				}
 			}
 		}
 	}

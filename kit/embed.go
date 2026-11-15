@@ -4,7 +4,8 @@ package kit
 
 import "embed"
 
-// FS holds .agents/skills/yass-*/SKILL.md and tools/yass/githooks/pre-commit, unstamped;
+// FS holds .agents/skills/yass-*/SKILL.md, the reference files beside them (*.md) and
+// tools/yass/githooks/pre-commit, unstamped;
 // `yass init` adds the version as it writes them.
 //
 //go:embed all:.agents tools

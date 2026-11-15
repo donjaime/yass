@@ -2,7 +2,9 @@
 
 YASS ships seven playbooks, as [Agent Skills](https://agentskills.io) in [`kit/.agents/skills/`](../kit/.agents/skills). Every `yass` binary carries them, and `yass init` writes them to `.agents/skills/` in your repo (project scope); `--claude` also copies them to `.claude/skills/`. With `--global`, they go in your user folder instead. `yass upgrade` brings them up to a newer binary's version. Agents pick one by matching your request against its `description`.
 
-This page is an index for reviewing what each playbook lets an agent do. The `SKILL.md` files are the source of truth; if this page and a playbook disagree, the playbook wins and this page needs fixing.
+A playbook can carry **reference files** beside its `SKILL.md`: text an agent reads only when the playbook points at it, so it costs nothing the rest of the time. There are two: [`yass-init/trello.md`](../kit/.agents/skills/yass-init/trello.md) (the Trello workflow) and [`yass-work/plans-elsewhere.md`](../kit/.agents/skills/yass-work/plans-elsewhere.md) (working with plans kept outside the repo). `yass init` writes them with their playbooks, `yass upgrade` keeps them at their playbook's version (they carry no stamp of their own) and writes back one that's missing, and `yass deinit` removes them.
+
+This page is an index for reviewing what each playbook lets an agent do. The `SKILL.md` files and their reference files are the source of truth; if this page and a playbook disagree, the playbook wins and this page needs fixing.
 
 | Playbook | Mode | Use it for | Writes files | Waits for a human |
 |---|---|---|---|---|
@@ -37,7 +39,7 @@ Sets a repo up through the agent and connects a yass folder to its project manag
 - **Writes:** what `yass init` writes; the board's five lists when the board is blank; `tracker.trello` (board link, list IDs) in the yass folder's `settings.yaml`, never `yass.yaml`, so private plans keep their board out of the code repo.
 - **Human gates:** asks for options before `yass init`; asks before changing a board whose lists don't fit the five, and changes nothing until answered; commits only with latitude. Never asks for a Trello key or token: with no Trello tool in the harness, it stops.
 - **Another project management system** (Jira, Linear, GitHub Projects, Azure Boards…): reads the team's workflow from the yass folder's `team.md`; when there's none, interviews the human (project, how work maps, which status matches each moment, what to comment and leave alone), writes it into `team.md` under `## Project management`, shows it back, and leaves it for the team to commit and review. Only identifiers go under `tracker:` in `settings.yaml`.
-- **Also holds** the Trello workflow the other playbooks follow: which moments move a card or add a comment, the check before every move, pieces' cards, and keeping board links out of a public code repo.
+- **Also holds** the Trello workflow the other playbooks follow, in `trello.md` beside it: which moments move a card or add a comment, the check before every move, pieces' cards, and keeping board links out of a public code repo.
 
 ## yass-update
 
@@ -77,7 +79,7 @@ Builds the one change it's pointed at and keeps its progress next to the code. A
 - **Runs:** `yass status [<change>]`; `yass new "<title>" [--source …]` for a small, clear request (from a harness plan, if there is one); `yass archive <change>` when the change is `done`, in the pull request that ticks its last box.
 - **Writes:** code; boxes marked `[/]` when started and `[x]` when verified (Steps, Acceptance, and plan criteria the work delivers); `## Decisions`; `## Steps`; a `## Log` entry before stopping. For a new small change, its Goal and Acceptance.
 - **When the plan is wrong:** reasons out the fix. Not confident: sets `blocked:` and stops. Confident: puts the intent edit on its own branch from the work's base, with the reason in Decisions, rebases the work on top, and keeps going. Lowering the bar is stacked the same way but flagged as needing a human before merge.
-- **Plans in another folder** (`yass root -v` says `separate`): pulls the plans first, and stops rather than running `yass init` when they're missing. Names the change in every code commit (`yass use <change>`, so the hooks add the `yass:` trailer), commits code first, then the plans, citing the code commits a box rests on (`— code: a1b2c3d`) and marking it `[x]` only once that code is merged. Cross-links the code PR (with `yass status <change> --brief` and the trailer) and the plans commit. Latitude for git is per repo. Intent changes go in the plans' own repo, linked from the code PR.
+- **Plans in another folder** (`yass root -v` says `separate`): reads `plans-elsewhere.md` beside the playbook, then pulls the plans first, and stops rather than running `yass init` when they're missing. Names the change in every code commit (`yass use <change>`, so the hooks add the `yass:` trailer), commits code first, then the plans, citing the code commits a box rests on (`— code: a1b2c3d`) and marking it `[x]` only once that code is merged. Cross-links the code PR (with `yass status <change> --brief` and the trailer) and the plans commit. Latitude for git is per repo. Intent changes go in the plans' own repo, linked from the code PR.
 - **Git:** only for that stack, and only with latitude from the human or harness (plain `git`, or `gh stack` and similar). Attended without latitude: shows the commands. Unattended without latitude: leaves the edits, writes the commands into the Log's **Next:**, and stops.
 - **Never:** changes intent alongside code; builds out-of-scope work (it notes it in the Log or the repo's issue tracker); marks a box `[x]` without evidence from its `verify:`.
 

@@ -1,6 +1,7 @@
 # Changelog
 
 ## Unreleased
+- **Playbooks read less to do the same.** A playbook can now carry reference files beside its `SKILL.md`, which an agent reads only when the playbook points at them. The Trello workflow moved from `yass-init` to `yass-init/trello.md`, so a tracker moment no longer loads all of the setup playbook, and "Plans in another folder" moved from `yass-work` to `yass-work/plans-elsewhere.md`, read only when plans are kept outside the repo. No rule changed. `yass init` writes the files, `yass upgrade` adds them to an existing install and writes back one that's missing, and `yass deinit` removes them. Run `yass upgrade` to get them.
 - Fix: `yass status` no longer counts playbooks in a folder `yass.yaml` ignores when it compares the repo's YASS files with the binary's version. `yass upgrade` already skipped them, so the note could ask for an upgrade that then did nothing.
 
 ## 0.6.0 (2026-11-15)
