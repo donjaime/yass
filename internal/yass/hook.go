@@ -16,7 +16,8 @@ import (
 // It warns when one commit changes code and also edits existing intent in a yass folder: prd.md,
 // design.md, plan.md beyond marking boxes, a yass folder's queue.md, or a change's title, Goal or
 // Acceptance. Writing new intent files is fine. Marking boxes and appending to Log and Decisions
-// alongside code is expected and never flagged. Editing the archive is always flagged: it's append-only.
+// alongside code is expected and never flagged, and so is archiving the change the code finishes. Editing
+// the archive is always flagged: it's append-only.
 
 var (
 	hookBoxRE = regexp.MustCompile(`^(\s*[-*+]\s+)\[[ xX/]\]`) // starting, ticking or unticking is progress; dropping ([-]) is not
@@ -252,7 +253,10 @@ func (h *hook) check(entries []entry, oldRef, newRef string) []string {
 				(strings.HasPrefix(e.status, "R") && !fromChanges) {
 				out = append(out, e.path+": the archive is append-only; follow-up work is a new change with `follows:`")
 			} else if fromChanges && hasCode {
-				out = append(out, e.path+": archive a change in its own commit, not alongside code")
+				// Archiving rides with the code that finishes a change, but intent still doesn't move with it.
+				if w := intentEdit(e, pl, show(oldRef, e.oldPath), show(newRef, e.path), true); w != "" {
+					out = append(out, w)
+				}
 			}
 			continue
 		}
@@ -270,25 +274,38 @@ func (h *hook) check(entries []entry, oldRef, newRef string) []string {
 		if e.status[0] != 'D' {
 			cur = show(newRef, e.path)
 		}
-		switch pl.fname {
-		case "prd.md", "design.md":
-			out = append(out, fmt.Sprintf("%s: %s is intent; change it in a commit without code", e.path, pl.fname))
-		case "plan.md":
-			if e.status[0] == 'D' || strings.Join(norm(old), "\n") != strings.Join(norm(cur), "\n") {
-				out = append(out, e.path+": with code, only mark boxes in plan.md; revise the plan in its own commit")
-			}
-		case "change.md":
-			if e.status[0] == 'D' {
-				out = append(out, e.path+": removing a change alongside code")
-			} else if intentOfChangeMD(old) != intentOfChangeMD(cur) {
-				out = append(out, e.path+": the title, Goal or Acceptance changed; that's intent, so give it its own commit")
-			}
+		if w := intentEdit(e, pl, old, cur, false); w != "" {
+			out = append(out, w)
 		}
 	}
 	if hasCode {
 		out = append(out, h.outsideThePiece(entries, places)...)
 	}
 	return out
+}
+
+// intentEdit says what's wrong with a yass file changing alongside code, or "" when it's only
+// progress. archiving is a file `yass archive` moved in the same commit: there, a PRD or design
+// that's byte-for-byte the same is fine, and anything else is held to the same rules.
+func intentEdit(e entry, pl place, old, cur string, archiving bool) string {
+	switch pl.fname {
+	case "prd.md", "design.md":
+		if archiving && old == cur {
+			return ""
+		}
+		return fmt.Sprintf("%s: %s is intent; change it in a commit without code", e.path, pl.fname)
+	case "plan.md":
+		if e.status[0] == 'D' || strings.Join(norm(old), "\n") != strings.Join(norm(cur), "\n") {
+			return e.path + ": with code, only mark boxes in plan.md; revise the plan in its own commit"
+		}
+	case "change.md":
+		if e.status[0] == 'D' {
+			return e.path + ": removing a change alongside code"
+		} else if intentOfChangeMD(old) != intentOfChangeMD(cur) {
+			return e.path + ": the title, Goal or Acceptance changed; that's intent, so give it its own commit"
+		}
+	}
+	return ""
 }
 
 // outsideThePiece flags a commit with code that reaches past one piece of a large change: it edits

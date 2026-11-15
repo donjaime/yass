@@ -668,7 +668,7 @@ func cmdArchive(a *args) error {
 		if gitTop := canon(filepath.FromSlash(strings.TrimSpace(out))); gitTop != r.Top {
 			commit = fmt.Sprintf("git -C %s commit -m \"yass: archive %s\"", gitTop, c.Name)
 		}
-		fmt.Printf("Commit it on its own: %s\n", commit)
+		fmt.Printf("Commit it as the last commit of the pull request that finishes the change, or on its own: %s\n", commit)
 	}
 	return nil
 }
