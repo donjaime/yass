@@ -1,8 +1,8 @@
 ---
 name: yass-work
-description: Work on a YASS change you've been pointed at. For work with no change, decide first whether it needs one (unambiguous, trivial work is just a good pull request); create it if it's new and small, resume from its Log, build against its acceptance criteria, keep progress (boxes marked in progress or done, Log, Decisions) up to date alongside the code, put needed plan changes on their own branch underneath the code instead of giving up, verify, and archive it when every box is checked. Use for "work on X", "keep going" on the change at hand, "fix this bug", and unattended runs that name a change.
+description: Work on a YASS change you've been pointed at. For work with no change, decide first whether it needs one (unambiguous, trivial work is just a good pull request, and so is work shaped into a brief with `yass-shape`); create it if it's new and small, resume from its Log, build against its acceptance criteria, keep progress (boxes marked in progress or done, Log, Decisions) up to date alongside the code, put needed plan changes on their own branch underneath the code instead of giving up, verify, and archive it when every box is checked. Use for "work on X", "keep going" on the change at hand, "fix this bug", and unattended runs that name a change.
 metadata:
-  yass-version: "0.5.0"
+  yass-version: "0.6.0"
 ---
 
 # yass-work
@@ -11,7 +11,7 @@ metadata:
 
 **Work only on the change you've been pointed at.** Picking what to build next is a decision, and it belongs to whoever is directing the work, not to this playbook. Being in progress isn't a reason to pick a change: several can be, and a freshly planned one (`not started` in `yass status`) may still be waiting for someone to approve its plan.
 
-**Git is up to whoever is driving.** Don't commit, branch, rebase, push or open a pull request unless the human or your harness has given you that latitude; pushing and pull requests are public. If you have it, do it yourself (plain `git`, or a stacking tool like `gh stack` if the repo uses one). If you don't, and someone's watching, give them the exact commands to run. Either way, keep the work shaped so that intent and code can land separately. "Separately" means apart from code: if the team squash-merges, that's a pull request with no code in it, which can still hold other intent, progress or an archive move.
+**Git is up to whoever is driving.** Don't commit, branch, rebase, push or open a pull request unless the human or your harness has given you that latitude; pushing and pull requests are public. If you have it, do it yourself (plain `git`, or a stacking tool like `gh stack` if the repo uses one). If you don't, and someone's watching, give them the exact commands to run. Either way, keep the work shaped so that intent and code can land separately. "Separately" means apart from code: if the team squash-merges, that's a pull request with no code in it, which can still hold other intent or progress. Archiving a change isn't intent: it rides with the code that finishes it (step 8).
 
 **Write pull requests and commits for people.** A reviewer hasn't memorized the plan, so lead with what a person needs, and put YASS's codes last:
 - **Title:** what changes, in plain words. No criterion IDs, milestone codes or change-folder names.
@@ -31,8 +31,9 @@ metadata:
    - **Not pointed at one?** Show `yass status` and ask which. Unattended, stop and say so.
    - **Directing your own work?** If the harness or the human has put you in charge of choosing (a fully autonomous run), the choice is yours: pick deliberately, and before you start a `not started` change, check that its plan has been approved or approve it yourself as you've been allowed to. Record the choice, and any approval, in its `## Decisions` with `(<you>)` as who.
    - **No change yet? Decide whether it needs one.** Not every pull request does.
-     - **Unambiguous intent, no change:** a trivial fix, a mechanical cleanup, a one-off that didn't come from the project management system: anything whose intent fits in the pull request's description and can be reviewed together with the code. Build it and open one pull request whose description says what and why. Trivial work goes ahead without asking; otherwise say in a line that you're skipping the ceremony. With plans kept elsewhere, its commits say `yass: none`. A card it came from moves as the Trello workflow says for work without a change.
-     - **Intent that deserves discussion, review or approval** (a behavior users will notice, a design call, anything you'd want agreed before building): ask whether to start a change. Unattended, stop and ask, unless you were told when dispatched not to stop for that; then go ahead without one and say so in the pull request.
+     - **Unambiguous intent, no change:** a trivial fix, a mechanical cleanup, a one-off: anything whose intent fits in the pull request's description and can be reviewed together with the code. Build it and open one pull request whose description says what and why. Trivial work goes ahead without asking; otherwise say in a line that you're skipping the ceremony. A card it came from moves as the Trello workflow says for work without a change.
+     - **Shaped, no change:** `yass-shape` ended in a brief the human approved, to land as plain pull requests. Build from the brief, with no change folder, no boxes, Log or Decisions, and no intent commits apart from code. The pull request's description leads with the brief (the problem, what changes, what's out of scope), then how it was checked; for a stack, the bottom one carries the whole brief and each one above says its part. If the work outgrows the brief, stop and say so rather than widening it quietly. A card it came from is already in Planning: see "With a tracker".
+     - **Intent that deserves discussion, review or approval** (a behavior users will notice, a design call, anything you'd want agreed before building): ask whether to start a change, or to shape it and land plain pull requests (`yass-shape` does either). Unattended, stop and ask, unless you were told when dispatched not to stop for that; then go ahead without one and say so in the pull request.
      - **Starting one,** for a small, clear request (a bug, a tweak): `yass new "<title>" [--source <issue link>]` and write its Goal and Acceptance. If there's an approved plan from the harness's plan mode, turn it into the Goal, Acceptance and Steps. Anything that changes what users can do in a big way, or needs a design call, goes to `yass-shape` first.
 2. **Load.** `yass status <change>` lists its files and open boxes. Read `change.md` and resume from the last **Next:** in its Log. For a piece, also read the parent's `prd.md` and `plan.md`. Read the code and docs you'll touch.
 3. **Build.** Alongside the code:
@@ -51,7 +52,10 @@ metadata:
    - Did: …
    - Next: …
    ```
-8. **Finish.** Merging a branch doesn't finish a change; a large change spans many branches. When every box is done or dropped (`yass status` says `done`), run `yass archive <change>` (it prints how to commit the move). Commit it apart from code; with squash merges, in a pull request with no code, which can carry the change's last progress too. Pieces are archived with their change.
+8. **Finish.** Merging a branch doesn't finish a change; a large change spans many branches. When every box is done or dropped (`yass status` says `done`), run `yass archive <change>` (it prints how to commit the move). Pieces are archived with their change.
+   - **Archive in the pull request that ticks the last box,** as its last commit, even when that pull request has code: one review builds, finishes and archives the change.
+   - **If review reopens the work,** take the archive commit off the branch, make the edits, and archive again. Never edit under `archive/`.
+   - **On its own** when the change was already finished on main, or when the archive evicts old months (`yass archive` says so): that's a commit, and with squash merges a pull request, without code.
    - A Step you no longer need can be dropped (`[-]`) any time, with a reason in Decisions.
 
 ## With a tracker
@@ -59,6 +63,7 @@ When the change's yass folder names a Trello board (`tracker:` in its `settings.
 - **Building starts:** check the card is in Planning, then move it to Implementing. A piece with its own card moves the same way. If the card is anywhere else, someone may have claimed it: don't move it or comment; tell the human where it is and ask. Unattended, stop, and say so in the Log.
 - **A pull request** for the change: comment on its card with the link when it's up for review, and again when it merges or closes.
 - **Done:** a piece's card moves to Done when the piece is done and its pull request merged; a top-level change's, when its archive merges. Each time, check it's in Implementing first.
+- **Shaped, no change:** the card is in Planning from shaping. Check that, then move it to Implementing when building starts; comment on it when each pull request is up and when it merges or closes; move it to Done when the last one merges.
 - **No card:** for a new top-level change, ask whether to create one, and create it only on a yes. Never create a card for a piece: it rolls up to its change's card.
 - **Plans kept elsewhere:** never put a board or card link in the code repo (commits, pull request descriptions). The plans link the card.
 - **Another tracker** (any other key under `tracker:`): at these same moments, do what the yass folder's `team.md` says under `## Project management`. None there? Run `yass-init`'s interview first, or ask.
@@ -85,7 +90,7 @@ When `yass root -v` says `separate` (a `yass.yaml` points outside this repo), pl
 
 - **Start by updating the plans.** Pull them (`git -C <plans folder> pull --ff-only`) before reading the change; `yass status` notes when they have uncommitted files or are behind. A plans repo with no upstream (local only) has nothing to pull: carry on with it as it is. Then resume from the Log as usual.
 - **If the plans folder isn't there, stop and say so.** Never run `yass init` to fix it: it would create an empty plans folder that only this checkout sees. The fix is the human's: clone the plans where `yass.yaml` expects them, or set the variable its `path:` uses. From a linked worktree, YASS already looks in the clone's other checkouts.
-- **Name the change in every code commit.** Run `yass use <change>` when you start (`--ac ac2,ac5` adds the criteria you're working toward); the hooks then add a `yass: <change>` trailer to each commit. It's per worktree, so parallel worktrees can work on different changes. Without the hooks, write the trailer yourself. A commit that belongs to no change gets `yass: none`.
+- **Name the change in every code commit.** Run `yass use <change>` when you start (`--ac ac2,ac5` adds the criteria you're working toward); the hooks then add a `yass: <change>` trailer to each commit. It's per worktree, so parallel worktrees can work on different changes. Without the hooks, write the trailer yourself. A commit that belongs to no change, or to a change in this repo, gets no trailer.
 - **Commit the code first, then the plans.** The code commit carries the trailer; the plans commit marks boxes and cites the code commits they rest on: `- [/] Disable Save while saving — code: a1b2c3d`. Name them in the Log entry too.
 - **`[x]` waits for the merge.** A box is done when its code is on the main branch: cite the commit there (after a squash merge, the squash commit). Until then it's `[/]`, citing the branch commits. `yass status` warns about a cited commit it can't find, and about a done box whose code isn't merged (`branch:` in `yass.yaml` says which branch counts).
 - **Boxes with no code** (a decision, a manual check) need no citation.
