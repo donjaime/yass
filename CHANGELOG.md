@@ -1,8 +1,16 @@
 # Changelog
 
-## Unreleased
-- **Playbooks read less to do the same.** A playbook can now carry reference files beside its `SKILL.md`, which an agent reads only when the playbook points at them. The Trello workflow moved from `yass-init` to `yass-init/trello.md`, so a tracker moment no longer loads all of the setup playbook, and "Plans in another folder" moved from `yass-work` to `yass-work/plans-elsewhere.md`, read only when plans are kept outside the repo. No rule changed. `yass init` writes the files, `yass upgrade` adds them to an existing install and writes back one that's missing, and `yass deinit` removes them. Run `yass upgrade` to get them.
+## 0.6.1 (2026-11-15)
+The playbooks do the same job in two-thirds of the words: every rule is said once, detail an agent doesn't need is gone, and text used only in some setups is read only then.
+- **Shorter playbooks, same rules.** The seven playbooks went from about 9,100 words to about 6,300. Each rule is stated once instead of in several playbooks, instructions a capable agent doesn't need are gone (git recipes in `yass-log`, a fixed report layout in `yass-status`), and each description says when to use the playbook instead of walking through its steps. `yass-work` has a section of its own for work with no change, and one for writing pull requests.
+- **Reference files, read on demand.** A playbook can now carry reference files beside its `SKILL.md`, which an agent reads only when the playbook points at them. The Trello workflow moved from `yass-init` to `yass-init/trello.md`, so a tracker moment no longer loads all of the setup playbook, and "Plans in another folder" moved from `yass-work` to `yass-work/plans-elsewhere.md`, read only when plans are kept outside the repo. No rule changed. `yass init` writes the files, `yass upgrade` adds them to an existing install and writes back one that's missing, and `yass deinit` removes them. Run `yass upgrade` to get them.
+- **A shorter `AGENTS.md` section.** It keeps the rules an agent needs before it opens a playbook and points at the playbooks for the rest: about 540 words, down from 650, in every session.
+- **Three gaps closed,** found by running agents through the playbooks in scratch repos: a human naming a `not started` change is the go-ahead to build its plan; the pull request's progress line (`yass status <change> --brief`) is taken before the change is archived; and the column `yass status` prints for a card is where it should be, not where it is.
 - Fix: `yass status` no longer counts playbooks in a folder `yass.yaml` ignores when it compares the repo's YASS files with the binary's version. `yass upgrade` already skipped them, so the note could ask for an upgrade that then did nothing.
+
+Migrating:
+- **Run `yass upgrade`** for the new playbooks, their two reference files and the `AGENTS.md` section. Nothing else to set up.
+- **If your own docs or prompts quote a playbook,** check them: sections moved, and `yass-init`'s Trello workflow and `yass-work`'s "Plans in another folder" are now the files `trello.md` and `plans-elsewhere.md` beside those playbooks.
 
 ## 0.6.0 (2026-11-15)
 Less ceremony where it doesn't pay: work can be shaped and then land as plain pull requests, a finished change is archived in the pull request that finishes it, and installing is one line to your agent.

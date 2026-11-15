@@ -31,7 +31,7 @@ tar -xzf "yass_${os}_${arch}.tar.gz"
 "yass_${os}_${arch}/install.sh"
 ```
 
-To pin a version, replace `latest/download` with `download/v0.6.0`. On Windows, download the `.zip` and run `install.sh` from Git Bash, or copy `yass.exe` into a folder on your PATH yourself.
+To pin a version, replace `latest/download` with `download/v0.6.1`. On Windows, download the `.zip` and run `install.sh` from Git Bash, or copy `yass.exe` into a folder on your PATH yourself.
 
 ### From source
 
@@ -45,7 +45,7 @@ That puts it in `$(go env GOPATH)/bin`. Or build a clone, which `install.sh` cop
 
 ```bash
 git clone https://github.com/donjaime/yass && cd yass
-git checkout v0.6.0                       # optional: a released version rather than main
+git checkout v0.6.1                       # optional: a released version rather than main
 go build -o bin/yass ./cmd/yass
 ./install.sh
 ```
