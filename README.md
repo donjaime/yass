@@ -1,8 +1,10 @@
 # YASS! Yet Another Spec System
 
-**A sassy "yes" to building with coding agents, without losing the plot.**
+**A sassy "yes" to building with coding agents.**
 
 YASS is the bridge between your project management system and your code: the missing link for your software factory. It keeps the plan, progress and decisions for each change in plain files next to the code, so people and agents can plan and build together.
+
+**Agents write code faster than you can read it.** YASS gives you leverage: review the plan, not just the diff. A plan is the change, compressed: a page of intent and acceptance criteria you can read, question and approve before a thousand lines get written. The people who know the domain set those criteria, and your agents build and verify against them.
 
 **Describe the change, not the whole system.** Your code, docs and READMEs are the source of truth for what exists. YASS doesn't write it down a second time: it specs only what needs to change, keeps that next to the code, in plain markdown that agents and humans both read. It's lightweight project management for people and coding agents.
 
@@ -27,7 +29,7 @@ yass/
 
 That's the whole system: no database, no server, and no config unless you want one ([`yass.yaml`](#keeping-plans-out-of-the-repo)). A small CLI (`init`, `new`, `status`, `archive`, `decisions`, `evict`, `deinit`), seven playbooks your agent follows, and an optional git hook.
 
-YASS doesn't commit for you. The CLI never commits (archiving only stages the move), and the playbooks only commit, branch or rebase when you or your harness have given the agent that latitude; otherwise they hand you the commands. The rules below are about what lands on your main branch, and the hook checks them.
+You stay in charge of git: YASS never commits, pushes or opens a pull request unless you've told your agent it can.
 
 ## The rules
 
@@ -371,7 +373,13 @@ YASS is meant to sit next to your harness's plan mode (Claude Code's, or any oth
 
 ## YASS inside your workflow
 
-YASS covers the inner loop of a product and software development life cycle: shaping, planning and building one change, with progress next to the code. The outer loop stays where your team already runs it, in a project management system like Jira, Linear, GitHub Issues and Projects, GitLab, Azure Boards, Asana or Trello: the backlog, and the board where people outside the repo follow the work. Your agent keeps that system in step at the moments that matter (planning started, a pull request up or merged, building started, done), and everything finer stays in the files. Trello has a built-in workflow; the others get yours, from a one-time interview. The `yass` binary never calls them. See [docs/project-management.md](docs/project-management.md).
+Building software with agents has three layers, and each has a natural owner:
+
+- **People direct, on the board.** The backlog, and what gets worked on next, stay in the project management system your team already runs: Jira, Linear, GitHub Issues and Projects, GitLab, Azure Boards, Asana or Trello. It's also where people outside the repo follow the work.
+- **A person and an agent shape the plan together.** What's changing, why, and the acceptance criteria that say when it's done: short enough to review, and agreed before the code is written.
+- **Agents keep the fine-grained progress.** Ticked boxes, decisions and a log sit next to the code, so the next person or agent picks up where the last one stopped.
+
+YASS connects the three. Your agent keeps the board in step at the moments that matter (planning started, a pull request up or merged, building started, done), and everything finer stays in the files. Trello has a built-in workflow; the others get yours, from a one-time interview. The `yass` binary never calls them. See [docs/project-management.md](docs/project-management.md).
 
 Guardrails, approvals, CI, verification gates, merge strategy and unattended agent loops differ from team to team too, so YASS doesn't own them either. It gives you places to record their results (acceptance criteria with `verify:`, Decisions with who made them, `source:` links to your tracker) and one optional hook for the rule it cares most about. See [docs/comparison.md](docs/comparison.md) for how YASS relates to OpenSpec, Spec Kit and others.
 
@@ -382,7 +390,7 @@ Guardrails, approvals, CI, verification gates, merge strategy and unattended age
 
 ## Status
 
-**v0.1, early.** The CLI and hook are covered by Go unit tests and an end-to-end test suite (`tests/e2e.sh`), run in CI on Linux and macOS; the Windows builds compile but aren't tested yet. The playbooks have been written for Claude Code, Codex, OpenCode and pi, but haven't been battle-tested in each. Feedback and war stories are very welcome.
+**v0.5, early.** The CLI and hook are covered by Go unit tests and an end-to-end test suite (`tests/e2e.sh`), run in CI on Linux and macOS; the Windows builds compile but aren't tested yet. The playbooks have been written for Claude Code, Codex, OpenCode and pi, but haven't been battle-tested in each. Feedback and war stories are very welcome.
 
 ## License
 
