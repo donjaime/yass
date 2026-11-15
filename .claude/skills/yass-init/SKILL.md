@@ -2,7 +2,7 @@
 name: yass-init
 description: Set up YASS in this repo and connect it to a tracker. Check what's already set up, run `yass init` for what's missing, on a repo shared by teams record who you are and which team's yass folders are yours (`yass me`), and adopt a Trello board for a yass folder (bootstrap a blank board, match an existing one's lists, ask when they don't fit), writing its settings to the folder's settings.yaml. Safe to run again. Also holds the Trello workflow the other playbooks follow. Use for "set up YASS here", "connect our Trello board", "use this board for our plans", or when a playbook needs the Trello workflow. Also connects Jira or any other tracker through an interview about your team's workflow, kept in the yass folder's team.md ("connect Jira", "change how we update our tracker").
 metadata:
-  yass-version: "0.5.0"
+  yass-version: "0.6.0"
 ---
 
 # yass-init
@@ -75,6 +75,7 @@ The other playbooks follow this whenever a change's yass folder has a Trello boa
 | A piece is done and its pull request merged | to Done | |
 
 - **A card worked without a change** (its intent was unambiguous enough to skip YASS): check it's in Will Do, then move it to Implementing; comment on its pull request when it's up and when it merges or closes; move it to Done when it merges. Planning is skipped.
+- **A card shaped without a change** (thought through with `yass-shape`, then landed as plain pull requests): it moves to Planning when shaping starts, like any card, with a comment once it's decided that it will land as pull requests, with no change folder; to Implementing when building starts; and to Done when its last pull request merges. Its pull requests are commented on the card like any other.
 - **One card per top-level change.** A piece can have its own card, which moves the same way as its piece. When a new piece, or change, clearly covers a card that already exists, make that card its `source:`, so the same work isn't tracked twice; when two might fit, ask.
 - **Starting from a card:** asked to shape or plan one, create the change with the card's title and its link as `source:` (`yass new "<card title>" --source <card link>`).
 - **No card:** a new top-level change with no card, in a folder with a board: ask whether to create one, and create it, in the column its state implies, only on a yes. A piece never gets a card created for it: it rolls up to its change's card, so decomposing a card's work adds no noise to the board. Otherwise never create cards, issues or lists.
